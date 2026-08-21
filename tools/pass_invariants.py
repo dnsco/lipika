@@ -135,7 +135,12 @@ def check_frozen(vault, base):
     if not tool.exists():
         res.status, res.detail = "SKIP", "frozen_tier_check.py not present"
         return res
-    code, out = run([sys.executable, str(tool), base], vault)
+    # --vault explicitly, NOT just cwd: frozen_tier_check resolves through vault_config,
+    # whose order is flag -> $LIPIKA_VAULT -> config default -> checkout, and never cwd.
+    # Without the flag this reported SUBSTANCE violations from the CONFIGURED vault while
+    # its own header named the one under test -- accurate data about the wrong quantity,
+    # which is the failure class this repo exists to prevent. Measured 2026-08-21.
+    code, out = run([sys.executable, str(tool), base, "--vault", str(vault)], vault)
     res.output = out
     res.status = "PASS" if code == 0 else "FAIL"
     res.detail = "no substance altered" if code == 0 else "rule F violation, or a deleted frozen file"
