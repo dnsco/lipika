@@ -1,6 +1,6 @@
 ---
 name: vault-normalize
-description: Bring a knowledge-base vault that was cloned or migrated from the old template up to the current shape — create the missing tier directories, seed CLAUDE.md and .gitignore, delete machinery the vault vendored a copy of, hoist a parked shelf back to the workstream tier, and report every document the owner must now write. It moves, creates and deletes files and never edits inside one. Invoke when asked to "normalize the vault", "migrate a vault to the new shape", "bring this clone up to date", "this vault still has its own agents/tools", or when `lipika doctor` finds a vault the config does not know about.
+description: Bring a knowledge-base vault that was cloned or migrated from the old template up to the current shape — create the missing tier directories, seed CLAUDE.md and .gitignore, delete machinery the vault vendored a copy of, and report both the parked shelf and every document the owner must now write. It moves, creates and deletes files and never edits inside one. Invoke when asked to "normalize the vault", "migrate a vault to the new shape", "bring this clone up to date", "this vault still has its own agents/tools", or when `lipika doctor` finds a vault the config does not know about.
 ---
 
 # vault-normalize — change the shape, never the words
@@ -111,19 +111,26 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
    ln -s $L/skills/<name>      ~/.claude/skills/<name>
    ```
 
-4. **Hoist a parked shelf back to the workstream tier.**
+4. **Report a parked shelf. Do NOT hoist it.**
 
-   `workstreams/parked/` is the shape the epic tier replaces. A workstream has **no status field** — the
-   date it last accrued is the whole answer — and parked-ness is a decision, which lives on an epic.
+   `workstreams/parked/` looks like the shape the epic tier replaced, and hoisting each entry up one
+   level is mechanical and wikilink-safe. **Do it anyway and you are contradicting a ruling.** An epic
+   *cites* its threads rather than containing them, so moving the folders buys nothing:
 
-   ```bash
-   git mv workstreams/parked/<name> workstreams/<name>      # one per entry
-   rmdir workstreams/parked
-   ```
+   > *"An epic cites its threads rather than containing them, so the folders correctly stay put and the
+   > walk keeps seeing one child. The fix was teaching the tool that a container is not a thread."*
 
-   **Basename-preserving, so no wikilink changes and no link repair is needed.** Check for a collision at
-   the destination *first*; if one exists, hoist nothing and report it — a rename to dodge a collision is
-   step 5's business, not a silent side effect of a move.
+   That is a recorded DEAD END, measured 2026-08-21, and `design/vault-and-agent-ontology.md` agrees at
+   §4: *"Threads stay where they are, so no link breaks."* When the parked shelf confused
+   `architecture-candidates`, the tool was fixed; the folders were deliberately not moved.
+
+   So **report it and move on**: name the shelf entries, and say that their parked-ness lives on an epic
+   rather than in the path. If a future ruling reverses this, the move is `git mv` per entry plus an
+   `rmdir`, and it is basename-preserving — but it is not yours to decide.
+
+   This step is the reason to read a normalizer's diff rather than trust its summary. *"Mechanical,
+   safe, and obviously an improvement"* is exactly the shape of a change that undoes a decision nobody
+   wrote down where the tool could see it.
 
 5. **Perform basename changes only through `lipika obsidian rename`.**
 
@@ -184,7 +191,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
      naming yours in the header — accurate data about the wrong tree. Run `frozen-tier-check` directly
      with `--vault` and read that instead.
    - **`frozen-tier-check` matches `done/` at any depth, not just the root tier.** Hoisting a
-     `parked/<thread>/done/` folder therefore prints one `ADDED` line per file inside it. Those are
+     `parked/<thread>/done/` folder would print one `ADDED` line per file inside it. Those are
      renames of a *nested* `done/`, not a change to the frozen root tier; the check still ends
      `0 needing attention`, and the count of ADDED lines should equal the count of renames under that
      path. Confirm that equality rather than skimming the block.
@@ -220,7 +227,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
   is wrong. Write it in the report instead; a correction is a newer document, and this pass writes none.
 - **Don't convert old-shape documents.** No task frontier gets rewritten as an orientation, no `done/`
   folder is emptied, no register is deleted. Lazy means the old documents stay and stop accruing.
-- **Don't move a record.** Two things move: a `parked/` shelf entry, whose basename is preserved, and a
+- **Don't move a record.** One thing moves: a
   file renamed by `lipika obsidian rename`. Nothing else, ever.
 - **Don't delete by directory name.** `skills/` and `tools/` in a vault are not evidence of anything. The
   identity gate in step 3 is the only licence to delete.
