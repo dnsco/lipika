@@ -170,8 +170,15 @@ def main(argv):
         print("created  " + ", ".join(made))
     if kept:
         print("kept     " + ", ".join(kept))
-    print("\nCLAUDE.md is the template verbatim. Edit it in place — a vault's copy is SUPPOSED to\n"
-          "diverge, naming your real repos and your dated evidence, and it is never ported back.")
+    # Said only when this run actually wrote it. Printed unconditionally, it asserted "verbatim" over
+    # a file it had just declined to touch -- 135 diff lines against the template, measured 2026-08-24
+    # -- from the one command whose job is to reassure you nothing was clobbered.
+    if any(m.startswith("CLAUDE.md") for m in made):
+        print("\nCLAUDE.md is the template verbatim. Edit it in place — a vault's copy is SUPPOSED to\n"
+              "diverge, naming your real repos and your dated evidence, and it is never ported back.")
+    else:
+        print("\nCLAUDE.md was already here and was NOT touched. A vault's copy is supposed to diverge;\n"
+              "it is never ported back, and this command will not overwrite it.")
     print()
     d = run([sys.executable, str(Path(__file__).resolve().parent / "doctor.py")])
     sys.stdout.write(d.stdout)

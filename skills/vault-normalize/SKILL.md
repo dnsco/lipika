@@ -191,10 +191,17 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
    both sides in the index; unstaged, a move reads as a delete plus an untracked file and every proof
    below is vacuous.
 
+   **Name deleted FILES, not the directory that held them.** Deleting every copy in `agents/` removes
+   the directory, so `git add -- agents` fails as a pathspec — and because `git add` is atomic, nothing
+   stages and every proof below runs vacuously empty, which reads exactly like a pass. Stage
+   `agents/curator.md agents/scout.md`, then re-run the proofs. `lipika vault-commit` needs the same
+   individual paths or its foreign-index guard refuses. This bites on almost every migration, because
+   deleting vendored machinery is what empties a directory.
+
    ```bash
    git diff -M --cached --diff-filter=M --numstat $BASE -- '*.md'   # MUST be empty: no .md was modified
    git diff -M --cached --summary $BASE | grep rename | grep -v '(100%)'  # MUST be empty: renames exact
-   git diff -M --cached --numstat $BASE | awk '$1!="0"'             # MUST be deletions only: 0 added
+   git diff -M --cached --numstat $BASE | awk '{if ($1 != "0") print}'  # MUST be deletions only: 0 added
    git diff -M --cached --summary $BASE                             # the whole shape change, one line each
    lipika frozen-tier-check $BASE --vault <target>          # done/ sources/ external/ untouched
    lipika dangling-links <target>                           # compare against the count you took at $BASE
