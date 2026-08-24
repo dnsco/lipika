@@ -154,7 +154,15 @@ def compose(vault, tdir, version, graders, orientation):
         "",
     ]
     if graders:
-        lines.append("Then run these graders, scored against their text verbatim:")
+        # Deliberately "eval documents", not "graders". `up:` cannot tell a sealed grader from the
+        # record that scored it -- measured on this tool's own first run, which told a session to
+        # "run" a scoring record. Naming a distinction the frontmatter does not carry would be a
+        # confident wrong answer; naming what was actually found is not.
+        lines.append(
+            "Eval documents recorded against this thread, newest first. The graders among them "
+            "are the ones written before a change; score against their text verbatim, and treat "
+            "anything already scored as a record rather than work:"
+        )
         for g in graders:
             lines.append(f"  {g.relative_to(vault.path)}")
         lines.append("")
