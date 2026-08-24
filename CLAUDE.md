@@ -120,34 +120,44 @@ for three days and made `main` a fiction.
    `evals/<case>/graders/*.md` and score themselves. **The name changed to match the tooling we are
    heading for; the rule did not.**
 2. **Author here**, once.
-3. **Dump**, before anything measures. It is what a cold agent reads, so measuring against a tree the
-   handoff has not been written into measures the wrong thing.
-4. **DEPLOY, if the change ships anything.** A change under `skills/`, `agents/`, `tools/` or `bin/`
-   is carried by the plugin, and **editing the tree changes nothing about what runs** — the installed
-   copy is frozen at its version. A change to `CLAUDE.md`, `design/` or `README.md` ships nothing and
-   needs no deploy: those are read from the checkout. When in doubt, deploy; it is cheap and a missed
-   one is silent. Bump the version in **both**
-   `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, then:
+3. **DEPLOY, if the change ships anything — before the dump, not after.** A change under `skills/`,
+   `agents/`, `tools/` or `bin/` is carried by the plugin, and **editing the tree changes nothing
+   about what runs** — the installed copy is frozen at its version. A change to `CLAUDE.md`,
+   `design/` or `README.md` ships nothing and needs no deploy: those are read from the checkout. When
+   in doubt, deploy; it is cheap and a missed one is silent. Bump the version in **both**
+   `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, commit, then:
 
    ```bash
    claude plugin marketplace update lipika
    claude plugin update lipika@lipika        # prints the old -> new version
+   claude plugin tag .                       # validates the two manifests agree; refuses if uncommitted
    ```
 
    **Same version is a silent no-op** from `update`, from `install`, and from `marketplace update` —
-   measured 2026-08-24, all four. If the version did not change, nothing was deployed and you are
-   about to measure the previous round. `claude plugin tag` validates that the two manifests agree,
-   which is the failure mode of a two-file bump.
-5. **Restart Claude.** `plugin update` says so itself: *"Restart to apply changes."* This is a real
-   step with an observable outcome, not a precaution — the new version directory exists on disk and
-   the running process has not read it.
+   measured 2026-08-24, all three. If the version did not change, nothing was deployed and you are
+   about to measure the previous round.
+4. **Dump.** It comes *after* the deploy so it can state the version that is actually installed, and
+   *before* anything measures, because it is what a cold agent reads — measuring against a tree the
+   handoff has not been written into measures the wrong thing.
+5. **Ask for a restart, and END THE SESSION HERE.** `plugin update` says it itself: *"Restart to
+   apply changes."* The deployed version is on disk and the running process has not read it —
+   measured 2026-08-24, when a session that had just deployed `0.2.1` went on loading a skill from
+   the `0.2.0` directory.
+
+   **This is a handoff, not a pause.** The agent running the loop cannot restart, cannot detect a
+   restart, and cannot proceed without one — so a round that treats it as an internal step stalls
+   there silently. Your last message names what the next session must run: the graders, by path.
+
+   *— everything below happens in the NEW session —*
+
 6. **PROBE BEFORE YOU MEASURE.** Ask a question the two versions answer *differently* and read what
    the role **did**, not what it says about itself — one asked to quote its own definition returned a
    rule that has never existed in any version of the file, in any repo. The deploy is verifiable, so
    this is now a cheap confirmation rather than the only evidence:
 
    ```bash
-   diff -rq .claude-plugin/../skills "$HOME/.claude/plugins/cache/lipika/lipika/<version>/skills"
+   claude plugin list      # the version now serving
+   diff -rq skills "$HOME/.claude/plugins/cache/lipika/lipika/<version>/skills"
    ```
 7. **Then curator, then eval**, scored against the graders verbatim.
 8. **Summarise the round where the next agent will read it**, and feed the findings back. That return
@@ -173,9 +183,15 @@ leaves a distinct, inspectable, versioned directory. "Which version is live" sto
 and becomes a number you can print. It also makes this machine match what anyone else installing
 Lipika runs, which the symlinks never did.
 
-**The one way this fails is forgetting step 4**, which silently measures the previous round. Unlike
+**The one way this fails is forgetting step 3**, which silently measures the previous round. Unlike
 the symlink failure it is *detectable* — compare the installed version against the tree — so it wants
 a `lipika doctor` check rather than this paragraph.
+
+**Why the restart ends the session rather than sitting inside the loop.** Measured 2026-08-24 by
+running the loop on itself: the agent executing it cannot restart, cannot detect a restart, and
+cannot proceed without one. A step only a human can perform, buried mid-loop, stalls there and
+nothing says so — which is exactly how the rule this replaced cost three days. Putting it at the
+boundary makes the stall impossible: the round *ends*, with an explicit ask, the way a handoff does.
 
 **Never eval the version you are replacing.** It measures a system being deleted — retired as an idea
 2026-08-21, and it is the shape a "let us get a baseline first" instinct takes.
