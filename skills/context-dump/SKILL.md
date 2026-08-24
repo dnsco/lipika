@@ -191,6 +191,28 @@ project does **not** load automatically — read it if you have not.
 
    `--result aborted` if you did not write. An unclosed `start` reads as someone still working in here.
 
+7. **If a deploy happened this session, end by printing the next session's prompt — and nothing after it.**
+
+   Only when the machinery was redeployed. An incremental dump is not a handoff to a restarted
+   session, and a restart nobody needs trains the reader to skip the block.
+
+   ```bash
+   lipika handoff-prompt <workstream>
+   ```
+
+   **Print its output verbatim as the last thing in your message.** It arrives already fenced; do not
+   unwrap it, do not add a sentence inside the fence, and do not follow it with anything the reader
+   would have to scroll past. The paste is what survives — commentary above it is read past.
+
+   **It refuses rather than warns**, exit 3, when the tree is not what is installed or the two
+   manifests disagree with the installed version. A refusal is not something to work around or
+   paraphrase: it means the deploy did not happen, so there is no valid handoff to write yet. Deploy,
+   then run it again.
+
+   It composes the prompt from the machine — the installed version, that version's gate command, and
+   every grader whose `up:` names this thread. **It does not restate the live set**, and neither should
+   you: the orientation you just wrote is what the next session reads.
+
 ## Don't
 
 - **Don't move documents.** Nothing is archived.

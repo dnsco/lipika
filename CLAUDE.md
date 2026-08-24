@@ -148,6 +148,13 @@ for three days and made `main` a fiction.
    restart, and cannot proceed without one — so a round that treats it as an internal step stalls
    there silently. Your last message names what the next session must run: the graders, by path.
 
+   **Do not compose that message by hand.** `context-dump`'s step 7 prints it, from
+   `lipika handoff-prompt <workstream>` — the installed version, that version's gate command, and
+   every grader whose `up:` names the thread, already fenced for pasting. It **refuses**, exit 3,
+   when the tree is not what is installed: a warning above a pasteable block is read past, and the
+   paste is what survives. A refusal means the deploy did not happen and there is no handoff to
+   write yet.
+
    *— everything below happens in the NEW session —*
 
 6. **GATE: prove the installed plugin IS the tree, or the eval is worthless.** This is the point of
@@ -241,8 +248,7 @@ that stays red on correct content gets dismissed, and one that stays green on a 
 - **A sub-agent inherits your cwd while every tool resolves the *configured* vault.** Dispatching from a
   worktree makes a pass read one tree and index another.
 - **The `Edit` tool needs its own `Read`.** A slice read through Bash does not satisfy the guard.
-- **`git push` over SSH fails here while `gh` is authenticated.** Push with
-  `git -c credential.helper='!gh auth git-credential' push https://github.com/dnsco/lipika.git <branch>`.
+
 - Everything else that bites, measured: `design/GOTCHAS.md`.
 
 ## Voice
