@@ -43,14 +43,19 @@ from pathlib import Path
 import vault_config
 
 TIERS = {
-    "workstreams": "active efforts; a named one gets a folder plus a <folder>/<folder>.md folder-note",
-    "grand-plans": "long-horizon direction the workstreams serve",
+    "workstreams": "one question being answered each; a thread gets a folder, a folder-note, dumps/ and orientation/",
+    "epics": "a large effort actually happening. live / parked / finished. Cites its threads",
+    "grand-plans": "long-horizon direction the workstreams serve. A standing want, with no liveness",
+    "architecture": "how a system is put together. The owner's; agents write the traces behind it",
     "reference": "subsystem maps traced from source, cross-workstream. No status, no next-moves",
     "values": "evergreen principles the docs lean on by name",
-    "done": "finished work. Append-only",
     "sources": "raw verbatim inputs — transcripts, clipped articles. Append-only",
     "external": "artifacts written for an outside audience. Append-only",
 }
+# No `done/`. The task tier and its closure ceremony were retired at dnsco/lipika#8 --
+# splitting a thread replaces all of it, and a thread that stopped is simply not listed
+# as live. Seeding `done/` into a NEW vault taught the retired shape on the first command
+# anyone runs. An EXISTING `done/` stays where it is: records never move.
 
 README = """---
 type: moc
@@ -60,12 +65,14 @@ tags: [vault, index]
 
 # {name} — vault map
 
-What lives here and where. **[[CLAUDE]]** is the operating manual: conventions, who may write, and
-how work is closed.
+What lives here and where. **[[CLAUDE]]** is the operating manual: conventions, and who may write.
 
-**This map carries no state.** Status, PR numbers and next-moves live only in each workstream's
-folder-note — go there for "where are we". An annotated table of contents becomes a second
-frontier and silently drifts; one line per document is the whole design.
+**This map carries no state.** A thread's state lives in its newest `orientation/` document — go
+there for "where are we". An annotated table of contents becomes a second frontier and silently
+drifts; one line per document is the whole design.
+
+**Nothing here closes.** A workstream has no status field: the date it last accrued is the whole
+answer, and a thread that stopped is simply not listed as live. Only an epic carries state.
 
 ## Workstreams
 

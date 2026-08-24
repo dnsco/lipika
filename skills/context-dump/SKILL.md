@@ -167,6 +167,12 @@ project does **not** load automatically — read it if you have not.
    lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried
    ```
 
+   **Then add the thread's line to the index yourself.** Append one entry to `README.md`
+   `## Workstreams` — the thread link, its question in one clause, and the epic it serves. A thread
+   nobody has indexed is invisible to a human browsing, and a split should not have to wait on a
+   `curator` run to become visible. **Append your one entry; do not regenerate the list** — that is
+   the curator's, and two authors regenerating one view is how it starts disagreeing with itself.
+
 5. **Commit** in the vault, which is its own repo. Stage **specific paths** — never `git add -A`, never a
    bare `commit`, because other sessions write here.
 

@@ -22,6 +22,10 @@ Read the vault's `CLAUDE.md` first. Resolve the vault with `lipika vault-config 
 - **A view is regenerated wholesale, never patched.** The index is yours; a thread's current orientation
   is **not** — a handoff writes it.
 - **`architecture/` is the owner's.** Repair a link inside one; never write or reword one.
+- **`epics/` and `grand-plans/` are the owner's PROSE, not the owner's files.** An epic cites its
+  threads, and which threads exist is mechanical — **keep the citation list true**: add a thread the
+  epic should cite, flag a citation pointing at a path that no longer exists, flag a live thread no
+  epic cites. Never touch the framing, the judgement, or whether an effort is parked.
 
 Full autonomy inside your surfaces: act, then report.
 
@@ -52,9 +56,18 @@ Full autonomy inside your surfaces: act, then report.
    lipika dangling-links .        # exit 1 = at least one; it separates the false-positive classes
    ```
 
-   Repoint what resolves to nothing. Use the `obsidian-cli` skill for anything that changes a basename,
-   so inbound links survive it. A link *inside* one workstream is that thread's own business unless it
-   points out of the workstream.
+   Repoint what resolves to nothing. A link *inside* one workstream is that thread's own business
+   unless it points out of the workstream.
+
+   **You may repair a link inside a record, and this does not contradict "never rewrite what a
+   document says".** A wikilink is an address; a claim is what the document asserts. Repointing an
+   address after its target moved preserves every claim — leaving it dangling is what loses meaning.
+   That distinction used to be implied here and agents hesitated on it; it is now explicit.
+
+   **Rename through the tool, never by hand.** `lipika obsidian rename` moves inbound links as part
+   of the operation, so there is no window in which they are stale and nothing to verify afterwards.
+   It needs Obsidian running and exits 4 inside a git worktree — that refusal is correct, not
+   something to work around.
 
 4. **Recommend an architecture document; never write one.**
 

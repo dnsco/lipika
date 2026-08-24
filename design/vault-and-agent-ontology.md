@@ -330,6 +330,9 @@ history rather than rebuild it.
 | An agent is pushed what bears on its work | A surface full of another thread's warnings fails as a long one does | Recall flat in the irrelevant fraction |
 | Every document is a record or a view | The maintenance bill was entirely the third class | A document that must be both, and stays correct |
 | A record is never edited | It is evidence of a moment; a later moment gets a later document | An edited record nobody had to reconcile |
+| A wikilink is an address, not a claim, so a record's links may be repaired | Repointing a moved target preserves every claim; leaving it dangling loses one. Rename through `lipika obsidian rename`, which moves the links with the file | A link repair that changed what a document asserted |
+| The owner writes an epic's PROSE; an agent keeps its citations true | Which threads exist is mechanical and goes stale fastest; the judgement is not and does not | An agent-maintained citation list that misrepresented the effort |
+| A vault must not hold a COPY of Lipika's machinery — but may hold its own tools and skills | The bill was N copies of one file, not the existence of a `skills/` directory. The test is identity, not location | A vault-local tool or skill that cost what the port loop cost |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its whole toolchain | A patched view that stayed true over months |
 | An item left out of an orientation stays recoverable from the dumps | Records are immutable and complete, so archaeology is always available | A dropped item that could not be found again |
 | A disposition states its basis | Silent inference is the failure; inference itself is not | An unstated basis nobody later needed |

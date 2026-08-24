@@ -25,10 +25,17 @@ One rule, and everything else follows from it: **every document in the vault is 
 
 - **A record is never edited.** Dumps, `reference/` traces, `sources/`, `external/`, and every
   orientation already written. A record is corrected by a newer document, never by a change to it.
+  **A wikilink is an address, not a claim** — repointing one when its target is renamed preserves
+  everything the document says, so a record's links may be repaired. Do it with
+  `lipika obsidian rename`, which moves the links as part of the operation; the rule is "use the tool
+  that cannot leave them stale", not "rename and then go check".
 - **A view is regenerated wholesale, never patched.** Each thread's current orientation, and the vault
   index. Safe to rewrite from scratch precisely because the records behind it are intact.
 - **`architecture/` is the owner's** — the one long-lived edited view. Agents produce the traces behind
   it and contradict it with them; they do not write it.
+- **`epics/` and `grand-plans/` are the owner's prose, not the owner's files.** An epic *cites* its
+  threads, and which threads exist is mechanical — an agent may maintain the citation list, and should.
+  The framing, the judgement and whether an effort is parked stay the owner's.
 
 The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. Its §8 is the list
 of what this system used to do and why each piece is gone — **read it before re-proposing anything**,
@@ -75,16 +82,53 @@ directory in this tree, and it is how a record stops being evidence of a moment.
 and every change ran a four-step port loop. That loop is gone. If you find yourself substituting a
 placeholder or diffing two copies of a definition, something has regressed.
 
+**The one-copy rule is about identity, not directories.** A vault must not hold a *copy of this
+repo's* machinery — that is the whole of it. A vault may hold **its own** `tools/` and **its own**
+`skills/`, written by its agents in the course of the work, and they are corpus rather than
+machinery. The test when deciding whether something in a vault should be deleted is *"is this a copy
+of something in Lipika?"*, never *"is it in a directory called `skills/`?"* Ruled 2026-08-21, after
+the directory-shaped version of the rule nearly deleted a vault's own `pr-description` skill.
+
+**Every change here lands through a pull request.** Nothing commits to `main` directly. A definition
+is a system prompt paid on every invocation and re-read by nobody, so the PR body is the only durable
+record of *why* it changed — and a change whose reasoning lives only in a session transcript is a
+change the next author will undo. **A PR here is a record, not a gate**: `~/.claude/` symlinks into
+the working tree, so an open PR's branch is already in force on this machine the moment it is
+checked out. Land it or close it; never leave one open and checked out.
+
 **The loop, and it is a loop:**
 
-1. **Author here**, once.
-2. **Probe behaviourally.** Never ask a role to quote its own definition — one did exactly that and
-   returned a rule that has never existed in any version of the file, in any repo. Ask a question the two
-   versions *answer differently*.
-3. **Try it on real work**, then profile it: `lipika agent-transcript`, qualitative read before any
-   figure. A size is not a finding.
-4. **Summarise the round where the next agent will read it**, and feed the findings back. That return
+1. **Seal the key first.** Write what the new version must do, as statements that can be *wrong*,
+   and **commit them before the change**. This is the TDD edge: the key is the test. A key written
+   afterwards silently agrees with whatever happened — measured, twice.
+2. **Author here**, once.
+3. **Dump**, before anything measures. It is what a cold agent reads, so measuring against a tree the
+   handoff has not been written into measures the wrong thing.
+4. **PROBE BEFORE YOU MEASURE.** Ask a question the two versions answer *differently* and read what
+   the role **did**, not what it says about itself — one asked to quote its own definition returned a
+   rule that has never existed in any version of the file, in any repo. **Nothing reports which
+   version of a definition is live**, so the probe is the only way to know, and it costs one question.
+5. **Then curator, then eval**, scored against the sealed keys verbatim.
+6. **Summarise the round where the next agent will read it**, and feed the findings back. That return
    edge is the difference between a design that stays true and one that becomes aspirational.
+
+**On definitions going stale, corrected 2026-08-24.** Claude Code **watches** `~/.claude/agents/` and
+`.claude/agents/` and loads edits within seconds; restart is documented as necessary only for an
+`agents/` directory that did not exist at session start, `--add-dir` directories, and
+`--disable-slash-commands`. Skills have documented live change detection. So the earlier rule here —
+*wait 15 minutes, or start a fresh session* — was wrong, and it cost three days of a round not being
+measured.
+
+**What we actually measured is narrower and worse.** These definitions are reached through
+**symlinks** into this working tree. Once, a symlink-target edit had not loaded at +15 minutes. The
+plausible cause is a file watcher registered on the link that never fires when only the target
+changes — which makes the staleness **unbounded rather than timed**. Prompt caching is not the
+culprit: it keys on the exact prefix, so changed text is a cache miss and the *new* text runs.
+
+Until the symlinks are gone, treat step 4 as mandatory rather than advisory.
+
+**Never eval the version you are replacing.** It measures a system being deleted — retired as an idea
+2026-08-21, and it is the shape a "let us get a baseline first" instinct takes.
 
 `design/agent-eval-method.md` is the procedure in full. Read it before you touch a definition.
 
@@ -101,9 +145,12 @@ that stays red on correct content gets dismissed, and one that stays green on a 
 
 ## Landmines
 
-- **A definition change is served stale for a few minutes.** Rewrite `agents/*.md` and spawn that role
-  immediately and the *old* text runs, with nothing in the transcript saying which version it was. Probe
-  before profiling. `SKILL.md` is exempt — it is read from disk at invocation.
+- **A definition change reached through a SYMLINK may never load.** Claude Code watches
+  `~/.claude/agents/` and loads edits within seconds — but ours are symlinks into this tree, and once a
+  symlink-target edit had not loaded at +15 minutes. Suspected: a watcher on the link that never fires
+  when only the target changes, which makes this unbounded rather than timed. **Probe before you
+  profile**, because nothing reports which version is live. Corrected 2026-08-24; the old "stale for a
+  few minutes" wording described a timer that does not exist.
 - **A new skill needs a symlink.** `~/.claude/skills/<name> -> <repo>/skills/<name>`, or it never
   registers. Same for `~/.claude/agents/<name>.md`. Deleting a definition means deleting its symlink too.
 - **A sub-agent in an unexpected tree reports clean.** A tree at a different commit still computes a
