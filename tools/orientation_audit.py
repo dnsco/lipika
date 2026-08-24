@@ -221,6 +221,12 @@ FIXTURES = [
      "itself.** Rewritten. The mechanism was accretion: the body grew round by round.\n", True),
 
 
+    ("carried under a SUBSECTION of Live items — a deeper heading nests, it does not exit",
+     "- **[LANDMINE]** `git push` over SSH fails on this machine while `gh` is authenticated "
+     "· as-of 2026-08-21",
+     "## Live items\n### Environment\n- **[LANDMINE]** `git push` over SSH fails on this "
+     "machine while `gh` is authenticated · as-of 2026-08-21\n", True),
+
     ("genuinely deleted — must NOT be found",
      "- **[LANDMINE]** A stale git worktree lives inside the vault, duplicating the whole "
      "workstream tree and inflating any count that walks it · as-of 2026-08-21",

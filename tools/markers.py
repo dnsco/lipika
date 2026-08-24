@@ -141,12 +141,24 @@ def list_items(text, sections=None):
     """
     want = {s.lower() for s in sections} if sections else None
     cur, inside = None, want is None
+    # A DEEPER heading nests inside the section; it does not leave it. `### Environment`
+    # under `## Live items` is still live items, and treating it as an exit made every
+    # item beneath a subsection invisible -- silently, as a short carried-count.
+    depth = 0
     items, buf = [], None
     for n, raw in enumerate(text.splitlines(), 1):
         h = re.match(r"^(#{1,6})\s+(.*)", raw)
         if h:
+            level = len(h.group(1))
             cur = h.group(2).strip().lower()
-            inside = want is None or any(w in cur for w in want)
+            if want is None:
+                inside = True
+            elif any(w in cur for w in want):
+                inside, depth = True, level
+            elif inside and level > depth:
+                pass
+            else:
+                inside = False
             if buf:
                 items.append(buf)
                 buf = None
