@@ -102,16 +102,30 @@ checked out. Land it or close it; never leave one open and checked out.
    and **commit them before the change**. This is the TDD edge: the key is the test. A key written
    afterwards silently agrees with whatever happened — measured, twice.
 2. **Author here**, once.
-3. **Dump, then curator, then eval — in that order, and the eval runs in a FRESH SESSION.** An
-   `agents/*.md` change is served stale for up to 15 minutes, so a round that edits and immediately
-   profiles measures the old definition and reports clean. `SKILL.md` is exempt, read from disk at
-   invocation. The dump comes first because it is what a cold agent will read; measuring against a
-   tree the handoff has not been written into measures the wrong thing.
-4. **Probe behaviourally.** Never ask a role to quote its own definition — one did exactly that and
-   returned a rule that has never existed in any version of the file, in any repo. Ask a question the two
-   versions *answer differently*.
-5. **Summarise the round where the next agent will read it**, and feed the findings back. That return
+3. **Dump**, before anything measures. It is what a cold agent reads, so measuring against a tree the
+   handoff has not been written into measures the wrong thing.
+4. **PROBE BEFORE YOU MEASURE.** Ask a question the two versions answer *differently* and read what
+   the role **did**, not what it says about itself — one asked to quote its own definition returned a
+   rule that has never existed in any version of the file, in any repo. **Nothing reports which
+   version of a definition is live**, so the probe is the only way to know, and it costs one question.
+5. **Then curator, then eval**, scored against the sealed keys verbatim.
+6. **Summarise the round where the next agent will read it**, and feed the findings back. That return
    edge is the difference between a design that stays true and one that becomes aspirational.
+
+**On definitions going stale, corrected 2026-08-24.** Claude Code **watches** `~/.claude/agents/` and
+`.claude/agents/` and loads edits within seconds; restart is documented as necessary only for an
+`agents/` directory that did not exist at session start, `--add-dir` directories, and
+`--disable-slash-commands`. Skills have documented live change detection. So the earlier rule here —
+*wait 15 minutes, or start a fresh session* — was wrong, and it cost three days of a round not being
+measured.
+
+**What we actually measured is narrower and worse.** These definitions are reached through
+**symlinks** into this working tree. Once, a symlink-target edit had not loaded at +15 minutes. The
+plausible cause is a file watcher registered on the link that never fires when only the target
+changes — which makes the staleness **unbounded rather than timed**. Prompt caching is not the
+culprit: it keys on the exact prefix, so changed text is a cache miss and the *new* text runs.
+
+Until the symlinks are gone, treat step 4 as mandatory rather than advisory.
 
 **Never eval the version you are replacing.** It measures a system being deleted — retired as an idea
 2026-08-21, and it is the shape a "let us get a baseline first" instinct takes.
@@ -131,9 +145,12 @@ that stays red on correct content gets dismissed, and one that stays green on a 
 
 ## Landmines
 
-- **A definition change is served stale for a few minutes.** Rewrite `agents/*.md` and spawn that role
-  immediately and the *old* text runs, with nothing in the transcript saying which version it was. Probe
-  before profiling. `SKILL.md` is exempt — it is read from disk at invocation.
+- **A definition change reached through a SYMLINK may never load.** Claude Code watches
+  `~/.claude/agents/` and loads edits within seconds — but ours are symlinks into this tree, and once a
+  symlink-target edit had not loaded at +15 minutes. Suspected: a watcher on the link that never fires
+  when only the target changes, which makes this unbounded rather than timed. **Probe before you
+  profile**, because nothing reports which version is live. Corrected 2026-08-24; the old "stale for a
+  few minutes" wording described a timer that does not exist.
 - **A new skill needs a symlink.** `~/.claude/skills/<name> -> <repo>/skills/<name>`, or it never
   registers. Same for `~/.claude/agents/<name>.md`. Deleting a definition means deleting its symlink too.
 - **A sub-agent in an unexpected tree reports clean.** A tree at a different commit still computes a

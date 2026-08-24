@@ -26,8 +26,8 @@ used, not written up afterwards from memory. Amendments are dated at the bottom.
    writing; never reword a file to satisfy one. `--into` needs **every** survivor when content moves,
    including the source file if it kept some.
 3. **Try it on real work**, then **profile it** — the frozen, verbatim measurement goes in the vault's
-   `sources/evals/`. Probe for definition staleness first: a rewritten definition is served stale for
-   minutes, and nothing in a transcript says which version ran.
+   `sources/evals/`. **Probe first**, always: nothing reports which version of a definition is live, and
+   a rewrite reached through a symlink may not have loaded at all.
 4. **Write the round's summary** into the workstream's own `reference/`, and feed the findings back to
    step 1.
 
@@ -42,13 +42,21 @@ frontier.
 Step 5's return edge is what makes this a loop rather than a checklist. Every durable improvement to these roles
 so far came from a profile, not from re-reading a definition.
 
-**One condition on step 4 that is easy to miss: a definition change is served stale, and possibly for the whole
-session.** After `agents/*.md` changes, spawns still receive the previous text, and nothing in a transcript says
-which version produced the behaviour — so a round that edits and immediately profiles measures the old
-definition and reports clean. Measured 2026-08-20: an in-place edit at a symlink's target had still not loaded
-**15 minutes** later, which refines the earlier "a few minutes" figure (taken on a file owned directly in
-`~/.claude/agents/`). Treat an in-session change as **not in force**; the exercise run wants a fresh session.
-Skills are exempt: `SKILL.md` is read from disk at invocation.
+**One condition on step 4 that is easy to miss, and it was stated wrongly here until 2026-08-24.** The old
+text said a definition is served stale "possibly for the whole session" and that the exercise run wants a fresh
+session. **The documentation says the opposite**: Claude Code watches `~/.claude/agents/` and `.claude/agents/`
+and loads edits within seconds, and restart is required only for an `agents/` directory absent at session start,
+`--add-dir` directories, and `--disable-slash-commands`. Skills have documented live change detection.
+
+What was actually measured on 2026-08-20 is narrower: an in-place edit **at a symlink's target** had not loaded
+at +15 minutes, against an earlier "a few minutes" on a file owned **directly** in `~/.claude/agents/`. That is
+one observation of a lower bound, not a duration — and the two conditions differing points at the symlink, not
+at a timer. Suspected cause: a watcher registered on the link that never fires when only the target changes,
+which would make the staleness **unbounded**. **Prompt caching is not the mechanism** — it keys on the exact
+token prefix, so changed text is a cache miss and the new text runs.
+
+Consequence for this method: **probe before you profile, always**, because nothing reports which version is
+live. Do not wait out an interval; there is no measured interval to wait out.
 
 **Probe behaviourally. Never ask a role to quote its own definition.** Measured the same day: a `scout` asked to
 quote the command it had been told to use returned a rule that has **never existed in any version of that
