@@ -42,7 +42,7 @@ fails: the record is just quietly worse, and the loss shows up weeks later as a 
   and the older one stays true about the moment it describes.
 - **A view is regenerated wholesale, never patched.** The orientation a handoff writes, and the vault index.
   A bad regeneration is fixed by regenerating again, because the records behind it are intact.
-- **`architecture/` is the owner's.** Agents produce the dated traces behind it and contradict it with them.
+- **`architecture/` carries the owner's reviewed judgement.** This vault's own agents never write one; an agent that genuinely understands the system may draft, and the document names its drafter. Agents produce the dated traces behind it and contradict it with them.
   They do not edit it.
 
 So, stated for an invocation:

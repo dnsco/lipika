@@ -105,11 +105,24 @@ file. It cannot go over budget because you regenerate under a target rather than
 something that was never said; `external/` because rewriting a delivered artifact makes the record
 disagree with what people received; a dump because it is evidence of a moment.
 
-✅ **`architecture/` is the one long-lived edited view, and only the owner writes it.** One written by an agent
-fails worse than a stale one: it becomes the most-linked document in the vault with no dated
-evidence positioned to contradict it, and nothing in the system is placed to disagree with it. Agents
-produce the dated `reference/` traces behind it and **contradict it with them** — which is an ESCALATED
-item, and the loop that keeps it honest.
+✅ **`architecture/` is the one long-lived edited view, and it carries the owner's judgement.** The
+failure it guards against is a document acquiring authority nobody granted it: it becomes the
+most-linked thing in the vault with no dated evidence positioned to contradict it. Agents produce the
+dated `reference/` traces behind it and **contradict it with them** — an ESCALATED item, and the loop
+that keeps it honest.
+
+⏳ **Narrowed 2026-08-24, because the first wording was too strong.** It said *only the owner writes
+it*, full stop — and that blocked a legitimate case: an agent embedded in a codebase, holding real
+accumulated understanding of that system, being distilled into a portrait of it. That agent is often
+the **best** placed author, and the rule had to be overridden in practice, which is the signal a rule
+is wrong rather than merely inconvenient.
+
+The line is **provenance**, not authorship. **This vault's own machinery agents never write one** —
+`curator`, `scout` and the two capture skills read *documents*, not systems, so their output would be
+a confident summary of the corpus rather than of the thing. An agent that understands the system may
+draft; it becomes an `architecture/` document when the owner has reviewed it, and it **names its
+drafter** so a later reader can weigh it. What is forbidden is not an agent's keystrokes — it is an
+unreviewed model of a system wearing the owner's authority.
 
 ## 4. The document ontology
 
@@ -338,7 +351,7 @@ history rather than rebuild it.
 | A disposition states its basis | Silent inference is the failure; inference itself is not | An unstated basis nobody later needed |
 | One thread per workstream | Two threads under one prefix put two agents on one path with an advisory warning between them | Two concurrent threads sharing an orientation without either being pushed the other's warnings |
 | Every metric carries the date it was taken | Undated figures invite every later agent to correct them | Agents agreeing on an undated figure across a month |
-| The owner writes `architecture/` | One written by an agent is confident, most-linked, and uncontradicted | An agent-written architecture document surviving a trace that disagreed with it |
+| `architecture/` carries the owner's reviewed judgement, and names its drafter | An unreviewed model of a system becomes confident, most-linked and uncontradicted. The vault's own agents read documents rather than systems, so they never draft one | A drafted-then-reviewed architecture document surviving a trace that disagreed with it |
 | Prose in a definition does not fire; a tool with an exit code does | Every measured instance of a rule silently not firing was fixed by moving it into a tool | A rule holding across several passes on prose alone |
 
 ## 10. Three tool-design rules the set was built on

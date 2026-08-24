@@ -36,8 +36,14 @@ One rule, and everything else follows from it: **every document in the vault is 
   that cannot leave them stale", not "rename and then go check".
 - **A view is regenerated wholesale, never patched.** Each thread's current orientation, and the vault
   index. Safe to rewrite from scratch precisely because the records behind it are intact.
-- **`architecture/` is the owner's** — the one long-lived edited view. Agents produce the traces behind
-  it and contradict it with them; they do not write it.
+- **`architecture/` is the owner's judgement, and that is a rule about provenance, not about agents.**
+  **Lipika's own agents never write one** — they read documents, not systems, so what they would
+  produce is a confident summary of the vault rather than of the thing it describes. **An agent with
+  real accumulated understanding of the system being described may draft one**, and often is the best
+  placed to; it becomes an `architecture/` document when the owner has reviewed it, and it **names who
+  drafted it** so a later reader can weigh it. Either way, agents produce the dated traces behind it
+  and contradict it with them. Narrowed 2026-08-24: the old wording said *no agent writes one*, which
+  blocked distilling an agent that genuinely understood a codebase, and had to be overridden.
 - **`epics/` and `grand-plans/` are the owner's prose, not the owner's files.** An epic *cites* its
   threads, and which threads exist is mechanical — an agent may maintain the citation list, and should.
   The framing, the judgement and whether an effort is parked stay the owner's.
