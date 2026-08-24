@@ -1,11 +1,19 @@
 {
   "name": "lipika",
-  "version": "0.1.0",
-  "description": "Agents and tools that maintain a knowledge-base vault of long-form engineering docs: an append-only capture skill, a frontier clerk, a librarian that consolidates one scope, a curator for what crosses scopes, and a read-only scout. Use when writing session context to a vault, reconciling a workstream's plan of record, or consolidating notes.",
+  "version": "0.2.0",
+  "description": "Agents, skills and tools that maintain an external knowledge-base vault of long-form engineering docs. Two capture skills -- pickup on the way in, context-dump on the way out -- a curator for the shared surfaces, a read-only scout, a vault-normalize migrator for a vault at an older shape, and the lipika command-line tools. Use when orienting at the start of a session that will touch the vault, writing a handoff, or bringing a cloned vault up to the current shape.",
   "author": {
     "name": "Dennis Collinson"
   },
   "repository": "https://github.com/dnsco/lipika",
   "license": "MIT",
-  "keywords": ["knowledge-base", "obsidian", "vault", "agents", "handoff", "memory", "pkm"]
+  "keywords": [
+    "knowledge-base",
+    "obsidian",
+    "vault",
+    "agents",
+    "handoff",
+    "memory",
+    "pkm"
+  ]
 }

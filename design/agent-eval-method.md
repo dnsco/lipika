@@ -55,8 +55,15 @@ at a timer. Suspected cause: a watcher registered on the link that never fires w
 which would make the staleness **unbounded**. **Prompt caching is not the mechanism** — it keys on the exact
 token prefix, so changed text is a cache miss and the new text runs.
 
-Consequence for this method: **probe before you profile, always**, because nothing reports which version is
-live. Do not wait out an interval; there is no measured interval to wait out.
+**Resolved 2026-08-24 by deploying instead of waiting.** Lipika installs as a plugin, and the installed copy
+is a versioned snapshot rather than a live view of the tree. So a round now *deploys*: bump the version in both
+`.claude-plugin/` manifests, `claude plugin marketplace update lipika`, `claude plugin update lipika@lipika`,
+restart. Measured the same day: **at an unchanged version, `install`, `update` and `marketplace update` are all
+silent no-ops** — the bump is what makes a deploy happen, and skipping it measures the previous round.
+
+That dissolves the staleness question rather than managing it: each round leaves a distinct versioned directory,
+so which version is live is a number you can print. **Probe anyway** — it costs one question and it is the only
+check that reads behaviour rather than a manifest.
 
 **Probe behaviourally. Never ask a role to quote its own definition.** Measured the same day: a `scout` asked to
 quote the command it had been told to use returned a rule that has **never existed in any version of that
@@ -69,9 +76,9 @@ and read the transcript for the call. What an agent did is not confabulable; wha
 
 | artifact | location |
 |---|---|
-| agent definitions (live) | `~/.claude/agents/<role>.md` |
-| agent definitions (both repos) | `agents/<role>.md` in this vault and in the template |
-| the dump skill | `~/.claude/skills/context-dump/SKILL.md`, `skills/context-dump/SKILL.md` in both repos |
+| definitions, as authored | `agents/<role>.md` and `skills/<name>/SKILL.md` in Lipika. One copy; there is no template to port to |
+| definitions, as RUNNING | `~/.claude/plugins/cache/lipika/lipika/<version>/` — a snapshot taken at deploy. Editing the tree does not change it |
+| which version is running | `claude plugin list`, and the version directory above. This is the answer to "was my change in force?" |
 | subagent transcripts | `~/.claude/projects/<project-slug>/<session-id>/subagents/agent-<agentId>.jsonl` |
 | task-output symlinks to the same files | `/private/tmp/claude-502/<slug>/<session-id>/tasks/<id>.output` |
 | frozen profiling reports | `sources/evals/YYYY-MM-DD-HHMM-<subject>-profile.md`, **`HHMM` from `date -u` when you write it** — not the run's start, not its completion |

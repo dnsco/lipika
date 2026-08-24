@@ -4,12 +4,13 @@
     "name": "Dennis Collinson",
     "url": "https://github.com/dnsco"
   },
+  "description": "Machinery for maintaining a knowledge-base vault of long-form engineering docs: capture skills, a curator, a scout, and a vault migrator.",
   "plugins": [
     {
       "name": "lipika",
       "source": "./",
-      "description": "Agents and tools for a knowledge-base vault: capture, reconcile, consolidate, curate.",
-      "version": "0.1.0"
+      "description": "Machinery for a knowledge-base vault: the pickup and context-dump skills, a curator and a scout, a vault-normalize migrator, and the lipika tools.",
+      "version": "0.2.0"
     }
   ]
 }
