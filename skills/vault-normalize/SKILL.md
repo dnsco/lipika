@@ -98,18 +98,37 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
 
    ```bash
    ls -la ~/.claude/agents/ ~/.claude/skills/     # a symlink into the vault means it is still in use
+   claude plugin list                             # and see whether a plugin already provides it
    ```
+
+   **A `~/.claude/` symlink is no longer the only way machinery reaches a session.** Lipika installs as
+   a plugin, so its definitions may be served from `~/.claude/plugins/cache/` instead, under a
+   `lipika:` prefix. Absence of a symlink is not absence of use.
 
    Then `git rm -r` the class (a) and class (b) paths. Class (c) you do not touch. **A name in neither
    list that you nonetheless believe is a copy is a report line, not a deletion** — say what it is, say why
    you suspect it, and leave it.
 
-   Wire the vault up to the one remaining copy, and say you did:
+   Then wire the vault up to the one remaining copy — **install Lipika as a plugin; do not hand-make
+   symlinks** — and say you did:
 
    ```bash
-   ln -s $L/agents/<role>.md   ~/.claude/agents/<role>.md
-   ln -s $L/skills/<name>      ~/.claude/skills/<name>
+   claude plugin marketplace add <path-or-url-to-lipika>
+   claude plugin install lipika@lipika
+   # restart, then confirm:
+   claude plugin list
    ```
+
+   Skills and agents then arrive namespaced: `/lipika:pickup`, `/lipika:context-dump`, and the
+   `lipika:curator` and `lipika:scout` roles.
+
+   **Deleting vendored machinery without installing the replacement leaves the reader worse off than
+   before** — they have lost their copy and gained nothing. If the install cannot be completed, say so
+   and leave the vendored copy in place.
+
+   Hand-made symlinks from `~/.claude/` into a checkout were the old wiring and are retired: an edit to
+   a link's *target* may never load, so a definition change could silently fail to take effect. The
+   plugin copy is a versioned snapshot, refreshed by a deploy, and its version is printable.
 
 4. **Report a parked shelf. Do NOT hoist it.**
 

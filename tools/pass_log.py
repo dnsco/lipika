@@ -83,7 +83,10 @@ LOG_NAME = "pass-log.jsonl"
 BASELINE_KINDS = {"full"}
 # `eval` is developer work — profiling or measuring another agent's run. It is exempt from
 # the span budgets (its subject is a transcript, not the corpus) and it never consolidates.
-KINDS = ["full", "delta", "scout", "dump", "clerk", "convert", "eval", "rollover"]
+# "curate" was missing while `agents/curator.md` prescribed it, so the curator's FIRST command
+# failed on every run -- measured 2026-08-24. "clerk" and "convert" name retired roles and stay
+# only because past log entries carry them.
+KINDS = ["full", "delta", "scout", "dump", "curate", "clerk", "convert", "eval", "rollover"]
 RESULTS = ["consolidated", "incremental", "skipped", "aborted"]
 
 
