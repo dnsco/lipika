@@ -150,17 +150,25 @@ for three days and made `main` a fiction.
 
    *— everything below happens in the NEW session —*
 
-6. **PROBE BEFORE YOU MEASURE.** Ask a question the two versions answer *differently* and read what
-   the role **did**, not what it says about itself — one asked to quote its own definition returned a
-   rule that has never existed in any version of the file, in any repo. The deploy is verifiable, so
-   this is now a cheap confirmation rather than the only evidence:
+6. **GATE: prove the installed plugin IS the tree, or the eval is worthless.** This is the point of
+   the loop — a measurement of a stale copy measures the previous round and reports clean.
 
    ```bash
-   claude plugin list      # the version now serving
-   diff -rq skills "$HOME/.claude/plugins/cache/lipika/lipika/<version>/skills"
+   V=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+   for d in skills agents tools bin; do
+     diff -rq $d "$HOME/.claude/plugins/cache/lipika/lipika/$V/$d" || echo "STALE: $d"
+   done
    ```
-7. **Then curator, then eval**, scored against the graders verbatim.
-8. **Summarise the round where the next agent will read it**, and feed the findings back. That return
+
+   Any output means **stop and deploy** (step 3) before measuring anything. All four paths, not just
+   `skills` — an agent definition drifts as silently as a skill.
+7. **PROBE.** Ask a question the two versions answer *differently* and read what the role **did**, not
+   what it says about itself — one asked to quote its own definition returned a rule that has never
+   existed in any version of the file, in any repo. The gate above proves the *files* are current;
+   the probe proves the *running session* has read them, which a restart is required for and
+   `claude plugin list` does not tell you.
+8. **Then curator, then eval**, scored against the graders verbatim.
+9. **Summarise the round where the next agent will read it**, and feed the findings back. That return
    edge is the difference between a design that stays true and one that becomes aspirational.
 
 **Why a deploy step at all — this replaced a superstition.** The rule here used to be *wait 15
@@ -183,7 +191,7 @@ leaves a distinct, inspectable, versioned directory. "Which version is live" sto
 and becomes a number you can print. It also makes this machine match what anyone else installing
 Lipika runs, which the symlinks never did.
 
-**The one way this fails is forgetting step 3**, which silently measures the previous round. Unlike
+**The one way this fails is forgetting step 3**, which step 6 exists to catch —, which silently measures the previous round. Unlike
 the symlink failure it is *detectable* — compare the installed version against the tree — so it wants
 a `lipika doctor` check rather than this paragraph.
 
