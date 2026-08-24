@@ -104,14 +104,23 @@ for three days and made `main` a fiction.
 
 **The loop, and it is a loop:**
 
-1. **Seal the key first.** Write what the new version must do, as statements that can be *wrong*,
-   and **commit them before the change**. This is the TDD edge: the key is the test. A key written
-   afterwards silently agrees with whatever happened — measured, twice.
+1. **Write the graders first.** State what the new version must do, as statements that can be
+   *wrong*, and **commit them before the change**. This is the TDD edge: the grader is the test. One
+   written afterwards silently agrees with whatever happened — measured, twice.
+
+   *Grader* is `claude plugin eval`'s word for exactly this, so it is ours. Until that tool is
+   ungated — it prints *"currently in early access"* on `2.1.241`, checked 2026-08-24 — graders are
+   prose in the vault's `sources/evals/` and a human scores them. When it opens they become
+   `evals/<case>/graders/*.md` and score themselves. **The name changed to match the tooling we are
+   heading for; the rule did not.**
 2. **Author here**, once.
 3. **Dump**, before anything measures. It is what a cold agent reads, so measuring against a tree the
    handoff has not been written into measures the wrong thing.
-4. **DEPLOY, and it is not optional.** Editing the tree changes nothing about what runs — the
-   installed plugin is a **copy**, frozen at its version. Bump the version in **both**
+4. **DEPLOY, if the change ships anything.** A change under `skills/`, `agents/`, `tools/` or `bin/`
+   is carried by the plugin, and **editing the tree changes nothing about what runs** — the installed
+   copy is frozen at its version. A change to `CLAUDE.md`, `design/` or `README.md` ships nothing and
+   needs no deploy: those are read from the checkout. When in doubt, deploy; it is cheap and a missed
+   one is silent. Bump the version in **both**
    `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, then:
 
    ```bash
@@ -134,7 +143,7 @@ for three days and made `main` a fiction.
    ```bash
    diff -rq .claude-plugin/../skills "$HOME/.claude/plugins/cache/lipika/lipika/<version>/skills"
    ```
-7. **Then curator, then eval**, scored against the sealed keys verbatim.
+7. **Then curator, then eval**, scored against the graders verbatim.
 8. **Summarise the round where the next agent will read it**, and feed the findings back. That return
    edge is the difference between a design that stays true and one that becomes aspirational.
 
@@ -167,7 +176,12 @@ a `lipika doctor` check rather than this paragraph.
 
 `design/agent-eval-method.md` is the procedure in full. Read it before you touch a definition.
 
-**`lipika recall-check <pre-change-ref> <path>` proves a rewrite dropped no rule.** Its subject is a
+**`lipika recall-check <pre-change-ref> <path>` proves a rewrite dropped no rule — provisionally.**
+It is a **bridge, not settled machinery**: it verifies *text* where a grader verifies *behaviour*, and
+a dropped rule that changes nothing matters less than a kept rule nobody follows. Its record is thin —
+9 flags and 1 real drop restored in one round, 6 runs and 1 real catch in another — and nothing
+invokes it automatically, so it fires only when someone remembers. **Dies when behavioural graders run
+against definitions.** Do not extend it in the meantime. Its subject is a
 definition here, not a vault document — nothing in the vault is edited, so nothing there needs it. **It
 is not the way to check a deliberate deletion**: a pass whose purpose is removing rules flags every one
 of them, and judging a hundred intended retirements in writing is a great deal of work for no signal.
