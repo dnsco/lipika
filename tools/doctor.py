@@ -30,6 +30,52 @@ HERE = Path(__file__).resolve().parent
 BIN = HERE.parent / "bin" / "lipika"
 
 
+def installed_vs_tree():
+    """Is the installed plugin the checkout? Returns a problem count.
+
+    THE ONE FAILURE THE LOOP CANNOT OTHERWISE CATCH. What runs is the installed snapshot, so
+    editing the tree changes nothing until a deploy -- and at an UNCHANGED version `install`,
+    `update` and `marketplace update` all report success and copy nothing (measured 2026-08-24,
+    all three). So a forgotten deploy is silent, and the next round measures the previous one and
+    reports clean. It cost three days once.
+
+    Until now this comparison existed only as a shell loop pasted into a handoff prompt and run by
+    hand at the top of a session. A rule with an exit code fails loudly where a rule a human must
+    remember does not fail at all.
+    """
+    try:
+        sys.path.insert(0, str(HERE))
+        import handoff_prompt as hp
+    except Exception as e:
+        print(f"  note     cannot compare installed vs tree: {e}")
+        return 0
+
+    try:
+        inst = hp.installed_dir(hp.DEFAULT_CACHE.expanduser())
+    except Exception:
+        print("  note     no installed plugin found; this is a dev checkout, nothing to compare")
+        return 0
+
+    tree = HERE.parent
+    declared = hp.manifest_version(tree)
+    stale = hp.differing(tree, inst)
+
+    if declared != inst.name:
+        print(f"  STALE    tree declares {declared}, installed is {inst.name} -- the tree has not "
+              f"been deployed")
+        print("           bump BOTH .claude-plugin manifests if they are equal, then deploy; at an "
+              "unchanged")
+        print("           version every deploy command is a silent no-op")
+        return 1
+    if stale:
+        print(f"  STALE    installed {inst.name} differs from the tree in: {', '.join(stale)}")
+        print("           what runs is the installed copy, so these edits are not live. Bump both "
+              "manifests and deploy.")
+        return 1
+    print(f"  ok       installed {inst.name} IS the tree (skills, agents, tools, bin)")
+    return 0
+
+
 def main():
     problems = 0
 
@@ -65,6 +111,8 @@ def main():
         print(f"  MISSING  no vault resolved: {e}")
         print(f"           write ~/.config/lipika/config.json, or pass --vault, or set "
               f"$LIPIKA_VAULT")
+
+    problems += installed_vs_tree()
 
     for name in ("git", "python3"):
         p = shutil.which(name)

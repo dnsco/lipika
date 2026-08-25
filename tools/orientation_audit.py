@@ -336,6 +336,32 @@ def main(argv):
     print(f"{'parent  ' if split else 'previous'}  {os.path.relpath(prev_p, vault)}")
     if split:
         print("  a split: items that do not bear on this thread are meant to stay behind.")
+    else:
+        # SAY WHICH COMPARISON THIS IS. Measured 2026-08-25: a thread had two orientations written
+        # the same afternoon, both declaring the same parent and both opening "this thread's first
+        # orientation". The parent branch above needs len(docs) == 1, so this ran instead and
+        # reported "clean: every prior item is carried", exit 0 -- over a comparison of two
+        # same-day siblings. Correct as far as it went, and read as evidence the SPLIT was sound,
+        # which nothing had checked. A sibling comparison is the right baseline once a thread has
+        # two orientations; the failure was never naming its scope.
+        # ANY orientation in the thread, oldest first -- not just the current one. `from:` belongs
+        # on a thread's FIRST orientation and is correctly absent from every later one, so reading
+        # only the current document loses the parent the moment a second handoff lands. That is the
+        # same defect as reading only the newest, one level up, and it is why the first version of
+        # this check stayed silent on the very run that motivated it.
+        declared = next(
+            (p for p in (parent_of(open(d, encoding="utf-8").read(), vault) for d in docs) if p),
+            None,
+        )
+        if declared and orientations(declared):
+            print(f"  SCOPE: this thread was split from {os.path.basename(declared)}, and this run "
+                  f"does NOT check that split.")
+            print("  It compares the two orientations named above. What the split left behind in "
+                  "the parent is")
+            print("  neither checked nor re-flagged below — only the first handoff after a split "
+                  "ever compares")
+            print("  against the parent, and once a second orientation exists that comparison "
+                  "cannot be redone here.")
 
     prior = live_items(prev)
     if not prior:
