@@ -194,6 +194,23 @@ consumer — `scope_recon` reporting which documents *lacked* it — and nothing
 `from:`, which `orientation-audit` follows to find a parent thread's items. A second mostly-empty field
 would have been a third thing to keep true, defended by a nag. The nag is retired.
 
+**`up:` itself was retired 2026-08-25, and the field is gone from the vault.** Measured before removal:
+of 170 documents carrying it, **139 restated their own folder path**, 15 more named a stale short form
+of their thread that the folder had since dated, and the sole apparent reader —
+`tools/handoff_prompt.py` — turned out not to read it at all. It matched any `[[slug]]` in a file's
+first 1200 characters while its docstring claimed to read the key, so nobody could see the two drift
+apart. **That gap is the mechanism**: a field with no reader accumulates purposes, because the only
+description of its behaviour is prose nothing checks.
+
+**`about:` replaces it on exactly the documents that live outside what they describe** — 11 of them:
+`sources/evals/`, `epics/`, `external/`, `reference/`. There the folder genuinely cannot say which
+thread the document concerns. **It means only that**, and giving it hierarchy, containment or
+parenthood is the failure repeating under a new spelling.
+
+Three loose documents in `workstreams/parked/` had to move into the threads their `up:` named before
+the strip, or the deletion would have orphaned them — they are the ones `architecture-candidates`
+reported as *in no thread and cannot vote*, and moving them retired that finding too.
+
 ✅ **A split COPIES what still bears on the new thread; it does not point at it.** The new thread's first
 orientation carries the parent's still-live items across, reworded freely and each citing its source, and
 names the parent in `from:`. Items that do not bear on the new thread stay behind — that is what splitting

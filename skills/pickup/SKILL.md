@@ -93,8 +93,21 @@ check. Grand plans and epics are the owner's; agents write workstreams.
    - **A missing architecture document**, if you found one.
    - **That this has become two threads**, if it has.
 
-8. **Ask what the owner wants explored first, then enter plan mode.** Ask before a plan has formed, not
-   after. This asks for an agenda, not for permission.
+8. **Summarise in plain language before you ask anything.** Laconic, terse, salient: what you now
+   know, in the words you would use to someone who has not read the thread. This is not the step-7
+   report again — that is for orienting; this is for someone about to answer a question.
+
+   **The live set is written in vocabulary the owner never agreed to.** Grader keys, agent-local
+   codenames, design terms sealed in sessions he was not in. They read as shared and are not.
+
+9. **Ask what the owner wants explored first, using only words your summary introduced.** Ask before a
+   plan has formed, not after. This asks for an agenda, not for permission.
+
+   **No question or option may name a term that summary did not define.** If an option needs one, the
+   summary earns it first, or the option is rewritten without it. Measured 2026-08-25: a run put
+   *"Key 2's own falsifier"*, *"span on the one operation inside the north star"* and *"the weaker
+   moment"* to the owner as though the frames were shared. He could not answer what he could not
+   parse, and said so.
 
    **Carry your findings into their answer rather than dropping them.** When the answer redirects the
    work, say which findings still bear on it.

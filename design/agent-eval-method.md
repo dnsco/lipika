@@ -93,8 +93,54 @@ D=~/.claude/projects/<project-slug>/<session-id>/subagents
 stat -f '%Sm' -t '%Y-%m-%d-%H%M' "$D/agent-<agentId>.jsonl"
 ```
 
-Frontmatter on an eval: `type: source`, `kind: eval`, `date`, `time`, `subject`, `tags: [..., verbatim]`, plus a
-provenance paragraph naming the transcript it was read from.
+Frontmatter on an eval: `type: eval`, `date`, `tags`, `about:`, plus a provenance paragraph naming the
+transcript it was read from. Profiles additionally carry `subject`. **This prescription was corrected
+2026-08-25** — it had said `type: source` / `kind: eval` / `time` / `subject`, which no document
+written since 2026-08-21 followed, and it omitted `about:`, which is the only field anything selects
+on.
+
+**`about:` names the thread the eval concerns, and it is the only frontmatter link here**, because
+`sources/evals/` is flat and the folder cannot say which thread a document is about.
+`tools/handoff_prompt.py` parses it to find the graders for a handoff. **This is the one place the key
+belongs.** It replaced `up:`, retired 2026-08-25 after being measured across the vault: `up:` restated
+the folder path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing
+read its value. **Do not give `about:` `up:`'s meaning.** It says *which thread this is about*, never
+hierarchy, containment or parenthood — that is how the retired field kept acquiring purposes.
+
+## The three kinds, and the four verdicts
+
+**A grader, a score and a profile are different artefacts** and `sources/evals/` holds all three. The
+distinction is carried by the vault's hand-maintained `evals.md`, not by frontmatter — the documents
+are records and are not edited to add a field.
+
+- **grader** — a prediction sealed and committed **before** the change it tests.
+- **score** — a verdict, written after the run, against a grader's text verbatim.
+- **profile** — a measurement of one run. Not a pass/fail.
+
+**Verdicts are PASS, FAIL, UNEXERCISED and SPENT.**
+
+- **UNEXERCISED** — the prediction never got tested. Scoring it PASS is how a round learns nothing and
+  believes it learned something. Protect this verdict.
+- **SPENT** — the grader described state that no longer existed by the time anyone read it. That is a
+  fault in the grader, not in the change. **So every grader carries its precondition**: the state it
+  assumes. Named 2026-08-25, after four clauses across K3 and K4 turned out to be exactly this.
+
+**When does a change need a grader?** A **definition** change does — a definition has no mechanical
+oracle, so a prediction written in advance is the only thing that can be wrong. A **tool** change gets
+a hand-audited **red case and green case** instead; that is a stronger instrument, not a weaker one.
+This states a boundary that was previously an exception: three defect fixes shipped without graders in
+August 2026 and were defensible for exactly this reason, and an unstated exception widens.
+
+**Graders falsify; they do not show improvement.** Improvement needs a baseline against the version
+being replaced, and that is retired — *never eval the version you are replacing; it measures a system
+being deleted*. If improvement signal is wanted it comes from comparing profiles across rounds, which
+is a different artefact and why the kinds are named at all.
+
+**The corpus is a lab notebook, not a suite.** Audited 2026-08-25: all 26 documents are
+round-specific, none evergreen, and ten profile roles that no longer exist. A grader names a specific
+change at a specific commit, so it cannot be re-run. *"Run every eval in this folder"* would need
+evals written against invariants instead of changes; none exist yet. `evals.md` is where the first
+would be listed.
 
 ## What a profile is FOR — read for what is obviously wrong, first
 

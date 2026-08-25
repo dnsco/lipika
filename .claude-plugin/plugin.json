@@ -1,6 +1,6 @@
 {
   "name": "lipika",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Agents, skills and tools that maintain an external knowledge-base vault of long-form engineering docs. Two capture skills -- pickup on the way in, context-dump on the way out -- a curator for the shared surfaces, a read-only scout, a vault-normalize migrator for a vault at an older shape, and the lipika command-line tools. Use when orienting at the start of a session that will touch the vault, writing a handoff, or bringing a cloned vault up to the current shape.",
   "author": {
     "name": "Dennis Collinson"
