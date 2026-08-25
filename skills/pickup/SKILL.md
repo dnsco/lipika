@@ -23,15 +23,29 @@ check. Grand plans and epics are the owner's; agents write workstreams.
 
 ## Do
 
-1. **Resolve where you are.**
+1. **You must be given a thread. If you were not, ask — do not pick one.**
 
    ```bash
    cd "$(lipika vault-config path)"
-   git log -12 --name-only --pretty=format:'%h %ad %s' --date=short -- workstreams/
+   lipika threads          # what is live, one line each, newest first
    ```
 
-   Name the thread and let the owner redirect you. If the task described matches no live workstream, say
-   so — that is usually a new thread rather than a wrong guess.
+   **Recency is not a resolver.** Several threads accrue in one vault on the same day — this machinery
+   and a product migration in another repo are two different questions with two different checkouts —
+   and the commit log interleaves them hour by hour. Measured 2026-08-25: picking "the most recently
+   touched workstream" hands a product session the machinery thread, and two hours earlier would have
+   done the exact reverse. Nothing reports the mismatch, because nothing knows what you meant.
+
+   So: **name the candidates and stop.** One question, listing what is live, and wait. This costs a
+   turn; reading the wrong thread costs the session. `vault_config` refuses rather than guessing its
+   vault for the same reason — a tool that guesses its target curates the wrong tree and reports
+   success.
+
+   The one case where you may proceed unasked is a vault with exactly **one** live thread, where there
+   is nothing to disambiguate. Say that is why.
+
+   If the task you were given matches no live thread, say so — that is usually a new thread rather than
+   a wrong guess.
 
 2. **Read the newest orientation, and only that one.**
    `workstreams/<ws>/orientation/` sorts by name; the last is current. Read one.

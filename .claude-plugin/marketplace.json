@@ -10,7 +10,7 @@
       "name": "lipika",
       "source": "./",
       "description": "Machinery for a knowledge-base vault: the pickup and context-dump skills, a curator and a scout, a vault-normalize migrator, and the lipika tools.",
-      "version": "0.2.6"
+      "version": "0.3.0"
     }
   ]
 }
