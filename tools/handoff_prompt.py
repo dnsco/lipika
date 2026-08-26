@@ -143,11 +143,17 @@ def thread_lineage(tdir):
     slugs = [tdir.name]
     o = tdir / "orientation"
     if o.is_dir():
-        names = sorted(o.glob("*.md"))
-        if names:
-            m = FROM.search(names[-1].read_text(errors="replace")[:1200])
+        # ANY orientation, not just the newest. The 0.2.6 fix read only the newest, which carries
+        # `from:` on a thread's FIRST orientation and never again -- so the very next handoff
+        # dropped the parent's graders and the split-severance bug came back by another route.
+        # Caught 2026-08-25 on the second handoff into this thread: five eval documents became one,
+        # silently, at exit 0. A thread's parentage does not change, so the oldest orientation that
+        # declares one is the answer.
+        for name in sorted(o.glob("*.md")):
+            m = FROM.search(name.read_text(errors="replace")[:1200])
             if m:
                 slugs.append(m.group(1).strip())
+                break
     return slugs
 
 
@@ -174,23 +180,46 @@ def graders_for(vault, tdir):
     return hits
 
 
-def compose(vault, tdir, version, graders, orientation):
+def compose(vault, tdir, version, graders, orientation, tree=None, cache=None):
+    """The next session's prompt. Machinery framing ONLY when a deploy was declared.
+
+    THE DEFECT THIS FIXES: this emitted the deploy sentence, the version and the four-directory
+    gate for EVERY thread, unconditionally, at exit 0. Measured 2026-08-25 against
+    `embedded-jetty-docker` -- a service migration that has never deployed this plugin -- it
+    asserted "The plugin was redeployed to 0.2.6 and this session is the first to run after the
+    restart" and told the reader that any output from the gate meant stop and deploy. Pasted into
+    that thread's own checkout, three legs of the gate error and the fourth prints
+    "Only in agents: .gitignore", because that repo has an `agents/` directory holding
+    opentelemetry-javaagent.jar and postgresql.jar. A plausible staleness finding, not an obvious
+    category error, inside a block the skill says to paste verbatim.
+
+    `deployed` is an ARGUMENT and never an inference. The tool knows the installed version; it
+    cannot know whether this session deployed, and it must not guess from the thread's name, path
+    or tags. Inferring would rebuild `up:`: a value nothing declared, read by one caller, explained
+    by none.
+    """
     rel = tdir.relative_to(vault.path)
-    lines = [
-        f"Run /lipika:pickup on {rel}.",
-        "",
-        f"The plugin was redeployed to {version} and this session is the first to run after the",
-        "restart, so start at step 6 of the loop -- prove the installed plugin is the tree before",
-        "measuring anything:",
-        "",
-        f'  V={version}',
-        '  for d in skills agents tools bin; do',
-        '    diff -rq $d "$HOME/.claude/plugins/cache/lipika/lipika/$V/$d" || echo "STALE: $d"',
-        "  done",
-        "",
-        "Any output means stop and deploy before measuring.",
-        "",
-    ]
+    lines = [f"Run /lipika:pickup on {rel}.", ""]
+    if version:
+        # Absolute paths on BOTH sides. The relative `$d` form silently compared whatever
+        # directory the next session happened to open in -- correct only from this checkout,
+        # which is the one place it proves nothing.
+        gate_tree = tree if tree else Path.cwd()
+        lines += [
+            f"The plugin was redeployed to {version} and this session is the first to run after the",
+            "restart, so start at step 6 of the loop -- prove the installed plugin is the tree before",
+            "measuring anything:",
+            "",
+            f'  V={version}',
+            f'  T="{gate_tree}"',
+            f'  I="{cache}"',
+            '  for d in skills agents tools bin; do',
+            '    diff -rq "$T/$d" "$I/$V/$d" || echo "STALE: $d"',
+            "  done",
+            "",
+            "Any output means stop and deploy before measuring.",
+            "",
+        ]
     if graders:
         # Deliberately "eval documents", not "graders". `about:` cannot tell a sealed grader from the
         # record that scored it -- measured on this tool's own first run, which told a session to
@@ -204,9 +233,11 @@ def compose(vault, tdir, version, graders, orientation):
         for g in graders:
             lines.append(f"  {g.relative_to(vault.path)}")
         lines.append("")
-    else:
-        lines.append("No graders are recorded against this thread; there is nothing to score.")
-        lines.append("")
+    # No `else`. This used to state "No graders are recorded against this thread; there is nothing
+    # to score" -- a confident negative, twice wrong. It fired over six unscored clauses at a split
+    # (fixed 0.2.6 by following `from:`), and it answers a question a product thread never asked:
+    # a service migration has no graders and needs no sentence saying so. Silence is the honest
+    # output for "nothing found".
     if orientation:
         lines.append(
             f"The orientation pickup will read is {orientation.relative_to(vault.path)} -- "
@@ -236,12 +267,35 @@ def main(argv=None):
         default=None,
         help="checkout to compare against the installed copy (defaults to this script's own)",
     )
+    ap.add_argument(
+        "--deployed",
+        action="store_true",
+        help="this session redeployed the plugin, so the next one owes a restart and the step-6 "
+             "gate. WITHOUT this, no version, no gate and no restart framing is emitted -- a "
+             "thread that deployed nothing must not be told to deploy. Never inferred.",
+    )
     args = ap.parse_args(argv)
 
     try:
         vault = vault_config.resolve(args.vault)
+        tdir = thread_dir(vault, args.thread)
         tree = Path(args.tree).resolve() if args.tree else tree_root()
-        inst = installed_dir(Path(args.cache).expanduser())
+        cache = Path(args.cache).expanduser()
+
+        if not args.deployed:
+            # No deploy, no claim. The tree-vs-installed comparison exists so the next session does
+            # not MEASURE a stale copy; a thread that is not measuring this machinery has nothing
+            # to be stale about, and refusing there would block every product handoff on the state
+            # of a repo it never touches.
+            body = compose(
+                vault, tdir, None, graders_for(vault, tdir), newest_orientation(tdir)
+            )
+            print("```")
+            print(body)
+            print("```")
+            return 0
+
+        inst = installed_dir(cache)
         version = inst.name
 
         stale = differing(tree, inst)
@@ -263,9 +317,9 @@ def main(argv=None):
                 "then run this again."
             )
 
-        tdir = thread_dir(vault, args.thread)
         body = compose(
-            vault, tdir, version, graders_for(vault, tdir), newest_orientation(tdir)
+            vault, tdir, version, graders_for(vault, tdir), newest_orientation(tdir),
+            tree=tree, cache=cache,
         )
         # The fence is emitted here, not by the caller: a definition that has to wrap this in
         # prose is a definition that can wrap it wrongly, and the paste is what survives.

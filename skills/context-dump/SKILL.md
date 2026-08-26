@@ -51,13 +51,22 @@ project does **not** load automatically — read it if you have not.
 
 ## Do
 
-1. **Find the home, name your choice, let the owner redirect.** Usually the most recently touched workstream.
+1. **The home is the thread this session worked on. If you cannot name it, ask — do not infer it.**
    **A workstream is one question being answered.** When the question has changed, the answer is a new
    dated workstream — that is the normal path, not the exception, and threads are meant to be short. More
    of the same one only when it is the same question.
 
+   **Never resolve it by recency.** This used to say *"usually the most recently touched workstream"*,
+   and several threads accrue in one vault on the same day — this machinery and a product migration in
+   another repo are two questions with two checkouts, interleaved commit by commit. A dump filed against
+   the wrong thread is not a small error: it puts a product finding into the machinery's live set, where
+   the next machinery session carries it forward as its own. Nothing detects it.
+
+   You did the work, so you know which thread it was — that is why this asks *you* and not the log.
+
    ```bash
-   cd "$(lipika vault-config path)" && git log -12 --name-only --pretty=format:'%h %ad %s' --date=short -- workstreams/
+   cd "$(lipika vault-config path)"
+   lipika threads                                     # what is live, if you need to see the names
    lipika pass-log active --scope workstreams/<ws>     # is anyone else in here?
    ```
 
