@@ -24,6 +24,7 @@ WHY THIS EXISTS
 import argparse
 import filecmp
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -119,19 +120,56 @@ def newest_orientation(tdir):
     return names[-1] if names else None
 
 
+ABOUT = re.compile(r'^about:\s*"?\[\[([^\]|]+)', re.M)
+
+
+FROM = re.compile(r'^from:\s*"?\[\[([^\]|]+)', re.M)
+
+
+def thread_lineage(tdir):
+    """This thread's slug, then its parent's, following `from:` on the newest orientation.
+
+    A SPLIT SEVERS GRADER SELECTION, and it does so silently -- measured 2026-08-25, on the split
+    that this function was written during. Graders are sealed `about:` the thread they were written
+    in; the work then moves to a successor thread, and the successor has none of its own. The tool
+    printed "No graders are recorded against this thread; there is nothing to score" over six
+    unscored clauses, exit 0, in a block meant to be pasted verbatim into the next session.
+
+    Following `from:` is what `orientation-audit` already does to find a parent's items, so the
+    edge exists and was simply not read here. One hop is deliberate: a chain of threads should not
+    accumulate every grader ever written, and a grader more than one split old is almost certainly
+    spent.
+    """
+    slugs = [tdir.name]
+    o = tdir / "orientation"
+    if o.is_dir():
+        names = sorted(o.glob("*.md"))
+        if names:
+            m = FROM.search(names[-1].read_text(errors="replace")[:1200])
+            if m:
+                slugs.append(m.group(1).strip())
+    return slugs
+
+
 def graders_for(vault, tdir):
-    """Every eval document whose `up:` names this thread. Mechanical, so it cannot go stale.
+    """Every eval document whose `about:` names this thread or the one it split from.
 
     Sorted newest-first by filename, which is how the vault's stamps sort.
+
+    This parsed a wikilink out of the whole head until 2026-08-25 -- any `[[slug]]` in the first
+    1200 characters, frontmatter or body -- while its docstring claimed it read a key. Nobody
+    could see the drift, because a substring match agrees with the key most of the time. That gap
+    is how `up:` acquired purposes it never had: the docstring was the only description of the
+    behaviour, and it was wrong. Match the key, so the claim and the code fail together.
     """
     evals = vault.path / "sources" / "evals"
     if not evals.is_dir():
         return []
-    slug = tdir.name
+    wanted = set(thread_lineage(tdir))
     hits = []
     for p in sorted(evals.glob("*.md"), reverse=True):
-        head = p.read_text(errors="replace")[:1200]
-        if f"[[{slug}]]" in head:
+        m = ABOUT.search(p.read_text(errors="replace")[:1200])
+        if m and m.group(1).strip() in wanted:
             hits.append(p)
     return hits
 
@@ -154,7 +192,7 @@ def compose(vault, tdir, version, graders, orientation):
         "",
     ]
     if graders:
-        # Deliberately "eval documents", not "graders". `up:` cannot tell a sealed grader from the
+        # Deliberately "eval documents", not "graders". `about:` cannot tell a sealed grader from the
         # record that scored it -- measured on this tool's own first run, which told a session to
         # "run" a scoring record. Naming a distinction the frontmatter does not carry would be a
         # confident wrong answer; naming what was actually found is not.

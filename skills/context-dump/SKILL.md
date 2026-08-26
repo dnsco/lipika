@@ -80,7 +80,8 @@ project does **not** load automatically — read it if you have not.
    is ahead of the clock; it tells you when that heals. Wait — never invent a later name.** Inventing is
    what put those names ahead in the first place.
 
-   Frontmatter: `type` / `status` / `date` / `tags` / `up:`.
+   Frontmatter: `type` / `status` / `date` / `tags`. **No `up:`** — retired 2026-08-25; the folder
+   already says which thread this is.
 
    - **What you did and what came of it** — PR numbers, commit shas, branch names, what is green and what
      is red.
@@ -129,7 +130,6 @@ project does **not** load automatically — read it if you have not.
    type: orientation
    status: current
    date: YYYY-MM-DD
-   up: "[[YYYY-MM-DD-<thread>]]"
    from: "[[YYYY-MM-DD-<parent-thread>]]"   # only on a thread's FIRST orientation
    ---
 
@@ -167,11 +167,18 @@ project does **not** load automatically — read it if you have not.
    lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried
    ```
 
-   **Then add the thread's line to the index yourself.** Append one entry to `README.md`
-   `## Workstreams` — the thread link, its question in one clause, and the epic it serves. A thread
-   nobody has indexed is invisible to a human browsing, and a split should not have to wait on a
-   `curator` run to become visible. **Append your one entry; do not regenerate the list** — that is
-   the curator's, and two authors regenerating one view is how it starts disagreeing with itself.
+   **Do not touch `README.md`. The index has exactly one author, and it is the `curator`.**
+
+   **A new thread is invisible to a human browsing the index until a curator runs, and that is the
+   accepted cost.** Say so if it matters to the owner; do not fix it here. This step used to append
+   the thread's line — link, question, epic — while the curator regenerated the same list as *what
+   the thread is, live or finished, with dates*. Two authors, two shapes: an appended line never
+   looked curated, and the next curator run overwrote it. Removed 2026-08-25 on the ruling that
+   keeping a view current buys churn and disagreement, and that a view regenerated rarely is worth
+   more than one patched constantly.
+
+   **Do not compensate by asking for a curator run** — no cadence, no trigger, no "run the curator
+   after a split". That reintroduces exactly the churn this removed.
 
 5. **Commit** in the vault, which is its own repo. Stage **specific paths** — never `git add -A`, never a
    bare `commit`, because other sessions write here.
@@ -210,7 +217,7 @@ project does **not** load automatically — read it if you have not.
    then run it again.
 
    It composes the prompt from the machine — the installed version, that version's gate command, and
-   every grader whose `up:` names this thread. **It does not restate the live set**, and neither should
+   every grader whose `about:` names this thread. **It does not restate the live set**, and neither should
    you: the orientation you just wrote is what the next session reads.
 
 ## Don't

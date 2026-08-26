@@ -62,8 +62,13 @@ being answered and has **no status field** — the date it last accrued is the w
 that stopped is simply not listed as live. A second shelf concept at that tier would only disagree with
 the date.
 
-Membership is prose in the epic. There is no frontmatter field for it, deliberately: `up:` was checked and
-had no reader.
+Membership is prose in the epic. There is no frontmatter field for it, deliberately.
+
+`up:` was **retired 2026-08-25** after being measured across the whole vault: it restated the folder
+path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing read it.
+**Do not re-add it, and do not give `about:` its meaning.** `about:` says only *which thread this
+document concerns*, and belongs only on documents that live OUTSIDE that thread -- `sources/evals/`,
+`epics/`, `external/`, `reference/`. Inside a thread the folder already says it.
 
 **One workstream is one thread of work** — one path prefix, one agent at a time. A workstream is heavy
 when it carries *two concurrent threads*, never when it is merely large: two hundred dumps on one thread
@@ -108,7 +113,8 @@ a rival account of the present.
 
 - **Filenames** `YYYY-MM-DD-topic.md`, and `YYYY-MM-DD-HHMM-topic.md` for dumps and orientations, where
   several a day is normal and same-date names do not sort. `architecture/` and `values/` skip the date.
-- **Frontmatter** — `type` / `status` / `date` / `tags`, plus `up:` and `from:` where they apply.
+- **Frontmatter** — `type` / `status` / `date` / `tags`, plus `from:` where it applies, and `about:`
+  only on a document that lives outside the thread it concerns.
 - **Links** — `[[wikilinks]]` inside the vault; code paths as literal text, with the repo named when
   ambiguous.
 - **Voice** — terse and factual, for a first-time reader. **No agent-local codenames** — say what a thing

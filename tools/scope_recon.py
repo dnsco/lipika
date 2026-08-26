@@ -59,8 +59,10 @@ REF = re.compile(
     r"(?P<repo>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#(?P<num>\d{1,6})"
     r"|(?:(?P<bare>[A-Za-z0-9_.-]+))?#(?P<num2>\d{2,6})"
 )
-FM_KEYS = ("type", "status", "date", "up", "tier")   # `up` is still parsed and reported
-# per-document; only the vault-wide "who is missing it" nag was retired.
+FM_KEYS = ("type", "status", "date", "about", "tier")   # `up` was retired 2026-08-25: it
+# restated the folder path in 139 of 170 documents, drifted stale in 15 more, and nothing read
+# it. `about:` replaces it ONLY on documents that live outside what they describe -- evals,
+# epics, external, reference -- where the path genuinely cannot say which thread they concern.
 
 
 def git(vault, *args):
