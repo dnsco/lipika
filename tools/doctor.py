@@ -93,14 +93,50 @@ def installed_vs_tree(tree_arg=None):
         return 1
     if stale:
         print(f"  STALE    installed {inst.name} differs from {tree} in: {', '.join(stale)}")
-        print("           what runs is the installed copy, so these edits are not live. Bump both "
-              "manifests and deploy.")
+        # The verdict is the same either way -- the snapshot is behind, and other clients read it.
+        # The ADVICE is not. Measured 2026-08-27: a `claude -p` subprocess reading a directory
+        # source's installLocation was told "these edits are not live" about edits that were live
+        # for it, on the same screen where its own base directory said otherwise. Same shape as the
+        # 0.3.0 defect -- the run had already computed the fact the sentence needed.
+        kind, loc, err = marketplace_entry()
+        reads_tree = (
+            not err
+            and kind == "directory"
+            and loc
+            and Path(loc).resolve() == tree.resolve()
+        )
+        if reads_tree:
+            print("           these edits ARE live for any process that reads that directory "
+                  "source -- deploying")
+            print("           is what makes the snapshot agree, not what makes the edits take "
+                  "effect. Bump both")
+            print("           manifests and deploy.")
+        else:
+            print("           what runs is the installed copy, so these edits are not live. Bump "
+                  "both manifests and deploy.")
         return 1
     print(f"  ok       installed {inst.name} IS {tree} (skills, agents, tools, bin)")
     return 0
 
 
 MARKETPLACES = Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
+
+
+def marketplace_entry():
+    """(source kind, installLocation, error). Read, never inferred.
+
+    Two callers need this and they need it for different reasons: the source line states it, and the
+    STALE advice is only correct for one of the two answers. Inferring it from the tree's path or the
+    repo's name would be the ruled-out class one level down.
+    """
+    import json
+    try:
+        entry = json.loads(MARKETPLACES.read_text()).get("lipika")
+    except (OSError, ValueError) as exc:
+        return None, None, f"cannot read the marketplace entry ({MARKETPLACES}): {exc}"
+    if not entry:
+        return None, None, f"no `lipika` marketplace entry in {MARKETPLACES}"
+    return (entry.get("source") or {}).get("source", "?"), entry.get("installLocation", "?"), None
 
 
 def definition_source(path=None):
@@ -122,20 +158,12 @@ def definition_source(path=None):
     probe step is what answers it. And it never sets the exit code: a directory source is a
     deliberate setup, not a fault.
     """
-    import json
-    try:
-        entry = json.loads(MARKETPLACES.read_text()).get("lipika")
-    except (OSError, ValueError) as exc:
-        print(f"  note     cannot read the marketplace entry ({MARKETPLACES}): {exc}")
+    kind, loc, err = marketplace_entry()
+    if err:
+        print(f"  note     {err}")
         print("           so where a session reads definitions from is UNSTATED, which is the "
               "thing this checks")
         return
-    if not entry:
-        print(f"  note     no `lipika` marketplace entry in {MARKETPLACES}")
-        print("           where a session reads definitions from is unstated")
-        return
-    kind = (entry.get("source") or {}).get("source", "?")
-    loc = entry.get("installLocation", "?")
     print(f"  ok       definitions source -> {kind}: {loc}")
     if kind == "directory":
         print("           a directory source IS the working tree, so a process that reads it runs "
