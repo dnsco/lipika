@@ -108,7 +108,16 @@ machinery. The test when deciding whether something in a vault should be deleted
 of something in Lipika?"*, never *"is it in a directory called `skills/`?"* Ruled 2026-08-21, after
 the directory-shaped version of the rule nearly deleted a vault's own `pr-description` skill.
 
-**Every change here lands through a pull request.** Nothing commits to `main` directly. A definition
+**Every change here lands through a pull request, and it is SQUASHED by the owner** — `main` is
+protected, so nothing else can land one. A squash leaves the checkout *diverged*, not behind, and the
+deploy reads the checkout, so realign before the next one:
+
+```bash
+git diff --stat main origin/main    # must be EMPTY
+git reset --hard origin/main
+```
+
+A definition
 is a system prompt paid on every invocation and re-read by nobody, so the PR body is the only durable
 record of *why* it changed — and a change whose reasoning lives only in a session transcript is a
 change the next author will undo. **A PR here is a record more than a gate** — you are usually the
