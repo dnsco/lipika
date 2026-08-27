@@ -213,7 +213,7 @@ def graders_for(vault, tdir):
     return hits
 
 
-def compose(vault, tdir, version, graders, orientation, tree=None, cache=None):
+def compose(vault, tdir, version, graders, orientation):
     """The next session's prompt. Machinery framing ONLY when a deploy was declared.
 
     THE DEFECT THIS FIXES: this emitted the deploy sentence, the version and the four-directory
@@ -234,23 +234,22 @@ def compose(vault, tdir, version, graders, orientation, tree=None, cache=None):
     rel = tdir.relative_to(vault.path)
     lines = [f"Run /lipika:pickup on {rel}.", ""]
     if version:
-        # Absolute paths on BOTH sides. The relative `$d` form silently compared whatever
-        # directory the next session happened to open in -- correct only from this checkout,
-        # which is the one place it proves nothing.
-        gate_tree = tree if tree else Path.cwd()
+        # The gate is a COMMAND, not a pasted shell loop. Three rounds of that loop, three shapes of
+        # one mistake: relative `$d` compared whatever directory the session opened in and produced a
+        # plausible staleness finding in a foreign checkout; absolute paths fixed that and then named
+        # the same directory twice, because the tool composing them worked out "the tree" as its own
+        # folder; and once step 6 became `lipika doctor`, a pasted loop was a second copy of the
+        # comparison that could disagree with the first. The tool that can refuse owns it now.
         lines += [
             f"The plugin was redeployed to {version} and this session is the first to run after the",
             "restart, so start at step 6 of the loop -- prove the installed plugin is the tree before",
             "measuring anything:",
             "",
-            f'  V={version}',
-            f'  T="{gate_tree}"',
-            f'  I="{cache}"',
-            '  for d in skills agents tools bin; do',
-            '    diff -rq "$T/$d" "$I/$V/$d" || echo "STALE: $d"',
-            "  done",
+            "  lipika doctor",
             "",
-            "Any output means stop and deploy before measuring.",
+            f"It must report `installed {version} IS <the checkout>`. A STALE or MISSING line about",
+            "the installed plugin means stop and deploy before measuring anything -- and read which",
+            "checkout it names, because that is the half a self-comparison gets wrong.",
             "",
         ]
     if graders:
@@ -371,8 +370,7 @@ def main(argv=None):
             )
 
         body = compose(
-            vault, tdir, version, graders_for(vault, tdir), newest_orientation(tdir),
-            tree=tree, cache=cache,
+            vault, tdir, version, graders_for(vault, tdir), newest_orientation(tdir)
         )
         # The fence is emitted here, not by the caller: a definition that has to wrap this in
         # prose is a definition that can wrap it wrongly, and the paste is what survives.
