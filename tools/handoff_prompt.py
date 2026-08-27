@@ -25,6 +25,7 @@ import argparse
 import filecmp
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -35,9 +36,41 @@ SHIPPED = ("skills", "agents", "tools", "bin")
 DEFAULT_CACHE = Path.home() / ".claude" / "plugins" / "cache" / "lipika" / "lipika"
 
 
-def tree_root():
-    """The checkout this script lives in."""
-    return Path(__file__).resolve().parent.parent
+def checkout_root(which=None):
+    """The git checkout, found by measurement -- or None. NOT the folder this script sits in.
+
+    THE DEFECT THIS FIXES: this was `Path(__file__).parent.parent` and called "the checkout this
+    script lives in". The installed snapshot is where this normally runs, so that expression IS the
+    installed copy, and `differing(tree, inst)` compared it against itself: empty by construction,
+    refusal unreachable, gate block emitted with both paths naming one directory. Measured
+    2026-08-26 in the first session after the 0.3.0 restart -- the block that reached a human said
+    `V=0.3.0` over a `T` declaring 0.2.4, and `doctor` said `installed 0.3.0 IS the tree` while six
+    files differed.
+
+    PATH is the mechanism, for the reason doctor's module docstring already gives: it is the one
+    with evidence behind it. `.git` is the discriminator -- a cache snapshot has none, a checkout
+    has a directory, a worktree has a file, and `.exists()` covers both. Verified against all three
+    on 2026-08-26.
+
+    Two candidates, both measured, PATH first: what `lipika` resolves to, then this script's own
+    root. The second is what the defect used to trust unconditionally, and it is safe here for the
+    reason that makes it a defect there -- the `.git` test is what excludes the snapshot, so the
+    self-comparison cannot come back through it. Without the second candidate, running a checkout's
+    own `./bin/lipika` while PATH points elsewhere refuses with a checkout sitting right there.
+
+    Returns None rather than guessing. A checkout derived from a hardcoded path, `~/workspace` or
+    the repo's name would rebuild `up:` one level down: a value nothing declared, read by one
+    caller, explained by none.
+    """
+    on_path = which or shutil.which("lipika")
+    candidates = []
+    if on_path:
+        candidates.append(Path(on_path).resolve().parent.parent)
+    candidates.append(Path(__file__).resolve().parent.parent)
+    for root in candidates:
+        if (root / ".git").exists():
+            return root
+    return None
 
 
 def installed_dir(cache):
@@ -279,7 +312,7 @@ def main(argv=None):
     try:
         vault = vault_config.resolve(args.vault)
         tdir = thread_dir(vault, args.thread)
-        tree = Path(args.tree).resolve() if args.tree else tree_root()
+        tree = Path(args.tree).resolve() if args.tree else checkout_root()
         cache = Path(args.cache).expanduser()
 
         if not args.deployed:
@@ -297,6 +330,26 @@ def main(argv=None):
 
         inst = installed_dir(cache)
         version = inst.name
+
+        # Both guards precede `differing`, because a comparison with nothing to compare against is
+        # not a passing comparison -- and the block must not be composed at all. A warning above the
+        # fence is read past; the paste is what survives.
+        if tree is None:
+            raise Refusal(
+                "no git checkout found to compare the installed plugin against.\n"
+                f"  installed: {inst}\n"
+                "  `lipika` on PATH resolves inside the installed snapshot, which has no checkout\n"
+                "  to be stale against -- and comparing it with itself is the defect this replaced.\n"
+                "pass --tree <checkout> to name it."
+            )
+        if tree.resolve() == inst.resolve():
+            raise Refusal(
+                "the tree and the installed plugin are the same directory, so the comparison "
+                "cannot fail.\n"
+                f"  both: {inst}\n"
+                "pass --tree <checkout> -- a gate whose two paths name one folder proves nothing, "
+                "however absolute each one is."
+            )
 
         stale = differing(tree, inst)
         if stale:

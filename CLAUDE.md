@@ -161,14 +161,23 @@ for three days and made `main` a fiction.
    the loop — a measurement of a stale copy measures the previous round and reports clean.
 
    ```bash
-   V=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
-   for d in skills agents tools bin; do
-     diff -rq $d "$HOME/.claude/plugins/cache/lipika/lipika/$V/$d" || echo "STALE: $d"
-   done
+   lipika doctor
    ```
 
-   Any output means **stop and deploy** (step 3) before measuring anything. All four paths, not just
-   `skills` — an agent definition drifts as silently as a skill.
+   A `STALE` or `MISSING` line about the installed plugin means **stop and deploy** (step 3) before
+   measuring anything. It compares all four shipped paths, not just `skills` — an agent definition
+   drifts as silently as a skill — and it **names the checkout it compared against**, which is the
+   part you have to read.
+
+   **This was a `diff -rq` loop pasted into the session, and the loop was the defect.** Its relative
+   `$d` form compared whatever directory the session happened to open in, which in a foreign checkout
+   produced a *plausible* staleness finding rather than an obvious error. Its absolute form then
+   compared the installed snapshot against itself — the tool composing it worked out "the tree" as its
+   own directory, so both paths named one folder and nothing could fail. Two shapes of the same
+   mistake in two rounds; the comparison lives in one place now, with an exit code.
+
+   `doctor` refuses rather than reporting green when it cannot find a checkout — in a shell where
+   `lipika` is the installed snapshot and nothing else is reachable, pass `--tree <checkout>`.
 7. **PROBE.** Ask a question the two versions answer *differently* and read what the role **did**, not
    what it says about itself — one asked to quote its own definition returned a rule that has never
    existed in any version of the file, in any repo. The gate above proves the *files* are current;
@@ -198,9 +207,11 @@ leaves a distinct, inspectable, versioned directory. "Which version is live" sto
 and becomes a number you can print. It also makes this machine match what anyone else installing
 Lipika runs, which the symlinks never did.
 
-**The one way this fails is forgetting step 3**, which step 6 exists to catch —, which silently measures the previous round. Unlike
-the symlink failure it is *detectable* — compare the installed version against the tree — so it wants
-a `lipika doctor` check rather than this paragraph.
+**The one way this fails is forgetting step 3**, which silently measures the previous round. Unlike the
+symlink failure it is *detectable*, and `lipika doctor` now detects it rather than this paragraph
+asking you to remember — that is what step 6 runs. It took two rounds to get right: the check shipped
+in `0.3.0` comparing the installed copy against its own directory, which cannot fail, and `0.3.1`
+made the second operand a checkout found by measurement and printed alongside the verdict.
 
 **Why the restart ends the session rather than sitting inside the loop.** Measured 2026-08-24 by
 running the loop on itself: the agent executing it cannot restart, cannot detect a restart, and
