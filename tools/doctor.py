@@ -100,6 +100,52 @@ def installed_vs_tree(tree_arg=None):
     return 0
 
 
+MARKETPLACES = Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
+
+
+def definition_source(path=None):
+    """Where a session would READ definitions from -- which is not what installed_vs_tree measures.
+
+    THE GAP THIS CLOSES. `installed_vs_tree` compares two folders and proves they are equal. That is
+    a fact about FILES. It says nothing about which copy a running process loads, and on 2026-08-27
+    the two answers differed by client: a fresh `claude -p` subprocess reported its pickup skill's
+    base directory as the CHECKOUT, measured twice from two cwds, while the app session that spawned
+    it reported a cache snapshot -- one already marked .orphaned_at.
+
+    The cause is the marketplace entry, so that is what this reads rather than assumes: a `directory`
+    source's installLocation IS the working tree. CLAUDE.md's stated payoff for installing as a
+    plugin -- "an unmerged branch is no longer silently live" -- does not hold for a client that
+    reads it, and a gate that stays silent about that is true about what it measured and read as a
+    claim about something else.
+
+    It never claims which copy THIS session loaded; a separate process cannot know that, and the
+    probe step is what answers it. And it never sets the exit code: a directory source is a
+    deliberate setup, not a fault.
+    """
+    import json
+    try:
+        entry = json.loads(MARKETPLACES.read_text()).get("lipika")
+    except (OSError, ValueError) as exc:
+        print(f"  note     cannot read the marketplace entry ({MARKETPLACES}): {exc}")
+        print("           so where a session reads definitions from is UNSTATED, which is the "
+              "thing this checks")
+        return
+    if not entry:
+        print(f"  note     no `lipika` marketplace entry in {MARKETPLACES}")
+        print("           where a session reads definitions from is unstated")
+        return
+    kind = (entry.get("source") or {}).get("source", "?")
+    loc = entry.get("installLocation", "?")
+    print(f"  ok       definitions source -> {kind}: {loc}")
+    if kind == "directory":
+        print("           a directory source IS the working tree, so a process that reads it runs "
+              "the tree as it")
+        print("           stands -- uncommitted edits included. The version number describes the "
+              "snapshot, not")
+        print("           necessarily what a given client loaded; the probe step is what tells you "
+              "which.")
+
+
 def main(argv=None):
     # It parsed NOTHING until now, which made `lipika doctor --vault <path>` a hard error while
     # `vault-normalize` step 1 said to pass --vault on every command. Recorded as a live landmine
@@ -149,6 +195,7 @@ def main(argv=None):
               f"$LIPIKA_VAULT")
 
     problems += installed_vs_tree(args.tree)
+    definition_source()
 
     for name in ("git", "python3"):
         p = shutil.which(name)
