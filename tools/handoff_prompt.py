@@ -297,7 +297,8 @@ def main(argv=None):
     ap.add_argument(
         "--tree",
         default=None,
-        help="checkout to compare against the installed copy (defaults to this script's own)",
+        help="checkout to compare against the installed copy; defaults to whatever `lipika` on "
+             "PATH resolves to, and only if that is a git checkout",
     )
     ap.add_argument(
         "--deployed",
