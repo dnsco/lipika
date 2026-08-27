@@ -17,8 +17,16 @@ that says where the work is and what needs deciding, and it costs a single read.
 **What runs on this machine is the INSTALLED PLUGIN VERSION, not the checked-out branch.** Lipika
 installs as a plugin, and the installed copy is a versioned snapshot taken at deploy time. So editing
 the tree — or switching branches — changes nothing until you run step 4 of the loop below. Two
-consequences, both good: **an unmerged branch is no longer silently live**, and "which definitions are
-in force" is a version number you can print rather than a fact about your git state.
+consequences: "which definitions are in force" is a version number you can print rather than a fact
+about your git state, and an unmerged branch is not silently live **in a client that reads the
+snapshot**.
+
+**That second one is narrower than it was written, measured 2026-08-27.** This marketplace is a
+`directory` source whose `installLocation` is this checkout, and a fresh `claude -p` subprocess loads
+its definitions from **there** — measured three times, from two working directories — while the app
+session that spawned it read a cache snapshot. So for a CLI process the tree *is* live, uncommitted
+edits included, which is the property the plugin install was adopted to remove. `lipika doctor` now
+prints the source and its path rather than leaving it to be assumed.
 
 This replaced hand-made symlinks from `~/.claude/` into the working tree, which had the opposite
 properties: a `git checkout` changed the definitions everywhere including in open sessions, and an
@@ -148,6 +156,24 @@ for three days and made `main` a fiction.
    restart, and cannot proceed without one — so a round that treats it as an internal step stalls
    there silently. Your last message names what the next session must run: the graders, by path.
 
+   **A `claude -p` subprocess is the one way to keep looping without a restart, and it measures a
+   different thing.** It is a fresh process, so it loads current definitions — but from the
+   *checkout*, per the directory source above, not from the deployed snapshot. That makes it good for
+   iterating and **wrong as a substitute for the gate**: it would run an undeployed edit and report
+   nothing amiss. Pass it the handoff prompt verbatim on **stdin**, and require the two things a
+   caller cannot otherwise see:
+
+   ```bash
+   { cat handoff.txt; echo; echo "Report the pickup skill's Base directory first, then the verbatim output of the gate command."; } \
+     | claude -p --allowedTools Bash Read Grep Glob Skill
+   ```
+
+   Ask for the **base directory** and the **verbatim gate output**, in that order, or the reply is a
+   summary of a measurement rather than the measurement. Without `--allowedTools` it stops at the
+   first permission prompt and reports the gate as "queued"; with the prompt passed as an argument
+   after `--allowedTools` it is swallowed and `claude` exits saying no input was given. Both measured
+   2026-08-27.
+
    **Do not compose that message by hand.** `context-dump`'s step 7 prints it, from
    `lipika handoff-prompt <workstream>` — the installed version, that version's gate command, and
    every grader whose `up:` names the thread, already fenced for pasting. It **refuses**, exit 3,
@@ -168,6 +194,12 @@ for three days and made `main` a fiction.
    measuring anything. It compares all four shipped paths, not just `skills` — an agent definition
    drifts as silently as a skill — and it **names the checkout it compared against**, which is the
    part you have to read.
+
+   It also names **where definitions are read from** — the marketplace source kind and its
+   `installLocation`, read from `known_marketplaces.json` rather than assumed. A green comparison is
+   exactly when that gets misread: two folders being equal is a fact about files, not about which
+   copy the process in front of you loaded. That line never changes the exit code, because a
+   directory source is a deliberate setup and not a fault.
 
    **This was a `diff -rq` loop pasted into the session, and the loop was the defect.** Its relative
    `$d` form compared whatever directory the session happened to open in, which in a foreign checkout
