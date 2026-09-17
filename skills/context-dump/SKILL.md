@@ -35,7 +35,7 @@ workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
   YYYY-MM-DD-<thread>.md         routing note — what this thread is. Dated to match the folder
   orientation/<stamp>.md         newest wins. Written at handoff
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
-  reference/YYYY-MM-DD-<topic>.md  dated traces from source, and EXTERNAL REFERENCES — never dumps/
+  reference/YYYY-MM-DD-<topic>.md  dated traces from source, and this thread's external references
 ```
 
 **Only the epic tier carries state.** An epic is parked by a decision; a workstream falls off by date, so
@@ -127,9 +127,6 @@ project does **not** load automatically — read it if you have not.
 
 2a. **If this session read anything outside the repos, write the references trace** —
    `workstreams/<ws>/reference/YYYY-MM-DD-references.md`. Dated, not stamped.
-
-   **Not `dumps/`**, which is where it goes if you do not think about it: asked for its sources, a run
-   wrote the inventory there under frontmatter typing itself `type: reference`.
 
    **Two lists, kept visibly apart.**
 
