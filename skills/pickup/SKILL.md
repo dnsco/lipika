@@ -107,9 +107,9 @@ check. Grand plans and epics are the owner's; agents write workstreams.
    - **Unopened references** — every entry in the orientation's `## References` backlog, **by name**.
      Not *"there are three unread references"*: name them and what each is claimed to settle. This is
      the list a session has to admit to, so it is the one most likely to have been quietly dropped —
-     on the thread that produced this rule, the Notion page that is the stated source of record for
-     the whole programme had never been opened. Say it too when the newest references trace is much
-     older than the newest dump: the thread has moved past what it can still re-check.
+     measured 2026-09-16, the Notion page that was the stated source of record for a whole programme
+     had never been opened. Say it too when the newest references trace is much older than the newest
+     dump: the thread has moved past what it can still re-check.
    - **A missing architecture document**, if you found one.
    - **That this has become two threads**, if it has.
 

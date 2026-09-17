@@ -49,8 +49,8 @@ import vault_config                               # noqa: E402
 URL = re.compile(r"https?://[^\s<>\"'`)\]}|]+")
 # All of github.com, not just its PR and commit paths. A repository is a code-repo path, which the
 # conventions already cover -- "literal text for code-repo paths, with the repo named" -- so a clone
-# URL is not an external reference. Measured while auditing the green case: the bare
-# `https://github.com/dnsco/lipika.git` was the tool's only false positive across four threads.
+# URL is not an external reference. A bare clone URL, `https://github.com/dnsco/lipika.git`, was this
+# tool's only false positive across six threads.
 # `gist.github.com` and `*.github.io` are DIFFERENT HOSTS and are not excluded: a gist and a
 # rendered Pages site are documents, and both are in the case this check was built for.
 FORGE = re.compile(r"^https?://(www\.)?github\.com(/|$)", re.I)

@@ -120,25 +120,21 @@ project does **not** load automatically — read it if you have not.
      green`. A draft or open PR has not landed. Asserting judgement instead is fine — say so:
      *judgement: the remaining work no longer describes this thread*. **An unstated basis is the only
      unacceptable one.**
-   - **An external page is a basis too — this is the clause that was missing.** Every example above is
-     internal, so an external page never entered the frame: measured 2026-09-17, five dumps on one
-     thread were built from a doc site, a gist, thirteen Slack messages and two vendor pages and named
-     none of them. **Name the media, because "external source" does not fire** — a Slack permalink, a
-     Notion page, a gist, a dashboard, a vendor page, a rendered doc site. Say which reference settled
-     the claim, in words, then wikilink the thread's references trace: *the M2 assignment page —
-     [[2026-09-17-references]]*. The URL lives in the trace, so a rename is one newer document instead
-     of five edits. **A bare `see [[…]]` does not satisfy this**: a pointer does not fire at a reader
-     who does not know to follow it.
+   - **An external page is a basis.** A Slack permalink, a Notion page, a gist, a dashboard, a vendor
+     page, a rendered doc site — named, because "external source" does not fire. Say which reference
+     settled the claim, in words, then wikilink the thread's references trace: *the M2 assignment page
+     — [[2026-09-17-references]]*. The URL lives in the trace, so a rename is one newer document
+     instead of five edits. **A bare `see [[…]]` does not satisfy this**: a pointer does not fire at a
+     reader who does not know to follow it. Measured 2026-09-16: five dumps built from a doc site, a
+     gist, thirteen Slack messages and two vendor pages named none of them.
    - **Reusable commands** — the exact incantation. A real script goes in Lipika's `tools/`, not the vault.
    - `[[wikilinks]]` to vault docs; literal text for code-repo paths, with the repo named.
 
 2a. **If this session read anything outside the repos, write the references trace** —
    `workstreams/<ws>/reference/YYYY-MM-DD-references.md`. Dated, not stamped.
 
-   **This destination already existed and nothing pointed at it.** `reference/` had fired in 2 of 14
-   threads, and the word appeared in this file exactly twice — the immutability list above, and the
-   shape diagram. Asked outright for its sources, a run wrote them into `dumps/` under frontmatter
-   typing itself `type: reference`. The instinct was right; the destination was unnamed.
+   **Not `dumps/`.** Asked outright for its sources, a run wrote the inventory there under frontmatter
+   typing itself `type: reference` — 2026-09-16, and `reference/` had fired in 2 of 14 threads.
 
    **Two lists, kept visibly apart.**
 
@@ -151,9 +147,9 @@ project does **not** load automatically — read it if you have not.
    - **<what it is>** — what cites it, and what it is claimed to settle. `<url>` · noted YYYY-MM-DD
    ```
 
-   **The second list is the half that goes missing.** On the measured thread, the Notion page that is
-   the stated source of record for the whole programme had never been opened, and that was invisible
-   until the two lists sat side by side. It costs you an admission of what you skipped. Write it.
+   **The second list is the half that goes missing**, because it costs you an admission of what you
+   skipped. Write it. Measured 2026-09-16: the Notion page that was the stated source of record for a
+   whole programme had never been opened, and nothing showed that until the two lists sat side by side.
 
    - **A stable public page may stand as a URL** with one line on what it settled. Transcribing it is
      waste.
@@ -215,7 +211,7 @@ project does **not** load automatically — read it if you have not.
 
    **`## References` is bounded by attention, not by thread age.** A wikilink, a handful, the unopened
    backlog. **Never the inventory** — that is the trace, and reproducing it here is how an orientation
-   grows without bound. Which handful matters is your judgement; nothing can rank it, and you did the
+   grows without bound. Which handful matters is your judgement: nothing can rank it, and you did the
    work.
 
    **Carry every live item forward.** An item leaves the live set only when its death condition has
