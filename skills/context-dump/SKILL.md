@@ -36,6 +36,7 @@ workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
   orientation/<stamp>.md         newest wins. Written at handoff
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
   reference/YYYY-MM-DD-<topic>.md  dated traces from source
+  reference/<stamp>-references.md  this thread's external references. Newest wins
 ```
 
 **Only the epic tier carries state.** An epic is parked by a decision; a workstream falls off by date, so
@@ -119,12 +120,55 @@ project does **not** load automatically — read it if you have not.
      green`. A draft or open PR has not landed. Asserting judgement instead is fine — say so:
      *judgement: the remaining work no longer describes this thread*. **An unstated basis is the only
      unacceptable one.**
+   - **An external page is a basis** — a Slack permalink, a Notion page, a gist, a dashboard, a vendor
+     page, a rendered doc site. Name the one that settled the claim and wikilink the trace holding its
+     URL: *the M2 assignment page — [[2026-09-16-222023-references]]*.
    - **Reusable commands** — the exact incantation. A real script goes in Lipika's `tools/`, not the vault.
    - `[[wikilinks]]` to vault docs; literal text for code-repo paths, with the repo named.
 
+2a. **If this session read anything outside the repos, write the references trace** —
+   `workstreams/<ws>/reference/<stamp>-references.md`:
+
+   ```bash
+   lipika stamp --for workstreams/<ws>/reference
+   ```
+
+   **Two lists, kept visibly apart.**
+
+   ```markdown
+   ## Read
+   - **<what it is>** — the fact it settled, never a description of the document.
+     `<url>` · opened YYYY-MM-DD · <the access route that actually works>
+
+   ## Cited by something read, not opened
+   - **<what it is>** — what cites it, and what it is claimed to settle. `<url>` · noted YYYY-MM-DD
+   ```
+
+   **The second list is the half that goes missing**, because it costs you an admission of what you
+   skipped. Write it. Measured 2026-09-16: the Notion page that was the stated source of record for a
+   whole programme had never been opened, and nothing showed that until the two lists sat side by side.
+
+   - **A stable public page may stand as a URL** with one line on what it settled. Transcribing it is
+     waste.
+   - **An auth-walled or mutable reference gets its substance traced here instead.** A Slack thread is
+     not one document, its permalink dies with workspace access, and a message can be edited out from
+     under it — same for a DM, a dashboard view, anything behind SSO. Carry what was said and decided;
+     the permalink is provenance, not content. Name the route that works: *behind GitHub auth; the
+     content is `<org>/<repo>` under `<path>`, read with `gh repo clone … --depth=1`*.
+   - **Correct it with a newer trace, never an edit.** A moved, renamed or dead URL is an event,
+     and a dated document is what keeps it one. The old trace stays true about its own moment.
+   - **It fires on a reference a later reader would need to re-open**, not on everything glanced at. A
+     session whose work was entirely in-repo writes no trace and no references bullet.
+
+   ```bash
+   lipika reference-check <ws>    # URLs in dumps no reference/ trace carries. 0 clean · 1 findings
+   ```
+
+   **A clean exit is not a clean bill** — nothing can see what you read and did not write down.
+
 3. **Second pass — what did not make it in?** Before you commit: what would a cold-start you need in a
    month? Sweep for implicit decisions made without the *why*, dead ends ruled out without the reason,
-   environment traps, and concrete current state. Route anything new into `## Live items` in the typed
+   environment traps, external references nothing names, and concrete current state. Route anything new into `## Live items` in the typed
    shape rather than into loose prose.
 
 4. **If this is a handoff, write the next orientation** — `lipika stamp --for
@@ -154,9 +198,18 @@ project does **not** load automatically — read it if you have not.
    ## Settled since the last orientation
    One line per item whose death condition fired, with the evidence.
 
+   ## References
+   Newest trace: [[YYYY-MM-DD-references]]. The handful this thread actually rests on, one line each on
+   what it settled — and every reference cited but never opened.
+
    ## Recent narrative
    The last handful of dumps, newest first, one or two sentences each, linked.
    ```
+
+   **`## References` is bounded by attention, not by thread age.** A wikilink, a handful, the unopened
+   backlog. **Never the inventory** — that is the trace, and reproducing it here is how an orientation
+   grows without bound. Which handful matters is your judgement: nothing can rank it, and you did the
+   work.
 
    **Carry every live item forward.** An item leaves the live set only when its death condition has
    fired — name which, with the evidence. Do not select: a long set about this thread is not the failure
@@ -170,7 +223,8 @@ project does **not** load automatically — read it if you have not.
 
    A split is not a link. Read the parent thread's current orientation and copy across every live item
    that bears on the new thread — reworded freely, each citing the source it came from — then name the
-   parent in `from:`. Items that do not bear on it stay behind; that is the whole point of splitting.
+   parent in `from:`. **Carry the references the same way**, the ones still bearing on the new
+   question, citing the parent's newest trace: a new thread does not re-open what the parent traced. Items that do not bear on it stay behind; that is the whole point of splitting.
 
    ```bash
    lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried

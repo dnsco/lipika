@@ -104,6 +104,9 @@ check. Grand plans and epics are the owner's; agents write workstreams.
    - **Where this is** — two or three sentences, from the orientation. Not a summary of the whole thread.
    - **What the audit found** — drops caught, or that it was clean, with the exit code.
    - **Stale live items** — anything whose `as-of` argues it should be re-checked before being relied on.
+   - **Unopened references** — each entry in the orientation's `## References` backlog, by name, with
+     what it is claimed to settle. A count is not a report. Say it too when the newest references
+     trace long predates the newest dump: the thread has moved past what it can still re-check.
    - **A missing architecture document**, if you found one.
    - **That this has become two threads**, if it has.
 
