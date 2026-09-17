@@ -35,8 +35,7 @@ workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
   YYYY-MM-DD-<thread>.md         routing note — what this thread is. Dated to match the folder
   orientation/<stamp>.md         newest wins. Written at handoff
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
-  reference/YYYY-MM-DD-<topic>.md  dated traces from source
-  reference/YYYY-MM-DD-references.md  <- EXTERNAL REFERENCES GO HERE, never in dumps/
+  reference/YYYY-MM-DD-<topic>.md  dated traces from source, and EXTERNAL REFERENCES — never dumps/
 ```
 
 **Only the epic tier carries state.** An epic is parked by a decision; a workstream falls off by date, so
