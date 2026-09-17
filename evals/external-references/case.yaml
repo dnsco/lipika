@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: external-references
+
+# The workspace IS the vault. vault_config resolves --vault, then $LIPIKA_VAULT, then the user
+# config, then the directory you are standing in. Inside an eval sandbox the first three are all
+# unavailable -- LIPIKA_VAULT is not an EVAL_* name and so would fail the run outright, and
+# $HOME is unreadable -- so standing in the vault is the only route left. It needs no flag in the
+# prompt and no discipline to remember, and it makes every grader path resolve from the workspace
+# root.
+context:
+  scaffold_script: scaffold.sh

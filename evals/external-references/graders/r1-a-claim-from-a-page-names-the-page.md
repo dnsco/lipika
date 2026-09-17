@@ -1,40 +1,40 @@
 ---
-type: eval
-kind: grader
-life: evergreen
-status: sealed
-date: 2026-09-17
-case: external-references
+type: llm
+focus: trace
 ---
 
 # R1 — a claim built on an external page names that page, from the dump that makes the claim
 
-**Written and committed BEFORE the change.**
+The session's evidence was outside every repo it could read: a documentation site, a Slack
+argument, a proposal page, vendor pages. It was asked to reach a conclusion and dump.
 
-## The change under test
+A **reference** is something outside the repos the session can read, which a later reader would have
+to re-open in order to re-check a claim. A **trace** is a document under
+`workstreams/<thread>/reference/` recording what a reference supplied.
 
-`skills/context-dump/SKILL.md` step 2 lists what a dump body carries, and its basis bullet — *"State,
-with its basis"* — exemplifies only internal bases: `merged #4131`, `commit a1b2c3d`, `gate green`. An
-external page never enters the frame, and measurement says the rule therefore never fires on one. A
-bullet is being added that names the media literally — Slack permalink, Notion page, gist, dashboard,
-vendor page, rendered doc site — and requires the dump to name the reference **in words** and wikilink
-the thread's references trace.
+PASS when all of these hold:
 
-- **PASS** — a dump asserting a fact whose only ground is an external page names that page in words and
-  links the trace: *the M2 assignment page — [[2026-09-17-references]]*.
-- **PASS** — the naming appears in **the dump that makes the claim**, not only in a later one. The
-  measured defect was provenance quarantined in a fifth document while the four dumps resting on it were
-  silent.
-- **FAIL if** the citation is a bare pointer — `see [[2026-09-17-references]]`, `sources: [[…]]` — with
-  no reference named. This is the same defect the live-item rule already forbids: a pointer does not
-  fire at a reader who does not know to follow it.
-- **FAIL if** the dump asserts an external fact with no reference at all. This is the original failure
-  and the only one nothing mechanical can catch.
-- **FAIL if** the rule is worded abstractly — *"cite external sources"*, *"record your basis"*. That
-  wording is what is being replaced, and it is already in the file.
+- A statement whose only ground is an external page **names that page in words** and wikilinks the
+  thread's trace — for example: *the M2 assignment page — `[[2026-09-17-m2-assignment]]`*.
+- The naming appears in **the dump that makes the claim**, not only in some other document.
 
-## What a suspicious result looks like
+FAIL if any of these hold:
 
-**A run that cites well after being asked proves nothing.** On 2026-09-16 the owner asked explicitly and
-still got the wrong shape. Score the dumps written **before** any instruction about references; if every
-citation in the run appeared after such a turn, this grader is **UNEXERCISED**, not a pass.
+- The citation is a bare pointer — `see [[2026-09-17-references]]`, `sources: [[…]]` — with no
+  reference named in words. A pointer does not fire at a reader who does not know to follow it.
+- The dump asserts a fact that could only have come from an external page and names no reference at
+  all.
+- Provenance is quarantined: the document names references for claims it does not itself make, while
+  the claims it does make are unattributed.
+- The citation is worded abstractly — *"cite external sources"*, *"record your basis"* — rather than
+  naming the specific page.
+
+## What you are shown
+
+The session transcript as JSON, one message per line — the first twelve messages and the last
+twelve. The documents the session wrote appear as the contents of its write calls. Judge on the
+writes you can actually see.
+
+**If no write of the relevant kind is visible at all, vote FAIL and say the document was not
+visible.** An absent record and an unverifiable one are the same thing to a later reader, which is
+the whole subject of this case.

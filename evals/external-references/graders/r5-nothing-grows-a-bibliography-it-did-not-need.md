@@ -1,41 +1,40 @@
 ---
-type: eval
-kind: grader
-life: evergreen
-status: sealed
-date: 2026-09-17
-case: external-references
+type: llm
+focus: files
+arm: both
 ---
 
-# R5 — the negative case: no dump grows a bibliography it did not need
+# R5 — the negative case: nothing grows a bibliography it did not need
 
-**Written and committed BEFORE the change.** This is the grader that fails if the change becomes
-ceremony, and it is the one most likely to be scored generously. Score it adversarially.
+You are shown the list of file paths created during the run, one per line.
 
-## The change under test
+Every rule about references is scoped to *a reference a later reader would need to re-open in order
+to re-check a claim*. It is **not** scoped to everything the session glanced at. This check is the
+counterweight to the others: they all reward writing more, and this one fails a run that has turned
+the rule into ceremony.
 
-Every clause added for references is scoped to *a reference a later reader would need to re-open in
-order to re-check a claim*. It is not scoped to everything glanced at. The orientation's `## References`
-section is explicitly **bounded by attention** — a wikilink to the newest trace, the handful the thread
-rests on, the unopened backlog — and explicitly not the inventory.
+**Score this adversarially.** A run that satisfies every other check and is waved through here is the
+expected shape of a change that has become ceremony.
 
-- **PASS** — a dump whose work was entirely in-repo (a refactor, a test run, a PR) writes no references
-  bullet and creates no trace.
-- **PASS** — the orientation's `## References` stays a handful of lines on a thread with thirty
-  references, with the inventory reachable by one wikilink.
-- **PASS** — a second dump in the same session, resting on references the first already traced, cites
-  the existing trace instead of writing a new one.
-- **FAIL if** the orientation reproduces the inventory. This was the owner's stated fear about putting
-  references in the orientation at all, and the bounded form is the concession that answered it.
-- **FAIL if** a dump lists pages it opened and abandoned, or lists a reference it did not use.
-- **FAIL if** the run creates a references trace on a thread with no external references, to satisfy the
-  step.
-- **FAIL if** the added prose is long enough to displace step 2's existing content. A definition is a
-  system prompt paid on every invocation; length is a cost, not a thoroughness signal.
+PASS when all of these hold:
 
-## What a suspicious result looks like
+- The number of trace documents is proportionate to the number of distinct subjects the session
+  actually rested claims on — a handful, not one per link encountered.
+- Work that was entirely inside the repos the session could read produces **no** trace at all.
+- A second dump in the same session, resting on references an earlier one already traced, reuses the
+  existing trace rather than creating a near-duplicate.
 
-**R1 through R4 all reward writing more, and this one is the only counterweight.** A round where R1–R4
-pass and R5 is scored "fine" is the expected shape of a change that has become ceremony. Compare the
-diff's line count against what it removes, and compare a no-external-references dump before and after —
-if it grew at all, say so.
+FAIL if any of these hold:
+
+- **The run created nothing at all, or created no dump.** An empty workspace is not restraint, and
+  this check must never pass vacuously — measured 2026-09-17, when it voted PASS three times against
+  a run that had not executed.
+- A trace is created on a thread with no external references, to satisfy the step.
+- The paths show a document per page visited, including pages opened and abandoned.
+- Traces are created for references the run never used to support a claim.
+
+## What you cannot see, and must not guess at
+
+You are shown paths, not contents or lengths. Do not infer restraint from a short file list alone if
+the run plainly read a great deal; the question is proportion to **subjects rested on**, not raw
+count. Where you cannot tell, say so rather than passing by default.

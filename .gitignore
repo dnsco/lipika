@@ -8,3 +8,6 @@ pass-log.jsonl
 
 # The vault this project is developed against, symlinked locally
 ai_docs
+
+# Eval run output: written by each run, regenerated wholesale
+evals/results/
