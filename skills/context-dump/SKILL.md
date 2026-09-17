@@ -127,8 +127,7 @@ project does **not** load automatically — read it if you have not.
    - `[[wikilinks]]` to vault docs; literal text for code-repo paths, with the repo named.
 
 2a. **If this session read anything outside the repos, write the references trace** —
-   `workstreams/<ws>/reference/<stamp>-references.md`. Stamped, because newest wins and a URL can
-   move the same day it was recorded:
+   `workstreams/<ws>/reference/<stamp>-references.md`:
 
    ```bash
    lipika stamp --for workstreams/<ws>/reference
