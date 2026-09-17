@@ -44,6 +44,23 @@ Measured on `workstreams/2026-09-16-can-agentomatic-host-workloads/` in the vaul
 destination, and the default is `dumps/`.** An instruction with no named destination gets obeyed into
 the wrong folder, and the one artefact produced is then superseded by the next dump.
 
+## The second defect, measured on the fix
+
+`0.3.6` fixed the destination and produced a new fault, on the same thread, 2026-09-17. Step 2a named
+one aggregate document per thread, so forty references — a Slack DM, a stakeholder deck, an incident
+review, gists, public pages — became `###` headings inside a single 401-line file. Two consequences:
+
+- **Correcting one reference means rewriting forty.** *Newest wins* over an aggregate, so the next
+  document copies thirty-nine entries forward on faith or drops them silently. The shape the vault
+  already used — one subject per dated file, still on line 38 of the skill's own diagram — has no such
+  problem: a correction is one new file.
+- **121 of those 401 lines are a `## Verbatim index`**, restating URLs already in the prose, written
+  only so `lipika reference-check`'s literal-string matching would reach exit 0. A check drove the
+  document's shape away from what a reader needs.
+
+**This is the same class as the first defect, one level in.** The first was a destination nobody
+named; the second is a *unit* nobody named. R2 and R3 were amended for it after scoring, and say so.
+
 ## Vocabulary this case uses
 
 **Reference**, never *source*. `sources/` at vault root means frozen eval measurements, never edited.
