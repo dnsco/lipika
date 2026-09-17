@@ -109,21 +109,23 @@ of something in Lipika?"*, never *"is it in a directory called `skills/`?"* Rule
 the directory-shaped version of the rule nearly deleted a vault's own `pr-description` skill.
 
 **Every change here lands through a pull request, and it is SQUASHED by the owner** — `main` is
-protected, so nothing else can land one. A squash leaves the checkout *diverged*, not behind, and the
-deploy reads the checkout, so realign before the next one:
+protected, so nothing else can land one. The deploy reads the checkout, so realign before the next
+one. **It is safe when nothing of yours would be lost, and two states qualify** — after a squash you
+hold the pre-squash commits and the trees are identical; merely behind, you hold nothing:
 
 ```bash
-git diff --stat main origin/main    # must be EMPTY
+git fetch origin
+git rev-list --count origin/main..main   # 0 -> you hold nothing; reset
+git diff --stat main origin/main         # if non-zero, must be EMPTY before you reset
 git reset --hard origin/main
 ```
 
-A definition
-is a system prompt paid on every invocation and re-read by nobody, so the PR body is the only durable
-record of *why* it changed — and a change whose reasoning lives only in a session transcript is a
-change the next author will undo. **A PR here is a record more than a gate** — you are usually the
-only reviewer — but it is no longer *also* live: since what runs is the installed version, an open
-branch affects nothing until it is deployed. Land it or close it anyway; three stacked PRs sat open
-for three days and made `main` a fiction.
+A definition is a system prompt paid on every invocation and re-read by nobody, so the PR body is the
+only durable record of *why* it changed — and a change whose reasoning lives only in a session
+transcript is a change the next author will undo. **A PR here is a record more than a gate** — you
+are usually the only reviewer — but it is no longer *also* live: since what runs is the installed
+version, an open branch affects nothing until it is deployed. Land it or close it anyway; three
+stacked PRs sat open for three days and made `main` a fiction.
 
 **The loop, and it is a loop:**
 
