@@ -233,9 +233,18 @@ needs its own case with a `history_file`, and until it exists this suite does no
 ### Open: the run could not authenticate
 
 Every run so far ended `exit 1: Not logged in · Please run /login`, so **the session under test has
-never executed** and no score from this suite means anything yet. The credential on this machine is
-in the macOS Keychain, there is no `ANTHROPIC_API_KEY` in the environment, and the eval's child
-process is sandboxed away from `$HOME`. Fixing it is the operator's.
+never executed** and no score from this suite means anything yet.
+
+**The mechanism, measured from a `--keep-temp` directory.** The run gives the child session a
+synthetic `HOME` — `<temp>/home`, with its own `<temp>/config` holding a fresh `settings.json` and
+`.claude.json`. The credential on this machine is in the macOS Keychain, reachable only through the
+real Claude Code configuration, which that child cannot see. So it starts logged out, and re-running
+reproduces it exactly. It is not a broken credential and no amount of re-running fixes it.
+
+**The route that survives a synthetic HOME is an API key in the environment**, since the
+provider-selecting and authenticating variables are on the documented inherit allowlist. Export
+`ANTHROPIC_API_KEY` in the shell the eval runs from. Operator action, by design — nothing in this
+repo should hold it.
 
 **This also leaves the sandbox question unmeasured.** The orientation carries a landmine saying an
 eval run inherits `HOME` and so resolves the operator's real vault; the documentation says writes are
