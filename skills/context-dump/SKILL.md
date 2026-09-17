@@ -119,13 +119,9 @@ project does **not** load automatically — read it if you have not.
      green`. A draft or open PR has not landed. Asserting judgement instead is fine — say so:
      *judgement: the remaining work no longer describes this thread*. **An unstated basis is the only
      unacceptable one.**
-   - **An external page is a basis.** A Slack permalink, a Notion page, a gist, a dashboard, a vendor
-     page, a rendered doc site — named, because "external source" does not fire. Say which reference
-     settled the claim, in words, then wikilink the thread's references trace: *the M2 assignment page
-     — [[2026-09-17-references]]*. The URL lives in the trace, so a rename is one newer document
-     instead of five edits. **A bare `see [[…]]` does not satisfy this**: a pointer does not fire at a
-     reader who does not know to follow it. Measured 2026-09-16: five dumps built from a doc site, a
-     gist, thirteen Slack messages and two vendor pages named none of them.
+   - **An external page is a basis** — a Slack permalink, a Notion page, a gist, a dashboard, a vendor
+     page, a rendered doc site. Name the one that settled the claim and wikilink the trace holding its
+     URL: *the M2 assignment page — [[2026-09-17-references]]*.
    - **Reusable commands** — the exact incantation. A real script goes in Lipika's `tools/`, not the vault.
    - `[[wikilinks]]` to vault docs; literal text for code-repo paths, with the repo named.
 
