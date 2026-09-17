@@ -104,12 +104,9 @@ check. Grand plans and epics are the owner's; agents write workstreams.
    - **Where this is** — two or three sentences, from the orientation. Not a summary of the whole thread.
    - **What the audit found** — drops caught, or that it was clean, with the exit code.
    - **Stale live items** — anything whose `as-of` argues it should be re-checked before being relied on.
-   - **Unopened references** — every entry in the orientation's `## References` backlog, **by name**.
-     Not *"there are three unread references"*: name them and what each is claimed to settle. This is
-     the list a session has to admit to, so it is the one most likely to have been quietly dropped —
-     measured 2026-09-16, the Notion page that was the stated source of record for a whole programme
-     had never been opened. Say it too when the newest references trace is much older than the newest
-     dump: the thread has moved past what it can still re-check.
+   - **Unopened references** — each entry in the orientation's `## References` backlog, by name, with
+     what it is claimed to settle. A count is not a report. Say it too when the newest references
+     trace long predates the newest dump: the thread has moved past what it can still re-check.
    - **A missing architecture document**, if you found one.
    - **That this has become two threads**, if it has.
 

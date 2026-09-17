@@ -133,8 +133,8 @@ project does **not** load automatically — read it if you have not.
 2a. **If this session read anything outside the repos, write the references trace** —
    `workstreams/<ws>/reference/YYYY-MM-DD-references.md`. Dated, not stamped.
 
-   **Not `dumps/`.** Asked outright for its sources, a run wrote the inventory there under frontmatter
-   typing itself `type: reference` — 2026-09-16, and `reference/` had fired in 2 of 14 threads.
+   **Not `dumps/`**, which is where it goes if you do not think about it: asked for its sources, a run
+   wrote the inventory there under frontmatter typing itself `type: reference`.
 
    **Two lists, kept visibly apart.**
 
