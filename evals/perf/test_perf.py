@@ -164,10 +164,13 @@ def main():
             "start": T0, "end": T0 + 30, "active_s": 30, "ended_by": "ask", "wait_s": 0,
             "version": "0.5.0", "model_s": 30, "subagent_s": 0, "other_tools_s": 0, "lipika_s": 0}
     ev = {"case": "c", "t": T0, "s": 100, "cost": 1, "turns": 3, "score": 1, "version": "0.5.0"}
-    page = pr.render([span], [], [], [ev], {}, 30)
+    home = dict(span, project="/n/workspace/lipika")
+    page = pr.render([span, home], [], [], [ev], {}, 30)
     opts = re.findall(r'<option value="([^"]+)"( selected)?>', page)
     check("the page has a project dropdown listing every project",
-          sorted(o for o, _ in opts) == ["agentomatic", "lipika"], opts)
+          sorted(o for o, _ in opts) == ["agentomatic", "lipika", "lipika-evals"], opts)
+    check("eval runs are their own project, not lipika",
+          re.search(r'data-project="lipika-evals"><h2>eval c<', page) is not None)
     check("lipika is selected by default", ("lipika", " selected") in opts, opts)
     sections = re.findall(r'<section class="panel"[^>]*>', page)
     check("every panel carries its project",
