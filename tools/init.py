@@ -55,7 +55,7 @@ TIERS = {
 # No `done/`. The task tier and its closure ceremony were retired at dnsco/lipika#8 --
 # splitting a thread replaces all of it, and a thread that stopped is simply not listed
 # as live. Seeding `done/` into a NEW vault taught the retired shape on the first command
-# anyone runs. An EXISTING `done/` stays where it is: records never move.
+# anyone runs. An EXISTING `done/` stays where it is: normalizing a vault moves no record.
 
 README = """---
 type: moc
@@ -72,7 +72,8 @@ there for "where are we". An annotated table of contents becomes a second fronti
 drifts; one line per document is the whole design.
 
 **Nothing here closes.** A workstream has no status field: the date it last accrued is the whole
-answer, and a thread that stopped is simply not listed as live. Only an epic carries state.
+answer, and a thread that stopped is simply not listed as live. One the owner has ruled finished
+moves whole to `workstreams/archive/`. Only an epic carries state.
 
 ## Workstreams
 

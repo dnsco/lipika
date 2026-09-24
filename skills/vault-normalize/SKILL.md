@@ -16,7 +16,8 @@ evidence and nothing announces the loss. The one sanctioned exception is link re
 its target moves keeps the record true rather than rewriting it.
 
 **Conversion is lazy and additive.** A workstream in the old task shape gets a `dumps/` directory and is
-written into; nothing already there moves. There is no migration project, and **records never move**. A
+written into; nothing already there moves. There is no migration project, and **conversion moves no
+record**. A
 change class marked lazy means *stop doing the old thing* — not *go convert everything*. If you find
 yourself converting documents, you have left this skill.
 

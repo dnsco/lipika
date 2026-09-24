@@ -90,7 +90,9 @@ Full autonomy inside your surfaces: act, then report.
 
 ## Don't
 
-- **Don't move documents to archive them.** Nothing is archived here.
+- **Don't move a thread unless the owner ruled it finished.** On that ruling it moves whole to
+  `workstreams/archive/<thread>/`, with `git mv` so every byte is unchanged. Never move a document
+  out of its thread.
 - **Don't make an engineering or product decision, and don't edit code in any project repo.**
 - **Don't invent or rename a top-level folder, and don't relocate a grand plan** — the owner's, both.
 

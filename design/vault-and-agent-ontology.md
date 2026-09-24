@@ -137,6 +137,8 @@ vault/
       orientation/YYYY-MM-DD-HHMM.md   VIEW-as-record. Newest wins.
       dumps/YYYY-MM-DD-HHMM-<topic>.md RECORD — several a day is normal, so it carries the time
       reference/YYYY-MM-DD-<topic>.md  RECORD — a trace, thread-local
+      gotchas.md                   RECORD, append-only — warnings that stay true in this thread
+    archive/<thread>/              a thread the owner ruled finished, moved whole
   sources/  external/  values/  grand-plans/     RECORD
 ```
 
@@ -222,8 +224,17 @@ of the reader worked. `orientation-audit` follows `from:` and asks about every
 parent item that did not come across — asks rather than fails, because only the author knows what bears on
 the new thread.
 
-✅ **A thread ends by not being listed as live.** Nothing is archived. A dated folder plus its last dump's
-date already encodes the lifecycle, and leaving it in place is what keeps every inbound link true forever.
+✅ **A thread ends by not being listed as live, and moves to `archive/` when the owner rules it
+finished** (2026-09-24). A dated folder plus its last dump's date already encodes the lifecycle. Moving
+the folder whole breaks no wikilink — they resolve by file name, and dated names are unique — and
+`lipika threads` hides `archive/` as it hides `parked/`. Literal paths written inside records go stale,
+and stay so: a record is not edited to follow a move.
+
+✅ **`gotchas.md` is append-only** (2026-09-24). An item whose death condition is `dies never` is a
+warning that stays true, not live state, and carrying it is how orientations reached 64 KB. It is
+appended to the thread's `gotchas.md` by `orientation-carry --append-gotchas`; a warning that stops being
+true is retired by a later line. It is a record whose existing bytes never change — `pass-log.jsonl` is
+the precedent — and it is per-thread because a shared surface collects every thread's warnings.
 
 ✅ **Folders and notes carry the date; `architecture/` does not.** The date is *opened*, never *current* —
 last-touched stays derivable from git and is never written down. Wikilinks resolve by basename and dating
@@ -231,7 +242,7 @@ folders is exactly what invites a repeat topic, so the note carries the date too
 second effort on a subject quietly resolves to the first.
 
 ▢ **Conversion is lazy and additive.** A workstream in the old task shape gets a `dumps/` directory and is
-written into; nothing already there moves. There is no migration project, and records never move.
+written into; nothing already there moves. There is no migration project, and conversion moves no record.
 
 ## 5. The live set, and how an item dies
 
@@ -490,6 +501,13 @@ however well it encodes a real measurement — rewrite it rather than re-explain
 | this document | the **design** — the shape, the forces, the falsifiers |
 
 ## Amendments
+
+**2026-09-24 — archive, and warnings per thread.** The owner ruled that a finished thread moves to
+`workstreams/archive/`, reversing the §4 rule that a thread stays where it was opened. What retired the `librarian` (§8) was a role
+archiving and merging on its own judgement against a mutable register; a move now happens only on the
+owner's ruling and edits no record. Always-true items leave the orientation for an append-only
+`gotchas.md` in their thread, replacing the vault `CLAUDE.md` and Lipika's `design/GOTCHAS.md` as their
+destination.
 
 **2026-08-21 — records and views.** The mutable-and-authoritative document class is removed, and with it
 seven tools, two roles and the task tier; §8 is the retirement record. Orientation replaces the frontier
