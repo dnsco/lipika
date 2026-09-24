@@ -77,6 +77,9 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _telemetry       # noqa: E402
+
 LOG_NAME = "pass-log.jsonl"
 
 # Kinds that may establish a consolidated baseline. Everything else stacks.
@@ -88,6 +91,14 @@ BASELINE_KINDS = {"full"}
 # only because past log entries carry them.
 KINDS = ["full", "delta", "scout", "dump", "curate", "clerk", "convert", "eval", "rollover"]
 RESULTS = ["consolidated", "incremental", "skipped", "aborted"]
+
+
+def stamps():
+    """Plugin version and Claude session, for `lipika perf`. Tool-written, like ts and sha."""
+    out = {"version": _telemetry.version()}
+    if _telemetry.session():
+        out["session"] = _telemetry.session()
+    return out
 
 
 def now():
@@ -278,7 +289,7 @@ def cmd_start(args, path):
     rec = {
         "ts": iso(when), "event": "start", "id": pass_id, "role": args.role,
         "scope": norm_scope(args.scope), "kind": args.kind, "pid": os.getpid(),
-        "sha": head_sha(),
+        "sha": head_sha(), **stamps(),
     }
     if args.parent:
         rec["parent"] = args.parent
@@ -349,7 +360,7 @@ def cmd_stop(args, path):
     rec = {
         "ts": iso(now()), "event": "stop", "id": args.id, "role": start.get("role"),
         "scope": start.get("scope"), "kind": kind, "result": args.result,
-        "sha": sha,
+        "sha": sha, **stamps(),
     }
     if started:
         rec["span_s"] = int((now() - started).total_seconds())
