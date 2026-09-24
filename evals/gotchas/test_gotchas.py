@@ -91,7 +91,7 @@ def main():
         before = g
         lipika(vault, "orientation-carry", "2026-09-20-t", "--append-gotchas")
         after = read(ws / "gotchas.md")
-        check("a second run appends nothing already there", after == before, after)
+        check("a second run appends nothing already there", bool(before) and after == before, after)
 
     with tempfile.TemporaryDirectory() as d:
         vault, ws = fixture(d, gotchas=EXISTING)
