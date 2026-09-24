@@ -135,10 +135,8 @@ project does **not** load automatically — read it if you have not.
 
    **The unit is a subject, not a link.** A Slack argument, a deck, an incident review and a vendor page
    are four subjects and four files; forty permalinks from one channel argument are one. **Never one
-   document holding unrelated subjects** — measured 2026-09-17, an aggregate put forty references into
-   401 lines, of which 121 restated URLs already in its own prose. And *newest wins* over an aggregate
-   means correcting one reference rewrites forty, so the next document copies thirty-nine forward on
-   faith.
+   document holding unrelated subjects** — correcting one reference in an aggregate rewrites all of
+   them, and the rest get copied forward on faith.
 
    ```markdown
    # <the subject> — <the fact it settled, never a description of the document>
@@ -147,9 +145,7 @@ project does **not** load automatically — read it if you have not.
 
    **What you never opened goes in one place of its own** — `reference/YYYY-MM-DD-unopened.md`, beside
    the traces. **It is the half that goes missing**, because it costs you an admission of what you
-   skipped. Write it: what it is, **what cites it**, and what it is claimed to settle. Measured
-   2026-09-16 — the Notion page that was a whole programme's stated source of record had never been
-   opened, and nothing showed that until the two sat side by side.
+   skipped. Write it: what it is, **what cites it**, and what it is claimed to settle.
 
    - **A stable public page may stand as a URL** with one line on what it settled. Transcribing it is
      waste, and several such pages may share one trace if they settle one subject.
