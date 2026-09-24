@@ -22,3 +22,21 @@ restarted. A human asks; the curator proposes and moves.
 - **P7** `lipika threads` no longer lists an archived thread; `lipika threads --all` lists it as
   `archive/<thread>`.
 - **P8** The regenerated index lists archived threads as finished, not as live.
+
+## Run 1, 2026-09-24 — cancelled at the proposal
+Run through a `claude -p --plugin-dir <worktree>` subprocess, with the branch's `bin` first on PATH.
+P1–P3 held. The owner cancelled before any move: the proposal judged each thread from its routing note
+and orientation headline, gave nothing to rule on, and repeated a stale claim from an orientation
+(unmerged commits on lipika `main`; `git rev-list --count origin/main..main` was 0).
+
+## What a curation report must do (for run 2, written before the definition change)
+- **P9** For each thread it reads, it lists every item in that thread's newest orientation and classes it:
+  **done** (its death condition fired, with the check it ran), **live**, **always true**, **duplicate**
+  (naming the other thread), or **uncheckable**.
+- **P10** Each live item names where it should be carried: an existing live thread, a new thread, or
+  nowhere, with the reason.
+- **P11** A claim about the state of a repo or PR is checked by a command in this run, not repeated from
+  a document. The stale local-`main` claim from run 1 does not reappear.
+- **P12** Each thread gets a recommendation (archive, keep, or merge into a named thread) with its
+  basis, and the report opens with a plain one-paragraph summary of what each thread was for.
+- **P13** It still moves, writes and commits nothing (P1).
