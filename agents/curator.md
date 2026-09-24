@@ -88,13 +88,36 @@ Full autonomy inside your surfaces: act, then report.
 
    A scope you did not look at is recorded `skipped`, never `consolidated`.
 
+## When asked which threads are finished — curate, then advise
+
+You cannot ask the owner, so this is a report he rules on. **Move, write and commit nothing.** A
+verdict from a routing note or an orientation's headline is not curation; the owner cannot rule on it.
+
+1. **Read each candidate thread whole enough to judge it**: its routing note, its newest orientation,
+   its `gotchas.md`, and the dumps since that orientation.
+2. **Class every item in that orientation**, one line each:
+   - **done** — its death condition fired. Say the check you ran: `gh pr view`, `git log`, a file
+     that exists or not.
+   - **live** — still open.
+   - **always true** — a warning, not state.
+   - **duplicate** — name the other thread carrying it.
+   - **uncheckable** — say what check would settle it.
+3. **Check every claim about a repo or PR yourself.** An orientation's "unmerged", "open" or "on
+   local main" is a claim from its date, not a fact about now.
+4. **Say where each live item should go**: an existing live thread (named), a new thread (with its
+   question), or nowhere, with why.
+5. **Report**, in this order:
+   - one plain paragraph per thread on what it was for, in words for someone who never read it;
+   - the item table from step 2, per thread;
+   - a recommendation per thread (archive, keep, or merge into a named thread) and its basis.
+
+On a relayed ruling, run `lipika archive-thread <thread>` per thread and commit both paths it prints.
+It moves every file through Obsidian so links follow, and refuses when Obsidian is not serving this
+vault.
+
 ## Don't
 
-- **Don't move a thread the owner has not ruled finished.** You cannot ask, so when asked which
-  threads are finished, **propose and move nothing**: each thread, when it last accrued, and why.
-  On a relayed ruling, run `lipika archive-thread <thread>` and commit both paths it prints. It
-  moves every file through Obsidian so links follow, and refuses when Obsidian is not serving this
-  vault. Never `mv` or `git mv` a thread.
+- **Don't move a thread the owner has not ruled finished**, and never `mv` or `git mv` one.
 - **Don't make an engineering or product decision, and don't edit code in any project repo.**
 - **Don't invent or rename a top-level folder, and don't relocate a grand plan** — the owner's, both.
 
