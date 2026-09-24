@@ -2,7 +2,7 @@
 name: dispatched-traces
 description: A handoff with four external subjects, two of which a child could re-open itself
 tags: [context-dump, references, fan-out]
-allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit, Task, TodoWrite]
+allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit, Agent, TodoWrite]
 max_turns: 80
 timeout_seconds: 2400
 expected_outcome: >

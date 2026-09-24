@@ -1,6 +1,8 @@
 ---
 type: tool_used
-tool: Task
+tool: Agent
+input_match: "lipika:tracer"
+min: 2
 ---
 
 # A1 — an addressable subject is dispatched, not transcribed
@@ -18,3 +20,9 @@ to appear in the trace.
 At least two dispatches. Fewer means the session transcribed a subject it could have delegated.
 
 This is the mechanical complement to A3, which fails a run that dispatches everything.
+
+**`tool: Agent`, not `Task`.** The subagent tool is named `Agent` with `Task` as an alias, and
+`tool_used` compares the recorded name exactly. Written as `Task`, this grader scored `Task called 0x`
+on 2026-09-24 whatever the run did — read from the `claude` 2.1.274 bundle, where the matcher is
+`if(e.name!==n.tool)return!1`. `input_match` is a regex over the call's input, so this counts
+dispatches to `lipika:tracer` and not any sub-agent.
