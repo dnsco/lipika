@@ -1,6 +1,8 @@
 ---
-type: llm
-focus: trace
+type: tool_used
+tool: Agent
+input_match: "changelog-v[34]|runner-[ab]-pricing\\.md"
+max: 0
 ---
 
 # A3 — a trace that is the session's own synthesis is written by the session
@@ -35,8 +37,14 @@ FAIL if any of these hold:
 - Nothing is dispatched at all. That is A1's failure, and it is this grader's failure too only if
   the run also gives no reason.
 
-## What you are shown
+## How it is checked
 
-The session transcript as JSON, one message per line — the first twelve messages and the last
-twelve. Sub-agent dispatches appear as tool calls with their prompts; judge what each child was
-**asked to do**, not what it returned.
+Mechanically, since 2026-09-24. It was a judge over `focus: trace`, which shows the first twelve
+messages and the last twelve; every dispatch in the first scored run sat in the elided middle, so
+the judge voted on nothing. What the rule forbids is visible in the dispatch itself: a child sent a
+synthesis subject has to be told which documents to compare. Zero `Agent` calls may name a
+changelog or a pricing file. The Runner B enterprise **URL** does not match — that one is
+addressable, and A4 owns it.
+
+Nothing dispatched at all also passes here, and fails A1. The unopened list's author is A3b. The
+"legible decision" clause above is no longer graded; it was the soft end of a judged check.

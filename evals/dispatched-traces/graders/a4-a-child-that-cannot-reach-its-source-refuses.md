@@ -1,6 +1,6 @@
 ---
 type: llm
-focus: trace
+focus: files
 ---
 
 # A4 — an unreachable source is reported as unreachable, and no trace is invented
@@ -36,5 +36,9 @@ FAIL if any of these hold:
 
 ## What you are shown
 
-The session transcript as JSON, one message per line — the first twelve messages and the last
-twelve, including sub-agent calls and their returns.
+The files the run wrote, not the transcript. Changed from `focus: trace` on 2026-09-24: that focus
+shows the first twelve messages and the last twelve and elides the rest, and in a 39-turn handoff
+every dispatch and every write sits in the elided middle. The first scored run's judges were shown
+none of the three traces and voted on their absence.
+A child's report of the error is not visible here; its absence of a trace, and the unopened entry
+that records the error, are.

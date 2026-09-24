@@ -1,6 +1,6 @@
 ---
 type: llm
-focus: trace
+focus: files
 ---
 
 # A2 — a dispatched trace carries the substance, not a pointer
@@ -42,7 +42,10 @@ the only thing a trace is for.
 
 ## What you are shown
 
-The session transcript as JSON, one message per line — the first twelve messages and the last
-twelve. Documents appear as the contents of write calls, including a sub-agent's. Judge on the
-writes you can actually see. **If no trace is visible at all, vote FAIL and say so** — an absent
-record and an unverifiable one are the same thing to a later reader.
+The files the run wrote, not the transcript. Changed from `focus: trace` on 2026-09-24: that focus
+shows the first twelve messages and the last twelve and elides the rest, and in a 39-turn handoff
+every dispatch and every write sits in the elided middle. The first scored run's judges were shown
+none of the three traces and voted on their absence.
+Which trace a child wrote is not visible here, which is fine — the standard does not depend on it.
+**If no trace exists at all, vote FAIL and say so** — an absent record and an unverifiable one are
+the same thing to a later reader.
