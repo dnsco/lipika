@@ -157,3 +157,60 @@ cite it. `lipika orientation-carry` separates them out at the handoff and exits 
   `git rev-parse HEAD` against the base ref before trusting a diff.
 - **A loop step only a human can perform stalls the loop silently.** That is why the restart ends
   the session rather than sitting inside it.
+
+## 7. Running the eval suite
+
+Also true on every thread, so also not live items. `claude plugin eval` shipped in `v2.1.269`;
+everything below was measured on `2.1.274`.
+
+### The run is not you
+
+- **The child agent gets a sealed `HOME`**, so the OAuth credential in your keychain is
+  unreachable and the run exits `Not logged in`. The **judge** calls run in the parent process, in
+  your environment, so they authenticate and bill normally — a run can cost real money and score
+  0.00 with every judge voting FAIL against a workspace no agent ever wrote to.
+- **An environment variable survives the `HOME` swap**, so a key reaches the child where OAuth
+  cannot. Pass it **per command**, never `export` it: the CLI selects one *active credential*, so
+  an ambient `ANTHROPIC_API_KEY` can displace OAuth for every interactive session in that shell and
+  move subscription usage to API billing with nothing announcing it.
+
+  ```bash
+  ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
+    claude plugin eval . --case <name> --scaffold \
+    --allow-tools Bash Write Edit Task --trust-plugin --ablation none --runs 1 --keep-temp
+  ```
+
+- **`--scaffold` is off by default.** Without it the workspace is empty, the seeded vault never
+  exists, and every `file_exists` grader fails for a reason that has nothing to do with the change.
+- **The tool grants are separate from the case's `allowed_tools`.** The case declares what a run
+  *may* use; `--allow-tools` is you saying yes. A grader needing an ungranted tool is reported at
+  load, above the score, where it reads as a warning.
+
+### Reading the result
+
+- **A grader skipped for the cost ceiling is scored as a FAILURE**, so the headline understates a
+  change that was never measured. Read the per-grader lines; never the score alone.
+- **The runner can contradict itself**: three graders printing `skipped: cost ceiling` under a
+  summary printing `nothing was skipped`. The per-grader lines are the truthful ones.
+- **`--max-cost-usd` is checked before a run launches, not during one**, so a single run overruns
+  by its whole cost. $2 capped, $2.13 spent.
+- **Exit 1 means "below threshold" OR "a case file failed to load".** Read stderr, not `$?`.
+- **Without `--keep-temp` the trace is deleted**, including on a run whose score you then have to
+  explain. `tracePath` in `aggregate-result.json` will point at a path that no longer exists.
+- **A judged grader passes vacuously on an empty workspace.** Every case needs a free
+  `file_exists` guard proving the run produced anything at all.
+
+### Writing a grader
+
+- **A grader takes `type`, `weight`, `arm` and its own type's options, and nothing else.** An
+  unknown key rejects the **whole case file**, not the one grader. Vault document frontmatter is
+  rejected outright, and `type:` means the grader *mechanism* here — `regex | tool_order |
+  tool_used | file_exists | llm | baseline` — not the vault's document class.
+- `tool_used` takes `tool:`. `tool_order` takes `before:` and `after:`. `file_exists` takes
+  `path:`. `llm` takes `focus:`. **`count:` is in the binary's strings and is rejected by the
+  loader.**
+- **For a `type: llm` grader the file body IS the criteria**, handed to a judge verbatim — so a
+  rubric may contain nothing addressed to a human that a judge would read as an instruction.
+- **Cost, for sizing.** One 39-turn run of a handoff-shaped case: **$2.13**. The default is 3 runs
+  per case plus a no-plugin baseline arm, so a two-case suite at defaults is ~$13 plus judges. A
+  failing change does not need three samples: `--runs 1 --ablation none` until it passes once.
