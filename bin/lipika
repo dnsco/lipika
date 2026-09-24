@@ -80,9 +80,26 @@ def main(argv):
         print(f"lipika: no such command '{name}'\n", file=sys.stderr)
         usage(cmds, out=sys.stderr)
         return 2
-    # exec rather than subprocess: the tool's own exit code is the contract every caller reads,
-    # and a wrapper that re-raises it is one more place for it to be lost.
-    os.execv(sys.executable, [sys.executable, str(target), *argv[1:]])
+    cmd = [sys.executable, str(target), *argv[1:]]
+    # Telemetry off: exec, as before. On: run as a child to time it, and return its exit code
+    # unchanged (a signal as 128+N). evals/perf/test_dispatcher.py checks the passthrough.
+    if os.environ.get("LIPIKA_TELEMETRY", "1") == "0":
+        os.execv(sys.executable, cmd)
+    import signal
+    import subprocess
+    import time
+    signal.signal(signal.SIGINT, signal.SIG_IGN)   # the child handles ^C
+    t = time.perf_counter()
+    rc = subprocess.call(cmd)
+    ms = (time.perf_counter() - t) * 1000
+    code = 128 - rc if rc < 0 else rc
+    try:
+        sys.path.insert(0, str(TOOLS))
+        import _telemetry
+        _telemetry.record(target.stem.replace("_", "-"), argv[1:], ms, code)
+    except Exception:
+        pass
+    return code
 
 
 if __name__ == "__main__":
