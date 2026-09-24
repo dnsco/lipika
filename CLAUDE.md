@@ -141,11 +141,11 @@ stacked PRs sat open for three days and made `main` a fiction.
    *wrong*, and **commit them before the change**. This is the TDD edge: the grader is the test. One
    written afterwards silently agrees with whatever happened — measured, twice.
 
-   *Grader* is `claude plugin eval`'s word for exactly this, so it is ours. Until that tool is
-   ungated — it prints *"currently in early access"* on `2.1.241`, checked 2026-08-24 — graders are
-   prose in the vault's `sources/evals/` and a human scores them. When it opens they become
-   `evals/<case>/graders/*.md` and score themselves. **The name changed to match the tooling we are
-   heading for; the rule did not.**
+   *Grader* is `claude plugin eval`'s word for exactly this, so it is ours. Graders live in
+   `evals/<case>/graders/*.md` and the tool scores them; the vault's `sources/evals/` holds the
+   hand-scored ones from before it shipped. **Every run carries a ceiling** —
+   `--max-cost-usd <usd> --runs 1` — because a case file has no cost key and `runs` defaults to 3.
+   How to run and read one: `design/GOTCHAS.md` §7.
 2. **Author here**, once.
 3. **DEPLOY, if the change ships anything — before the dump, not after.** A change under `skills/`,
    `agents/`, `tools/` or `bin/` is carried by the plugin, and **editing the tree changes nothing

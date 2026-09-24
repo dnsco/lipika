@@ -25,9 +25,10 @@ used, not written up afterwards from memory. Amendments are dated at the bottom.
 2. **Prove no rule was dropped**, with `lipika recall-check <pre-change-ref> <path>`. Every flag judged in
    writing; never reword a file to satisfy one. `--into` needs **every** survivor when content moves,
    including the source file if it kept some.
-3. **Try it on real work**, then **profile it** — the frozen, verbatim measurement goes in the vault's
-   `sources/evals/`. **Probe first**, always: nothing reports which version of a definition is live, and
-   a rewrite reached through a symlink may not have loaded at all.
+3. **Score it, then try it on real work.** `claude plugin eval` scores the graders in
+   `evals/<case>/graders/`; **every run passes `--max-cost-usd` and `--runs 1`** (§7 of `GOTCHAS.md`).
+   A profile of real work goes in the vault's `sources/evals/`. **Probe first**, always: a deployed
+   version is not a running one.
 4. **Write the round's summary** into the workstream's own `reference/`, and feed the findings back to
    step 1.
 
@@ -81,6 +82,8 @@ and read the transcript for the call. What an agent did is not confabulable; wha
 | which version is running | `claude plugin list`, and the version directory above. This is the answer to "was my change in force?" |
 | subagent transcripts | `~/.claude/projects/<project-slug>/<session-id>/subagents/agent-<agentId>.jsonl` |
 | task-output symlinks to the same files | `/private/tmp/claude-502/<slug>/<session-id>/tasks/<id>.output` |
+| graders, and the case they run in | `evals/<case>/` in Lipika — `case.yaml`, `prompt.md`, `graders/*.md`, `scaffold.sh` |
+| scored runs | `evals/results/<timestamp>/aggregate-result.json`; the trace survives only under `--keep-temp` |
 | frozen profiling reports | `sources/evals/YYYY-MM-DD-HHMM-<subject>-profile.md`, **`HHMM` from `date -u` when you write it** — not the run's start, not its completion |
 | the findings drawn from them | `workstreams/vault-maintenance/` |
 | the round summary an agent actually reads | `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, newest first |
@@ -109,7 +112,7 @@ hierarchy, containment or parenthood — that is how the retired field kept acqu
 
 ## The three kinds, and the four verdicts
 
-**A grader, a score and a profile are different artefacts** and `sources/evals/` holds all three. The
+**A grader, a score and a profile are different artefacts.** Since `claude plugin eval`, graders and scores live in Lipika's `evals/`; `sources/evals/` holds profiles, and the hand-scored graders from before. The
 distinction is carried by the vault's hand-maintained `evals.md`, not by frontmatter — the documents
 are records and are not edited to add a field.
 
@@ -392,3 +395,9 @@ not a reason to hold back a change or re-run a pass.
   the false-positive classes; `obsidian unresolved` reads the index and sees `links:` frontmatter fields no body
   scan reaches. Measured on the same vault at the same commit: **0 and 6, both correct.** The assumption going
   in was that the Python tool duplicated the CLI; it does not.
+
+- **2026-09-24 — graders run under `claude plugin eval`, and every run carries a ceiling.** Steps 3 and
+  the artifacts table now say where graders and scores live. A case file has no cost key — checked in
+  the `2.1.274` schema — and `runs` defaults to 3, so the ceiling is a flag on every invocation:
+  `--max-cost-usd <usd> --runs 1`. One handoff-shaped run is ~$2.45. The same day's two traps, both
+  graders that could not pass whatever the run did, are in `GOTCHAS.md` §7.

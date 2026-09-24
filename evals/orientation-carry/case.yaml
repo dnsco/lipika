@@ -10,7 +10,7 @@ context:
 # report reads like a failing change rather than an ungranted one.
 #
 #   claude plugin eval . --case <name> --scaffold \
-#     --allow-tools Bash Write Edit Agent --trust-plugin
+#     --allow-tools Bash Write Edit Agent --trust-plugin --runs 1 --max-cost-usd 5
 #
 # `--scaffold` is off by default, so without it the run works in an empty workspace and every
 # file_exists grader fails for the wrong reason. The tool grants are separate from the case's

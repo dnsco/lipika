@@ -177,8 +177,13 @@ everything below was measured on `2.1.274`.
   ```bash
   ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
     claude plugin eval . --case <name> --scaffold \
-    --allow-tools Bash Write Edit Task --trust-plugin --ablation none --runs 1 --keep-temp
+    --allow-tools Bash Write Edit Agent --trust-plugin --ablation none --runs 1 --keep-temp \
+    --max-cost-usd 5
   ```
+
+- **Every run carries `--max-cost-usd` and `--runs 1`.** A case file has no cost key, and `runs`
+  defaults to 3 per case plus a baseline arm — the flags are the only budget. The Console spend
+  limit on `anthropic-eval-key` is the backstop.
 
 - **`--scaffold` is off by default.** Without it the workspace is empty, the seeded vault never
   exists, and every `file_exists` grader fails for a reason that has nothing to do with the change.
@@ -192,8 +197,8 @@ everything below was measured on `2.1.274`.
   change that was never measured. Read the per-grader lines; never the score alone.
 - **The runner can contradict itself**: three graders printing `skipped: cost ceiling` under a
   summary printing `nothing was skipped`. The per-grader lines are the truthful ones.
-- **`--max-cost-usd` is checked before a run launches, not during one**, so a single run overruns
-  by its whole cost. $2 capped, $2.13 spent.
+- **`--max-cost-usd` is checked before a run launches, not during one**, so it overruns by the runs
+  in flight — one at default concurrency. $2 capped, $2.13 spent.
 - **Exit 1 means "below threshold" OR "a case file failed to load".** Read stderr, not `$?`.
 - **Without `--keep-temp` the trace is deleted**, including on a run whose score you then have to
   explain. `tracePath` in `aggregate-result.json` will point at a path that no longer exists.
@@ -206,11 +211,19 @@ everything below was measured on `2.1.274`.
   unknown key rejects the **whole case file**, not the one grader. Vault document frontmatter is
   rejected outright, and `type:` means the grader *mechanism* here — `regex | tool_order |
   tool_used | file_exists | llm | baseline` — not the vault's document class.
-- `tool_used` takes `tool:`. `tool_order` takes `before:` and `after:`. `file_exists` takes
-  `path:`. `llm` takes `focus:`. **`count:` is in the binary's strings and is rejected by the
-  loader.**
+- `tool_used` takes `tool:`, `input_match:` (a regex over the call's input), `min:`, `max:`.
+  `tool_order` takes `before:` and `after:`, each a tool name or `{tool, input_match}`.
+  `file_exists` takes `path:`. `llm` takes `focus:`. **`count:N` is a `regex` grader's `match:`
+  mode, not a key** — as a key it is rejected. Read from the `2.1.274` bundle, 2026-09-24.
+- **The subagent tool is `Agent`; `Task` is only an alias**, and `tool_used` compares the recorded
+  name exactly. `tool: Task` scores `0x` whatever the run did — measured 2026-09-24, a run that
+  dispatched three tracers.
+- **`focus: trace` shows the judge the first 12 and last 12 messages and elides the rest.** In a long
+  run the work sits in the elided middle and the judge votes on its absence. Judge what the run
+  wrote with `focus: files` (or `{source: file, path}`); make a rule about dispatch a `tool_used`
+  check with `input_match`. Other foci: `last_message`, `mock_calls`.
 - **For a `type: llm` grader the file body IS the criteria**, handed to a judge verbatim — so a
   rubric may contain nothing addressed to a human that a judge would read as an instruction.
-- **Cost, for sizing.** One 39-turn run of a handoff-shaped case: **$2.13**. The default is 3 runs
+- **Cost, for sizing.** One 39-turn run of a handoff-shaped case: **$2.13–2.45**. The default is 3 runs
   per case plus a no-plugin baseline arm, so a two-case suite at defaults is ~$13 plus judges. A
   failing change does not need three samples: `--runs 1 --ablation none` until it passes once.
