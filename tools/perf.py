@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """perf — every skill run and lipika tool call over time, as one HTML page.
 
-One panel per project and operation, in run order, after rue-lang.dev/performance: a trailing
-median with an IQR band, version changes as rules, and a point flagged only when it leaves the
-trailing dispersion, in either direction.
+A project dropdown (default `lipika`, kept in the URL hash) shows one project's panels, one per
+operation in run order: a trailing median with an IQR band, version changes as rules, and a point
+flagged when it leaves the trailing dispersion in either direction (after rue-lang.dev/performance).
 
 Sources, none written by an agent:
   skill runs  Claude transcripts, ~/.claude/projects/*/*.jsonl; spans defined in _perf_parse.py
@@ -11,8 +11,8 @@ Sources, none written by an agent:
   passes      the vault's pass-log.jsonl
   eval runs   <checkout>/evals/results/*/aggregate-result.json
 
-A project is a repo: the cwd's origin remote name, worktrees folded in. The page is a view,
-rebuilt from the logs each run; nothing is stored.
+A project is a repo: the cwd's origin remote name, worktrees folded in. Eval runs are project
+`lipika-evals`. The page is one self-contained HTML file, rebuilt from the logs each run.
 
 USAGE
   lipika perf [--days N] [--project NAME] [--out PATH] [--json]

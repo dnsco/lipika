@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Graders for the timing `bin/lipika` adds around every tool.
 
-Written before the change. Builds a throwaway plugin root -- a copy of `bin/lipika`, the real
-`tools/_telemetry.py`, a manifest and one fixture tool -- so it tests the dispatcher, not the tools.
-Run: `python3 evals/perf/test_dispatcher.py`. Exit 0 all pass, 1 any fail.
+Runs a copy of `bin/lipika` in a throwaway plugin root with the real `tools/_telemetry.py` and one
+fixture tool, so it tests the dispatcher, not the tools. Exit 0 all pass, 1 any fail.
 """
 
 import json

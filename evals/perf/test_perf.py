@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Graders for `lipika perf`: the transcript parser, skill spans, and flagging.
+"""Graders for `lipika perf`: parser, skill spans, flagging, projects, the page.
 
-Written before the code they grade, so they can be wrong. Run: `python3 evals/perf/test_perf.py`
-(also what `lipika perf --self-test` runs). Exit 0 all pass, 1 any fail.
+Run `python3 evals/perf/test_perf.py` or `lipika perf --self-test`. Exit 0 all pass, 1 any fail.
 """
 
 import json
@@ -133,7 +132,7 @@ def main():
                   abs(pk["wait_s"] - 180) < 0.01 and abs(pk["active_s"] - 19) < 0.01,
                   f"wait={pk['wait_s']} active={pk['active_s']}")
 
-    # Flagging, after rue: trailing-window median, k x dispersion, both directions.
+    # Flagging: trailing-window median, k x dispersion, both directions.
     steady = [100, 104, 97, 101, 99, 103, 98, 102, 100, 101]
     marks = pr.flag(steady + [400], window=8, k=3)
     check("red: a 4x outlier after a steady window is flagged", marks[-1] == "flag", marks[-1])
@@ -158,7 +157,7 @@ def main():
     groups = pr.group_skills([a, b])
     check("one skill in two projects is two series", len(groups) == 2, sorted(groups))
 
-    # The page: one project at a time, chosen from a dropdown, lipika selected by default.
+    # The page: one project at a time, from a dropdown, lipika by default.
     import re
     span = {"skill": "lipika:pickup", "session": "S", "project": "/n/workspace/agentomatic",
             "start": T0, "end": T0 + 30, "active_s": 30, "ended_by": "ask", "wait_s": 0,
