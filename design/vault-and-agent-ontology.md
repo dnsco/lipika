@@ -225,8 +225,9 @@ parent item that did not come across — asks rather than fails, because only th
 the new thread.
 
 ✅ **A thread ends by not being listed as live, and moves to `archive/` when the owner rules it
-finished** (2026-09-24). A dated folder plus its last dump's date already encodes the lifecycle. Moving
-the folder whole breaks no wikilink — they resolve by file name, and dated names are unique — and
+finished** (2026-09-24). A dated folder plus its last dump's date already encodes the lifecycle. The move
+is `lipika archive-thread`, which moves every file through `obsidian move`, so a path-qualified link is
+rewritten with it; a bare wikilink resolves by file name and survives regardless. And
 `lipika threads` hides `archive/` as it hides `parked/`. Literal paths written inside records go stale,
 and stay so: a record is not edited to follow a move.
 
