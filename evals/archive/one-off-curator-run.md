@@ -40,3 +40,16 @@ and orientation headline, gave nothing to rule on, and repeated a stale claim fr
 - **P12** Each thread gets a recommendation (archive, keep, or merge into a named thread) with its
   basis, and the report opens with a plain one-paragraph summary of what each thread was for.
 - **P13** It still moves, writes and commits nothing (P1).
+
+## Run 2, 2026-09-24 — the seven-thread lipika chain, proposal only
+Same subprocess route; $3.37, 404 s. Vault clean after (P13).
+- **P9 partial.** Items are classed, but runs of ~30 `dies never` items are classed as one group.
+- **P10 mostly.** Most live items name a destination; a few say only "not carried".
+- **P11 held.** PR and git claims were checked with `gh` and `git log`; run 1's stale local-`main`
+  claim now reads "landed via #21".
+- **P12 held.** A plain summary and a recommendation per thread.
+- It recommended archiving six and keeping `2026-09-17-how-do-external-references-get-recorded`, and
+  surfaced two unruled escalations whose last home is in the chain (`c085ca2` edited a record in place;
+  contradictory restart measurements).
+- It read the installed `lipika doctor` as blocking any move. The conclusion is right until 0.6.0 is
+  deployed, because other sessions still run a `lipika threads` that lists `archive` as a thread.
