@@ -392,6 +392,17 @@ history rather than rebuild it.
   *concatenation* of the successor's items and shared scaffolding vouched for everything. Its second
   reported a correctly-recorded resolution as needing judgement, because it demanded a hard identifier in
   a haystack one item long. Both were found by the fixtures, not by reading.
+- **A conditional output degrades to silence, not to an error, when its condition cannot be
+  evaluated.** Measured 2026-09-24: `handoff-prompt` emits the deploy sentence and the gate only
+  for a thread its graders name, which was itself a fix for emitting them unconditionally into
+  threads where they were nonsense. Graders then moved from the vault into the repo, the lookup
+  found none, and the tool printed a handoff with no gate at exit 0 after a deploy. A conditional
+  needs a third state for *I could not tell*, distinct from *no*.
+- **A rule about where a fact BELONGS can silently retarget who READS it.** *An item that cannot
+  die is a convention, not thread state* is a sound test for placement and no test at all for
+  audience. It coincided with the audience question for every machine trap and diverged on the
+  first `[ESCALATED]` item, which it moved off the one surface a handoff puts in front of the
+  owner. When a rule moves content, ask who was reading it where it was.
 - **A check reports what it did not check, rather than swallowing it.** Skips and empty-filter cases get
   their own exit code or label; an unannounced gap reads as a clean result.
 
