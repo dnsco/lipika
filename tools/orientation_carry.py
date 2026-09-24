@@ -49,9 +49,14 @@ WHAT IT REFUSES TO BE SILENT ABOUT
 
   So: **an item whose death condition is `dies never` is a convention, not a live item.** It belongs
   on a durable surface once -- the vault's `CLAUDE.md`, Lipika's `design/GOTCHAS.md` -- with the
-  orientation citing the surface. `[DEAD END]` is the exception and stays in the live set: it has no
-  death condition by design, but it is thread-LOCAL -- *do not re-propose this, here* -- which no
-  shared surface can say.
+  orientation citing the surface. **Two classes are exempt, and neither exemption is about whether
+  the item can die.** `[DEAD END]` has no death condition by design but is thread-LOCAL -- *do not
+  re-propose this, here* -- which no shared surface can say. `[ESCALATED]` is exempt because of who
+  reads it: an escalation is what the owner opens the document for, and a standing rule from him is
+  exactly the shape that reads `dies never`. Found 2026-09-24, on this tool's second real use,
+  when it swept *do not merge a PR unless he says so in that turn* out of a live set and
+  `orientation-audit` reported it dropped with no successor. Silence toward the owner is the worst
+  failure this tool has.
 
   The tool NAMES them and does not drop them. Promoting a landmine to a convention is a judgement
   with a destination, and the destination is a file the agent has to open.
@@ -172,11 +177,22 @@ def split_items(body):
 def is_immortal(raw_lines):
     """An item that can never leave a live set, and is therefore not thread state.
 
-    `[DEAD END]` is excluded on purpose. It also has no death condition, but it is thread-local --
-    *do not re-propose this, on this thread* -- and no shared surface can hold that.
+    Two kinds are excluded on purpose, and neither exclusion is about whether the item can die.
+
+    `[DEAD END]` has no death condition by design, but it is thread-LOCAL -- *do not re-propose
+    this, on this thread* -- and no shared surface can hold that.
+
+    `[ESCALATED]` is excluded because of who reads it. An escalation is the thing a human opens
+    the document for, and a standing rule from the owner -- *do not merge a PR unless I say so in
+    that turn* -- is precisely the kind that reads as `dies never`. Measured 2026-09-24, on the
+    second real use of this tool: it swept exactly that item out of a thread's live set, and
+    `orientation-audit` reported it as dropped with no successor. Moving it to a durable surface
+    is not wrong in principle and is wrong in effect, because the surface is not what a handoff
+    puts in front of the owner. **Silence toward the owner is the worst failure this tool has**,
+    so the class is exempt whatever its death condition says.
     """
     text = " ".join(l.strip() for l in raw_lines)
-    if markers.typed_kind(text) == "DEAD END":
+    if markers.typed_kind(text) in ("DEAD END", "ESCALATED"):
         return False
     return bool(IMMORTAL.search(text))
 
@@ -270,6 +286,12 @@ type: orientation
     red = green.replace("### The path\n", "### The path\n\n"
                         "- **[LANDMINE] The `Edit` tool needs its own `Read`** → dies never · "
                         "as-of 2026-09-15\n")
+    # A standing owner rule, typed ESCALATED and reading `dies never`. It must be CARRIED.
+    # Real item, real regression: this shape was swept out of a live set on 2026-09-24.
+    esc = green.replace("- **[ESCALATED] Somebody must rule.**",
+                        "- **[ESCALATED] Do not merge a PR unless he says so in that turn.** → "
+                        "dies never · as-of 2026-09-17\n"
+                        "- **[ESCALATED] Somebody must rule.**")
 
     with tempfile.TemporaryDirectory() as tmp:
         for name, body, want in (("green", green, 0), ("red", red, 1)):
@@ -308,6 +330,18 @@ type: orientation
         if "needs its own `Read`" not in so2.getvalue():
             failures.append("--all must emit the immortal items")
 
+        # An ESCALATED item reading `dies never` is a standing rule from the owner, and a
+        # handoff is how it reaches him. It is carried, and the tool stays quiet about it.
+        ws = os.path.join(tmp, "esc")
+        os.makedirs(os.path.join(ws, "orientation"))
+        with open(os.path.join(ws, "orientation", "2026-09-21-140000.md"), "w") as fh:
+            fh.write(esc)
+        so, se = io.StringIO(), io.StringIO()
+        if run(ws, out=so, err=se) != 0:
+            failures.append("esc: an ESCALATED item must not make the tool refuse\n" + se.getvalue())
+        if "Do not merge a PR" not in so.getvalue():
+            failures.append("esc: an ESCALATED item was swept out of the carry")
+
         bare = os.path.join(tmp, "bare")
         os.makedirs(bare)
         if run(bare, out=io.StringIO(), err=io.StringIO()) != 3:
@@ -316,7 +350,7 @@ type: orientation
     for f in failures:
         print("FAIL", f, file=sys.stderr)
     print("self-test: " + ("FAILED" if failures
-                           else "green, red, --all and no-orientation all as specified"))
+                           else "green, red, escalated, --all and no-orientation all as specified"))
     return 1 if failures else 0
 
 
