@@ -28,10 +28,19 @@ CONTRACT
           until it heals. Do not invent a name; wait, or fix the name that is wrong.
   exit 5  bad invocation
 
+  A `reference/` target is the exception, and it is not a special case so much as a different
+  question. A trace is `YYYY-MM-DD-<topic>.md` -- the conventions say so and so does the shape block
+  in `context-dump` -- because nothing reads "the newest trace": they are addressed by subject, and
+  several land on one day. So there is no sort-last property to check, and checking one would refuse
+  every trace after the first each day. Measured 2026-09-17, following the step as written: the tool
+  returned `2026-09-17-230233` for a `reference/` target and the two traces written that pass were
+  renamed by hand against the diagram.
+
 USAGE
   lipika stamp                                   # 2026-08-21-205131
   lipika stamp --date                            # 2026-08-21
   lipika stamp --for workstreams/<ws>/orientation      # stamp, checked against what is there
+  lipika stamp --for workstreams/<ws>/reference        # 2026-08-21 -- date only, no sort check
 """
 
 import argparse
@@ -46,6 +55,11 @@ import vault_config     # noqa: E402
 # A leading YYYY-MM-DD-HHMM or YYYY-MM-DD. Anything else in the directory is not a stamped
 # document and cannot be sorted against -- README.md in an orientation folder is not a rival.
 STAMPED = re.compile(r"^(\d{4}-\d{2}-\d{2}(?:-\d{4,6})?)")
+
+# Directories whose documents are dated to the DAY and addressed by subject. `orientation/` and
+# `dumps/` are the opposite: one of them is read by being newest, and both can land twice in a
+# minute, which is what the seconds are for.
+DATE_ONLY_DIRS = {"reference"}
 
 
 def utc_now():
@@ -97,10 +111,26 @@ def main(argv):
     args = ap.parse_args(argv)
 
     now = utc_now()
-    s = stamp(now, args.date)
+
+    # A target the conventions date to the DAY, not to the second. Keyed on the directory's own
+    # name rather than on a flag, because the caller following step 2a has a path in hand and no
+    # reason to know which resolution that path wants -- and a step that hands you a tool whose
+    # answer you then have to correct by hand is the step failing, not the caller.
+    date_only = args.date or (args.target is not None and
+                              os.path.basename(str(args.target).rstrip("/")) in DATE_ONLY_DIRS)
+    s = stamp(now, date_only)
 
     if not args.target:
         print(s)
+        return 0
+
+    if date_only and not args.date:
+        # No sort-last check: several traces land on one day by design, so every one after the
+        # first would be refused for colliding with a name that is not its rival.
+        print(s)
+        print(f"date only -- a trace in {args.target} is addressed by subject, not by being newest."
+              "\nName it YYYY-MM-DD-<topic>.md, where <topic> is what the trace is ABOUT.",
+              file=sys.stderr)
         return 0
 
     target = args.target
