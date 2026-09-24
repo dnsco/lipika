@@ -163,38 +163,22 @@ project does **not** load automatically — read it if you have not.
    yourself.**
 
    Send one `tracer` per subject, all in one message so they run at once. Give each **the exact
-   path to write, the address, the subject, and the claim it settles** — and *nothing else*. Not
-   the substance.
+   path to write, the address, the subject, and the claim it settles** — and *nothing else*. **Not
+   the substance**: the handoff's cost is text generated, so pasting the source into the prompt
+   spends what the dispatch exists to save. The child re-opens the artifact in a context that is
+   then discarded.
 
-   **The substance is the whole point.** If you paste what the source said into the prompt, you
-   generate the bytes you dispatched to avoid generating and the tracer is a slower way to write
-   the same document. The saving exists only because the child re-opens the artifact in a context
-   that is then discarded. Measured 2026-09-17: a handoff ran at a flat 150–230 B/s in every
-   phase, six traces cost 2m59s, and ~11 KB of that was Slack text copied by hand out of tool
-   output that was already verbatim in the session's context.
+   - **Dispatch** one artifact a child can re-open on its own: a Slack thread, a deck, an incident
+     review, a vendor page, a doc site.
+   - **Write it yourself** when the trace is **synthesis** — a claim across several artifacts plus
+     your judgement. A child has neither, and returns a confident summary of the wrong thing.
+   - **Never dispatch `unopened.md`.** An absence cannot be delegated.
+   - **A tracer that refuses has done its job** — it writes nothing and returns the address and the
+     error. Route that to the unopened list.
+   - **Read what comes back.** A source that settles less than the claim you sent is a correction,
+     and it belongs in your dump.
 
-   **Dispatch** a subject that is **one artifact a child can re-open on its own**: a Slack thread,
-   a deck, an incident review, a vendor page, a doc site.
-
-   **Write it yourself** when the trace is **synthesis** — a claim that exists only across several
-   artifacts plus your judgement about them. Of the six traces in that pass, two were conversations
-   and four were synthesis. A child sent to write one of those has neither the artifacts in view
-   nor the judgement, and returns a confident summary of the wrong thing.
-
-   **Never dispatch `unopened.md`.** Only you know what you did not open; an absence cannot be
-   delegated.
-
-   **A tracer that refuses has done its job.** It writes nothing when it cannot reach the source,
-   and reports the address and the error — route that to the unopened list. It can always invent a
-   plausible trace instead, and a fabricated trace is not a slower record but a false one, found
-   only when someone re-opens the source, which is exactly when it cannot be repaired.
-
-   **Read what comes back.** A tracer reports what the source *actually* settled, which is
-   sometimes narrower than the claim you sent it with. That correction is the most valuable thing
-   in its return, and it belongs in your dump.
-
-   You commit — once, after every tracer has returned (step 5). They do not commit, and they open
-   no pass: yours covers them.
+   You commit once, after every tracer has returned (step 5). Tracers neither commit nor open a pass.
 
    ```bash
    lipika reference-check <ws>    # URLs in dumps no reference/ trace carries. 0 clean · 1 findings
@@ -204,9 +188,8 @@ project does **not** load automatically — read it if you have not.
    **A clean exit is not a clean bill** — nothing can see what you read and did not write down. **If
    `reference-check` reports untraced URLs that your traces plainly carry, say so and stop** — it
    matches literal strings, so a grouped or abbreviated citation reads as untraced, and the fix is
-   the tool rather than a machine-readable index bolted onto a document a human has to read. It no
-   longer reads fenced code blocks: a URL in a `bash` block is a command to re-run, not a source to
-   re-open, and demanding a trace for one is what produced a falsified trace on 2026-09-17.
+   the tool rather than a machine-readable index bolted onto a document a human has to read. It
+   skips fenced code: a URL in a `bash` block is a command to re-run, not a source to re-open.
 
    **`trace-check` names a fact about a document, never an instruction to edit one.** A trace is a
    record. An older trace it flags stays exactly as it is.
@@ -230,29 +213,18 @@ project does **not** load automatically — read it if you have not.
    ```
 
    Paste that in, then do the judgement it cannot: **delete the items whose death conditions
-   fired** and write each into `## Settled since the last orientation` with the evidence that
-   fired it, and author the rest — `## Where this is`, your new items, the escalation ordering,
-   `## References`, `## Recent narrative`.
+   fired**, writing each into `## Settled since the last orientation` with the evidence, and author
+   the rest — `## Where this is`, your new items, the escalation ordering, `## References`,
+   `## Recent narrative`. Retyping is where a live set decays: rewording and lost death conditions
+   happen in carried items, not new ones. A carried item keeps its own `as-of`.
 
-   This is not patching a view. The document is new, dated, and yours; the tool copies the half
-   that is mechanical. Retyping is where a live set decays — measured 2026-09-17, `orientation-audit`
-   found three defects in a 91-item carry, one item reworded past recognition and two that lost
-   the death condition they had in the predecessor, **all three in carried items and none in the
-   seventeen new ones**. A carried item keeps its own `as-of`, because `as-of` is when an item was
-   last *confirmed*, not last copied.
-
-   **It exits 1 and names the items that can never leave, and that is the part to act on.** An
-   item whose death condition reads `dies never` is a **convention, not a live item** — a fact
-   about the machine or the workflow, true of every thread, which nothing can ever retire. Measured
-   2026-09-18: 24% and 42% of two unrelated threads' live sets were immortal, and both carried the
-   **same 19** of them. Write it once where it belongs — the vault's `CLAUDE.md`, or Lipika's
-   `design/GOTCHAS.md` if it is about the machinery — and let the orientation cite the surface.
-   `[DEAD END]` is exempt: *do not re-propose this, here* is thread-local, and no shared surface
-   can say it.
-
-   Say what you moved and where. A disposition states its basis, and *"this is not thread state"*
-   is a basis. If you judge one genuinely thread-local, paste it back — the tool names, it does not
-   drop.
+   **It exits 1 and names the items that can never leave — act on those.** An item whose death
+   condition reads `dies never` is a **convention, not a live item**, true of every thread. Write it
+   once where it belongs — the vault's `CLAUDE.md`, or Lipika's `design/GOTCHAS.md` for machinery —
+   and let the orientation cite it. Say what you moved and where; *"this is not thread state"* is a
+   basis. `[DEAD END]` and `[ESCALATED]` stay: one is thread-local, the other is what the owner
+   opens the document for. If you judge an item thread-local, paste it back — the tool names, it
+   does not drop.
 
    ```markdown
    ---
