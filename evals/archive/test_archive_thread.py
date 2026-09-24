@@ -6,7 +6,8 @@ Run `python3 evals/archive/test_archive_thread.py`. Exit 0 all pass, 1 any fail.
 Obsidian cannot run in a fixture, so a fake `obsidian` on PATH stands in: it answers `vault` with a
 path and performs `move path=... to=...`, logging each call. What this proves is that the tool moves
 EVERY file through Obsidian -- which is what keeps links true -- and refuses, moving nothing, when
-Obsidian is absent, serving another vault, or the move would clobber or carry uncommitted work.
+Obsidian is absent (3), serving another vault (4), or the move would clobber, re-archive, or carry
+uncommitted work (6). A thread that does not exist is 5.
 That Obsidian repairs the links is Obsidian's behaviour, not tested here.
 """
 
@@ -79,6 +80,8 @@ def fixture(d):
 
 def bindir(d, with_obsidian=True):
     b = Path(d) / ("bin" if with_obsidian else "bin-bare")
+    if b.exists():
+        return b
     b.mkdir()
     os.symlink(shutil.which("git"), b / "git")
     if with_obsidian:
@@ -139,24 +142,24 @@ def main():
         vault, ws = fixture(d)
         (vault / "workstreams" / "archive" / T).mkdir(parents=True)
         r, moves = run(vault, bindir(d), vault, T)
-        check("when the destination exists it refuses and moves nothing",
-              r.returncode != 0 and not moves and unmoved(ws), f"exit {r.returncode}\n{r.stderr}")
+        check("when the destination exists it refuses with exit 6 and moves nothing",
+              r.returncode == 6 and not moves and unmoved(ws), f"exit {r.returncode}\n{r.stderr}")
 
     # Red: uncommitted work inside the thread.
     with tempfile.TemporaryDirectory() as d:
         vault, ws = fixture(d)
         (ws / "dumps" / "2026-08-22-090000-uncommitted.md").write_text("# not yet committed\n")
         r, moves = run(vault, bindir(d), vault, T)
-        check("with uncommitted work in the thread it refuses and moves nothing",
-              r.returncode != 0 and not moves and unmoved(ws), f"exit {r.returncode}\n{r.stderr}")
+        check("with uncommitted work in the thread it refuses with exit 6 and moves nothing",
+              r.returncode == 6 and not moves and unmoved(ws), f"exit {r.returncode}\n{r.stderr}")
 
     # Red: a thread that does not exist, and one already archived.
     with tempfile.TemporaryDirectory() as d:
         vault, ws = fixture(d)
         r, _ = run(vault, bindir(d), vault, "2026-01-01-nope")
-        check("a thread that does not exist is refused", r.returncode != 0, r.stderr)
+        check("a thread that does not exist is exit 5", r.returncode == 5, r.stderr)
         r, _ = run(vault, bindir(d), vault, f"archive/{T}")
-        check("a path already under archive/ is refused", r.returncode != 0 and unmoved(ws), r.stderr)
+        check("a path already under archive/ is refused with exit 6", r.returncode == 6 and unmoved(ws), r.stderr)
 
     print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
