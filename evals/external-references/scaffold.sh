@@ -49,7 +49,7 @@ NOTE
 # Stands in for what a session would otherwise fetch. Network is restricted inside the sandbox and
 # live fetches would make the case non-deterministic; what is under test is how the session RECORDS
 # a reference, not whether it can retrieve one. Each file therefore carries its own provenance, and
-# several cite things that are deliberately absent -- those are the backlog R3 looks for.
+# several cite things that are deliberately absent -- those are the backlog `the-unopened-list-is-its-own-file` looks for.
 
 mkdir -p research-notes
 

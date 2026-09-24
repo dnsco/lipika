@@ -6,7 +6,7 @@ min: 0
 max: 0
 ---
 
-# A3 — a trace that is the session's own synthesis is written by the session
+# a trace that is the session's own synthesis is written by the session
 
 The line this round adds to the skill, and the one that stops "dispatch the traces" becoming "fan
 everything out". A tracer is for a subject that is **one addressable artifact a child can re-open**.
@@ -35,7 +35,7 @@ FAIL if any of these hold:
 - A sub-agent is sent to compare the two pricing documents, or to read the two changelogs against
   each other.
 - The unopened list is produced by a sub-agent.
-- Nothing is dispatched at all. That is A1's failure, and it is this grader's failure too only if
+- Nothing is dispatched at all. That is `an-addressable-subject-is-dispatched`'s failure, and it is this grader's failure too only if
   the run also gives no reason.
 
 ## How it is checked
@@ -45,7 +45,7 @@ messages and the last twelve; every dispatch in the first scored run sat in the 
 the judge voted on nothing. What the rule forbids is visible in the dispatch itself: a child sent a
 synthesis subject has to be told which documents to compare. Zero `Agent` calls may name a
 changelog or a pricing file. The Runner B enterprise **URL** does not match — that one is
-addressable, and A4 owns it.
+addressable, and `no-trace-is-written-for-the-unreachable-page` owns it.
 
-Nothing dispatched at all also passes here, and fails A1. The unopened list's author is A3b. The
+Nothing dispatched at all also passes here, and fails `an-addressable-subject-is-dispatched`. The unopened list's author is `the-unopened-list-is-not-dispatched`. The
 "legible decision" clause above is no longer graded; it was the soft end of a judged check.

@@ -5,7 +5,7 @@ input_match: "lipika:tracer"
 min: 2
 ---
 
-# A1 — an addressable subject is dispatched, not transcribed
+# an addressable subject is dispatched, not transcribed
 
 The mechanical half of the claim this round exists to test. Two of the five things named in the
 prompt are **one addressable artifact each** — the `#platform-eng` export and the incident review.
@@ -19,7 +19,7 @@ to appear in the trace.
 
 At least two dispatches. Fewer means the session transcribed a subject it could have delegated.
 
-This is the mechanical complement to A3, which fails a run that dispatches everything.
+This is the mechanical complement to `synthesis-is-not-dispatched`, which fails a run that dispatches everything.
 
 **`tool: Agent`, not `Task`.** The subagent tool is named `Agent` with `Task` as an alias, and
 `tool_used` compares the recorded name exactly. Written as `Task`, this grader scored `Task called 0x`

@@ -8,7 +8,7 @@ after:
   input_match: "vault-commit"
 ---
 
-# A5 — the vault commit comes after the dispatches return
+# the vault commit comes after the dispatches return
 
 A parent that commits while children are still writing commits a partial handoff, and the files
 that land after it are untracked with nothing to say so. The skill already requires the parent to
@@ -19,6 +19,6 @@ Both ends carry an `input_match`: the first tracer dispatch, and the Bash call t
 `vault-commit`. Written as bare `Task`/`Bash` it could not pass — the tool is named `Agent` — and
 had it matched, any early shell call would have satisfied `after`. **Not yet confirmed:** whether
 `tool_order` compares first or last occurrences. If first, this proves the commit follows the first
-dispatch, not the last; the substance is judged in A2 either way.
+dispatch, not the last; the substance is judged in the trace-content checks either way.
 
 A tracer never commits. One commit, by the session, after the last child returns.

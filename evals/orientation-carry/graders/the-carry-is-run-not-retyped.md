@@ -4,10 +4,10 @@ tool: Bash
 input_match: "orientation-carry"
 ---
 
-# B4 — the carry is a tool call
+# the carry is a tool call
 
-The weakest check in this case, and it is here for one reason: B1 can pass by careful retyping, and
-a run that passes B1 by being careful has not demonstrated the change — it has demonstrated that
+The weakest check in this case, and it is here for one reason: `carried-items-keep-their-as-of-and-death-condition` can pass by careful retyping, and
+a run that passes `carried-items-keep-their-as-of-and-death-condition` by being careful has not demonstrated the change — it has demonstrated that
 this particular run was careful, which the profiled handoff also was until it was not.
 
 `input_match` is a regex over the call's input, so this matches a Bash call whose command runs

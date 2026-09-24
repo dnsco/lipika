@@ -7,7 +7,7 @@ date: 2026-08-25
 case: thread-isolation
 ---
 
-# T1 — with no thread named, the skills refuse rather than guess
+# with no thread named, the skills refuse rather than guess
 
 **Written and committed BEFORE the change.** This is the first grader authored in this repo rather than
 in the vault, under the placement decided 2026-08-25: an eval added in the same commit as the change it

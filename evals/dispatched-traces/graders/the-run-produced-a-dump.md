@@ -3,7 +3,7 @@ type: file_exists
 path: "workstreams/*/dumps/*.md"
 ---
 
-# A0 — the run actually wrote a dump
+# the run actually wrote a dump
 
 A guard, not a rule about dispatch. Every judged check here is scored against what the run produced;
 if it produced nothing, those checks can vote PASS on an empty workspace and the suite reports a

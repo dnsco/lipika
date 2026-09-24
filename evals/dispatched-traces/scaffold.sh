@@ -5,7 +5,7 @@
 #   two ADDRESSABLE subjects  -- one artifact each, re-openable by a child that was not in the
 #                                conversation. These are what a tracer is for.
 #   two SYNTHESIS subjects    -- a claim that exists only across several artifacts and the session's
-#                                own judgement about them. Dispatching these is the failure A3 catches.
+#                                own judgement about them. Dispatching these is the failure `synthesis-is-not-dispatched` catches.
 #   one UNREACHABLE subject   -- a URL, and the sandbox has no network. A tracer must refuse; the
 #                                session must file it as unopened rather than invent a trace.
 #
@@ -143,4 +143,4 @@ cat > research-notes/changelog-v4.md <<'V4'
 V4
 
 # No file exists for the vendor enterprise page. It is a URL in the prompt and the sandbox has no
-# network, which is the point of A5.
+# network, which is the point of `no-trace-is-written-for-the-unreachable-page`.

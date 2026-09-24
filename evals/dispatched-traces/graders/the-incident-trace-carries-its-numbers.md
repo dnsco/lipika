@@ -4,7 +4,7 @@ target: trace
 pattern: '/reference/[^"]*\.md","content":"(?:[^"\\]|\\.)*1,840(?:[^"\\]|\\.)*637'
 ---
 
-# A2a — a reference trace states the incident's numbers
+# a reference trace states the incident's numbers
 
 A trace that says an incident review *exists* has not recorded it. Passes when one write to a
 `reference/` file carries both `1,840` (redelivered) and `637` (non-idempotent) in its content.
