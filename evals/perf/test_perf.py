@@ -158,6 +158,21 @@ def main():
     groups = pr.group_skills([a, b])
     check("one skill in two projects is two series", len(groups) == 2, sorted(groups))
 
+    # The page: one project at a time, chosen from a dropdown, lipika selected by default.
+    import re
+    span = {"skill": "lipika:pickup", "session": "S", "project": "/n/workspace/agentomatic",
+            "start": T0, "end": T0 + 30, "active_s": 30, "ended_by": "ask", "wait_s": 0,
+            "version": "0.5.0", "model_s": 30, "subagent_s": 0, "other_tools_s": 0, "lipika_s": 0}
+    ev = {"case": "c", "t": T0, "s": 100, "cost": 1, "turns": 3, "score": 1, "version": "0.5.0"}
+    page = pr.render([span], [], [], [ev], {}, 30)
+    opts = re.findall(r'<option value="([^"]+)"( selected)?>', page)
+    check("the page has a project dropdown listing every project",
+          sorted(o for o, _ in opts) == ["agentomatic", "lipika"], opts)
+    check("lipika is selected by default", ("lipika", " selected") in opts, opts)
+    sections = re.findall(r'<section class="panel"[^>]*>', page)
+    check("every panel carries its project",
+          sections and all('data-project="' in x for x in sections), sections[:3])
+
     check("a record without version renders as unknown", pr.version_of({}) == "unknown")
     check("a record without session has project unknown", pr.project_of({}, {}) == "unknown")
 
