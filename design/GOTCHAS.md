@@ -29,7 +29,7 @@ Three mitigations. Use all three, because each covers a different hole:
 
 Default assumption: if a session invoked neither skill, it has not read the conventions.
 
-## 2. Reads are free; writes go through the two skills
+## 2. Reads are free; writes go through the skills, and two agents each write one thing
 
 A project session sees `<vault>/` in its tree and treats it like any other directory — it will edit a doc in
 place, "tidy" a section that reads as stale, or delete what looks obsolete. Unlike a bad code change, nothing
@@ -100,3 +100,60 @@ ln -s ~/workspace/<vault> <vault>
 ```
 
 If `git status` in that worktree then shows it untracked, add `/<vault>` to its exclude too.
+
+## 6. Traps that are true on every thread, so they belong here and not in a live set
+
+**Why this section exists, and it is a rule about orientations rather than about any one trap
+below.** An item whose death condition reads `dies never` can never leave a thread's live set, so
+it is the one class that only accumulates. Measured 2026-09-18: two unrelated threads in one vault
+carried the **same 19** of these, at 24% and 42% of their live sets, retyped at every handoff.
+**An item that cannot die is a convention, not thread state.** It goes here once and orientations
+cite it. `lipika orientation-carry` separates them out at the handoff and exits 1 naming them.
+
+`[DEAD END]` is the exception and stays in the thread: *do not re-propose this, **here***.
+
+### The shell on this machine is zsh
+
+- **`grep --include=*.md` fails** — zsh globs the pattern before grep sees it. Quote it.
+- **`"$var:path"` silently applies a history modifier.** Write `"${var}:path"`.
+- **Reading a tool's output through `tail` turns a refusal into an apparent success**, and `$?`
+  after a pipeline reports the pipe's last command. `cmd > file; echo $?`.
+- **Two `claude` binaries are on `PATH`** — `/opt/homebrew/bin/claude` and
+  `~/.local/bin/claude`. Homebrew's wins by order. Print `claude --version` before believing
+  anything about a CLI feature.
+
+### Tools lie about themselves in specific, repeatable ways
+
+- **`--help` can document a whole interface that invocation refuses.** Never conclude a CLI
+  feature's availability from `--help`; invoke it. (And the inverse: `claude plugin eval`'s binary
+  contains the string `count:`, which its grader loader rejects.)
+- **A CLI measurement is about one host's installed binary, not about a feature.** `2.1.252`
+  refused what `2.1.274` ran.
+- **A failed setup command leaves a probe printing a clean-looking verdict.** Assert the setup
+  landed before believing any measurement over it.
+- **A proof can be corrupted into one that cannot fail, and it reads as a pass.** When a proof
+  comes back green, confirm it *could* have failed.
+- **A tool's verdict can be right while the sentence under it is wrong.** When a check prints
+  advice, ask which client will read it.
+
+### Writing and committing
+
+- **The `Edit` tool needs its own `Read`.** A slice read through `Bash` does not satisfy the guard.
+- **A new dump or orientation must sort last by name**, or `pickup` never reads it.
+  `lipika stamp --for <dir>`; if it refuses, wait. Never invent a later name.
+- **`lipika vault-commit` requires `-m` and refuses a subject over 72 characters** — and it
+  refuses *after* the whole message is written. Count first.
+- **Never change HEAD in the vault checkout.** It is shared, so a branch moves it for every
+  session in the tree. This does **not** extend to the Lipika checkout, where local `main` was
+  ruled correct 2026-08-27.
+- **Editing one hard-wrapped paragraph pushes the overflow down it one line at a time.** Rewrap
+  the whole paragraph in one edit, and count **characters**, not bytes.
+
+### Agents and trees
+
+- **A sub-agent inherits your cwd while every tool resolves the *configured* vault.** Dispatching
+  from a worktree makes a pass read one tree and index another.
+- **A tree at an unexpected commit computes a delta that still looks clean.** Check
+  `git rev-parse HEAD` against the base ref before trusting a diff.
+- **A loop step only a human can perform stalls the loop silently.** That is why the restart ends
+  the session rather than sitting inside it.
