@@ -29,7 +29,6 @@ import glob
 import html
 import json
 import math
-import re
 import os
 import statistics
 import subprocess
@@ -42,6 +41,7 @@ import _telemetry            # noqa: E402
 
 NORTH_STAR_S = 120
 WINDOW, K = 8, 3.0
+EVALS = "lipika-evals"
 PROJECTS = os.path.expanduser("~/.claude/projects")
 
 
@@ -230,7 +230,9 @@ table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px;
 th,td{text-align:right;padding:3px 8px;border-bottom:1px solid var(--grid)} th:first-child,td:first-child{text-align:left}
 th{color:var(--ink-2);font-weight:600} details{margin-top:8px} summary{cursor:pointer;color:var(--ink-2);font-size:12px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2);margin:4px 0 8px}
-a{color:var(--ink-2)} .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.filters{margin:0 0 16px;color:var(--ink-2)}
+select{font:inherit;color:var(--ink);background:var(--surface-1);border:1px solid var(--axis);
+border-radius:6px;padding:4px 8px;margin-left:6px} .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 """
 
 
@@ -331,11 +333,7 @@ def table(headers, rows):
     return f"<table><tr>{h}</tr>{b}</table>"
 
 
-def anchor(title):
-    return "p-" + "".join(c if c.isalnum() else "-" for c in title)
-
-
-def panel(title, points, extra="", reference=None, cols=None):
+def panel(project, title, points, extra="", reference=None, cols=None):
     svg, marks = scatter(points, reference)
     ys = [p[1] for p in points]
     flagged = [points[i] for i, m in enumerate(marks) if m == "flag"]
@@ -344,28 +342,52 @@ def panel(title, points, extra="", reference=None, cols=None):
     meta = (f"n={len(ys)} · median {fmt_s(statistics.median(ys))} · p90 {fmt_s(pct(ys, 90))} · "
             f"range {fmt_s(min(ys))}–{fmt_s(max(ys))} · {state}")
     rows = [(fmt_t(t), fmt_s(s), v, l, marks[i]) for i, (t, s, v, l) in enumerate(points)]
-    return (f'<section class="panel" id="{anchor(title)}"><h2>{html.escape(title)}</h2><p class="meta">{meta}</p>{svg}{extra}'
-            f'<details><summary>table</summary>{table(cols or ["when", "span", "version", "detail", "mark"], rows[::-1])}'
-            f'</details></section>')
+    return (f'<section class="panel" data-project="{html.escape(project)}"><h2>{html.escape(title)}</h2>'
+            f'<p class="meta">{meta}</p>{svg}{extra}<details><summary>table</summary>'
+            f'{table(cols or ["when", "span", "version", "detail", "mark"], rows[::-1])}</details></section>')
+
+
+def tools_panel(project, rows):
+    groups = {}
+    for r in rows:
+        groups.setdefault((r.get("cmd"), r.get("verb") or "", version_of(r)), []).append(r["ms"])
+    body = [(f"{c} {v}".strip(), ver, len(ms), f"{pct(ms, 50):.0f}", f"{pct(ms, 95):.0f}")
+            for (c, v, ver), ms in sorted(groups.items(), key=lambda kv: -len(kv[1]))]
+    return (f'<section class="panel" data-project="{html.escape(project)}"><h2>lipika tools</h2>'
+            f'<p class="meta">every call through <code>bin/lipika</code> · {len(rows)} calls</p>'
+            + table(["command", "version", "calls", "p50 ms", "p95 ms"], body) + "</section>")
+
+
+SCRIPT = """<script>
+const sel = document.getElementById('project');
+function show() {
+  document.querySelectorAll('section[data-project]').forEach(s => {
+    s.hidden = s.dataset.project !== sel.value;
+  });
+  history.replaceState(null, '', '#' + encodeURIComponent(sel.value));
+}
+const want = decodeURIComponent(location.hash.slice(1));
+if ([...sel.options].some(o => o.value === want)) sel.value = want;
+sel.addEventListener('change', show);
+show();
+</script>"""
 
 
 def render(skills, passes, tel, evals, sessions, days):
-    parts = [f'<div class="viz-root"><h1>lipika performance</h1><p class="sub">last {days} days · '
-             f'generated {time.strftime("%Y-%m-%d %H:%M")} · a point is flagged when it is more than '
-             f'{K:g}× the trailing dispersion from the trailing median of {WINDOW} runs</p>']
+    panels = []
     by = group_skills(skills)
-    for key in sorted(by, key=lambda k: (k[1], -len(by[k]))):
+    for key in sorted(by, key=lambda k: -len(by[k])):
         ss = sorted(by[key], key=lambda s: s["start"])
         pts = [(s["start"], max(s["active_s"], 0.5), s["version"], f'ended by {s["ended_by"]}'
                 + (f' · owner wait {fmt_s(s["wait_s"])}' if s["wait_s"] else "")) for s in ss]
-        parts.append(panel(f"{key[1]} · {key[0]}", pts, stack(ss), NORTH_STAR_S))
+        panels.append((key[1], panel(key[1], key[0], pts, stack(ss), NORTH_STAR_S)))
     bypass = {}
     for s, e in passes:
         bypass.setdefault((s.get("role"), project_of(s, sessions)), []).append((s, e))
-    for key in sorted(bypass, key=lambda k: (k[1], -len(bypass[k]))):
+    for key in sorted(bypass, key=lambda k: -len(bypass[k])):
         pts = [(pp.epoch(s["ts"]), max(e["span_s"], 0.5), version_of(e), s.get("scope") or "vault")
                for s, e in bypass[key]]
-        parts.append(panel(f"{key[1]} · pass {key[0]} (pass-log)", pts, "", NORTH_STAR_S))
+        panels.append((key[1], panel(key[1], f"pass {key[0]} (pass-log)", pts, "", NORTH_STAR_S)))
     bycase = {}
     for r in evals:
         bycase.setdefault(r["case"], []).append(r)
@@ -373,33 +395,25 @@ def render(skills, passes, tel, evals, sessions, days):
         rs.sort(key=lambda r: r["t"])
         pts = [(r["t"], r["s"], r["version"], f'${r["cost"] or 0:.2f} · {r["turns"]} turns · score {r["score"]}')
                for r in rs]
-        parts.append(panel(f"lipika · eval {case}", pts))
-    if tel:
-        groups = {}
-        for r in tel:
-            groups.setdefault((r.get("cmd"), r.get("verb") or "", version_of(r)), []).append(r["ms"])
-        rows = [(f"{c} {v}".strip(), ver, len(ms), f"{pct(ms, 50):.0f}", f"{pct(ms, 95):.0f}")
-                for (c, v, ver), ms in sorted(groups.items(), key=lambda kv: -len(kv[1]))]
-        parts.append('<section class="panel"><h2>lipika tools</h2><p class="meta">every call through '
-                     f'<code>bin/lipika</code> · {len(tel)} calls</p>'
-                     + table(["command", "version", "calls", "p50 ms", "p95 ms"], rows) + "</section>")
-    else:
-        parts.append('<section class="panel"><h2>lipika tools</h2><p class="meta">no telemetry yet -- '
-                     'it starts with the first call through a dispatcher that records it</p></section>')
-    if not (skills or passes or evals):
-        parts.append('<p class="sub">NOTHING WAS MEASURED in this window.</p>')
-    titles = [t for t in re.findall(r'<section class="panel" id="[^"]*"><h2>([^<]*)</h2>', "".join(parts))]
-    index = {}
-    for t in titles:
-        proj, _, rest = html.unescape(t).partition(" · ")
-        index.setdefault(proj, []).append((rest, t))
-    nav = "".join(f'<p class="meta"><b>{html.escape(p)}</b> · ' + " · ".join(
-        f'<a href="#{anchor(html.unescape(t))}">{html.escape(r)}</a>' for r, t in items) + "</p>"
-        for p, items in index.items())
-    parts.insert(1, f'<section class="panel">{nav}</section>')
-    parts.append("</div>")
+        panels.append((EVALS, panel(EVALS, f"eval {case}", pts)))
+    bytool = {}
+    for r in tel:
+        bytool.setdefault(project_of(r, sessions), []).append(r)
+    for proj, rows in bytool.items():
+        panels.append((proj, tools_panel(proj, rows)))
+
+    projects = sorted({p for p, _ in panels}, key=lambda p: (p == "unknown", p.lower()))
+    default = "lipika" if "lipika" in projects else (projects[0] if projects else "")
+    options = "".join(f'<option value="{html.escape(p)}"{" selected" if p == default else ""}>'
+                      f'{html.escape(p)}</option>' for p in projects)
+    head = (f'<div class="viz-root"><h1>lipika performance</h1><p class="sub">last {days} days · '
+            f'generated {time.strftime("%Y-%m-%d %H:%M")} · a point is flagged when it is more than '
+            f'{K:g}× the trailing dispersion from the trailing median of {WINDOW} runs</p>'
+            f'<p class="filters"><label for="project">project</label> <select id="project">{options}'
+            f'</select></p>')
+    body = "".join(h for _, h in panels) or '<p class="sub">NOTHING WAS MEASURED in this window.</p>'
     return (f"<!doctype html><html><head><meta charset='utf-8'><title>lipika performance</title>"
-            f"<style>{CSS}</style></head><body>{''.join(parts)}</body></html>")
+            f"<style>{CSS}</style></head><body>{head}{body}</div>{SCRIPT}</body></html>")
 
 
 def main(argv):
