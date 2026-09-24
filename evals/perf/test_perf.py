@@ -55,6 +55,13 @@ FIXTURE = [
     rec(320, "assistant", use("u6", "AskUserQuestion", {"questions": []})),
     rec(500, "user", result("u6")),
     rec(505, "assistant", [{"type": "text", "text": "planning"}]),
+    # A skill typed as a slash command: no Skill call, a human prompt naming it, then its body.
+    rec(600, "user", "<command-message>lipika:context-dump</command-message>\n"
+        "<command-name>/lipika:context-dump</command-name>", origin={"kind": "human"}),
+    rec(600, "user", [{"type": "text", "text": "Base directory for this skill: "
+        "/Users/x/.claude/plugins/cache/lipika/lipika/0.3.5/skills/context-dump\n\n# body"}],
+        isMeta=True),
+    rec(660, "assistant", [{"type": "text", "text": "dumped"}]),
 ]
 
 failures = []
@@ -76,7 +83,7 @@ def write_fixture(d):
 
 def main():
     import _perf_parse as pp
-    import perf_report as pr
+    import perf as pr
 
     with tempfile.TemporaryDirectory() as d:
         path = write_fixture(d)
@@ -95,9 +102,17 @@ def main():
               pp.transcript_events(path, len(data) + 999)[0] == events)
 
         spans = pp.skill_spans(events)
-        check("two skill spans found", len(spans) == 2, repr([s.get("skill") for s in spans]))
-        if len(spans) == 2:
-            cd, pk = spans
+        check("three skill spans found, one of them typed as a slash command", len(spans) == 3,
+              repr([s.get("skill") for s in spans]))
+        if len(spans) == 3:
+            cd, pk, sl = spans
+            check("a slash command starts a span at the prompt, named without the slash",
+                  sl["skill"] == "lipika:context-dump" and abs(sl["start"] - (T0 + 600)) < 0.01
+                  and abs(sl["active_s"] - 60) < 0.01, (sl["skill"], sl["active_s"]))
+            check("the skill body's base directory gives the version that ran",
+                  sl["version"] == "0.3.5", sl.get("version"))
+            check("a span with no base directory has version unknown", cd["version"] == "unknown",
+                  cd.get("version"))
             check("span starts at the Skill call", abs(cd["start"] - (T0 + 2)) < 0.01)
             check("a skill that finishes its turn ends at the last assistant record",
                   abs(cd["end"] - (T0 + 50)) < 0.01 and cd["ended_by"] == "turn_end",
@@ -129,6 +144,19 @@ def main():
     marks = pr.flag([100, 300], window=8, k=3)
     check("a short series says not enough history, never ok",
           marks == ["history", "history"], marks)
+
+    # Projects are repos: two repos never share a series, and a worktree folds into its repo.
+    wt = "/nonexistent/workspace/onlineDataAnalysis/.claude/worktrees/mxnet-removal-0c24e9"
+    check("a worktree cwd resolves to its repo", pr.project_key(wt) == "onlineDataAnalysis",
+          pr.project_key(wt))
+    check("a plain cwd resolves to its directory name",
+          pr.project_key("/nonexistent/workspace/agentomatic") == "agentomatic")
+    here = pr.project_key(os.path.dirname(os.path.abspath(__file__)))
+    check("a cwd inside a git checkout resolves to its remote's repo name", here == "lipika", here)
+    a = {"skill": "lipika:pickup", "project": "/n/workspace/agentomatic", "start": 1}
+    b = {"skill": "lipika:pickup", "project": "/n/workspace/onlineDataAnalysis", "start": 2}
+    groups = pr.group_skills([a, b])
+    check("one skill in two projects is two series", len(groups) == 2, sorted(groups))
 
     check("a record without version renders as unknown", pr.version_of({}) == "unknown")
     check("a record without session has project unknown", pr.project_of({}, {}) == "unknown")
