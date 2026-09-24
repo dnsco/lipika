@@ -226,9 +226,6 @@ everything below was measured on `2.1.274`.
   "content":"…<fact>` — and check dispatch with `tool_used` + `input_match`.
 - **`tool_used`'s `min` defaults to 1**, so `max: 0` alone reads `expected 1..0` and cannot pass.
   An absence check needs `min: 0` too.
-- **Name a new grader by what it asserts, with no letter or number prefix** —
-  `synthesis-is-not-dispatched.md`, not `a3-…`. The case folder already partitions graders, and the
-  harness reports each by its filename. Existing prefixed graders stay as they are.
 - **For a `type: llm` grader the file body IS the criteria**, handed to a judge verbatim — so a
   rubric may contain nothing addressed to a human that a judge would read as an instruction.
 - **Cost, for sizing.** One 39-turn run of a handoff-shaped case: **$2.13–2.45**. The default is 3 runs
