@@ -2,6 +2,7 @@
 type: tool_used
 tool: Agent
 input_match: "changelog-v[34]|runner-[ab]-pricing\\.md"
+min: 0
 max: 0
 ---
 

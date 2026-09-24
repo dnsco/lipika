@@ -219,9 +219,13 @@ everything below was measured on `2.1.274`.
   name exactly. `tool: Task` scores `0x` whatever the run did — measured 2026-09-24, a run that
   dispatched three tracers.
 - **`focus: trace` shows the judge the first 12 and last 12 messages and elides the rest.** In a long
-  run the work sits in the elided middle and the judge votes on its absence. Judge what the run
-  wrote with `focus: files` (or `{source: file, path}`); make a rule about dispatch a `tool_used`
-  check with `input_match`. Other foci: `last_message`, `mock_calls`.
+  run the work sits in the elided middle and the judge votes on its absence. **`focus: files` is the
+  changed paths only, no contents**, and `{source: file, path}` takes one literal path — so a judge
+  cannot read files whose names the run chose. **A `regex` grader's `target: trace` is the whole
+  run, unelided**: check what was written by matching inside a write — `/reference/[^"]*\.md",
+  "content":"…<fact>` — and check dispatch with `tool_used` + `input_match`.
+- **`tool_used`'s `min` defaults to 1**, so `max: 0` alone reads `expected 1..0` and cannot pass.
+  An absence check needs `min: 0` too.
 - **For a `type: llm` grader the file body IS the criteria**, handed to a judge verbatim — so a
   rubric may contain nothing addressed to a human that a judge would read as an instruction.
 - **Cost, for sizing.** One 39-turn run of a handoff-shaped case: **$2.13–2.45**. The default is 3 runs
