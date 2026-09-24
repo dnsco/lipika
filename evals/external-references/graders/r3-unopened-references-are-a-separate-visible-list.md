@@ -1,37 +1,33 @@
 ---
-type: eval
-kind: grader
-life: evergreen
-status: sealed
-date: 2026-09-17
-case: external-references
+type: llm
+focus: files
 ---
 
-# R3 — what was only cited is a separate, visible list
+# R3 — what was only cited is a separate, visible document
 
-**Written and committed BEFORE the change.**
+You are shown the list of file paths created during the run, one per line.
 
-## The change under test
+A **reference** is something outside the repos the session could read. Some references the session
+**opened and read**; others were **cited by something it read but never opened** — the second group
+is the backlog, and it is the part that goes missing silently. The two must be kept visibly apart.
 
-Step 2a requires two lists, kept visibly apart: what was **read**, and what was **cited by something
-read but never opened**. The second is the backlog, and it is the part that goes missing silently. On the
-measured thread, the Notion page that is the stated source of record for the entire programme had never
-been opened, and that only became visible once the two lists sat side by side.
+PASS when:
 
-- **PASS** — the trace carries two headed lists, and an unopened reference appears under the second with
-  what cites it and what it is claimed to settle.
-- **PASS** — the orientation's `## References` section names the unopened ones, and `pickup` reads them
-  out in its step-7 report without a second document read.
-- **FAIL if** there is one merged list, or if read/unread is a per-entry annotation easy to skim past.
-  The adjacency of the two lists is the load-bearing part.
-- **FAIL if** a reference the run knew about but did not open is absent entirely. The list costs a
-  session an admission of what it skipped; an omission here is the failure wearing a tidy face.
-- **FAIL if** unopened references are given death conditions and routed into the live set as OPEN Q or
-  ESCALATED. Considered and rejected 2026-09-17: references accumulate, live items are bounded by dying,
-  and escalating every unread page at the owner is the ceremony this change is meant to avoid.
+- The backlog is its **own dated document** under `workstreams/<thread>/reference/`, named so a
+  reader can tell what it is — for example `YYYY-MM-DD-unopened.md` — sitting beside the subject
+  traces in the same folder.
 
-## What a suspicious result looks like
+FAIL if any of these hold:
 
-**An empty second list is the suspicious outcome, not the clean one.** Anything read from a doc site or
-a Slack thread cites something. A run reporting that it opened everything it encountered has either read
-very little or is reporting what it wishes were true.
+- There is no separate backlog document, and unopened references are instead scattered as per-entry
+  annotations inside the subject traces, so a reader must visit every file to assemble what was
+  skipped.
+- The backlog is merged into a single document that also carries the references that were read.
+- No backlog document exists at all.
+
+## How to judge an empty or absent backlog
+
+**An empty backlog is the suspicious outcome, not the clean one.** Anything read from a
+documentation site or a Slack thread cites something further. A run that produced no backlog has
+either read very little or is reporting what it wishes were true. Do not credit its absence as
+"nothing to report".
