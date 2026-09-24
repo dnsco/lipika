@@ -89,6 +89,39 @@ def md_files(root):
                 yield os.path.join(dirpath, f)
 
 
+FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def outside_fences(text):
+    """(lineno, line) for every line NOT inside a fenced code block.
+
+    A URL in a fenced block is a COMMAND, not a citation. Measured 2026-09-17: this check flagged
+
+        curl -s -A "<agent>" "https://crates.io/api/v1/crates/wrpc-transport/reverse_dependencies"
+
+    out of a dump's own `Reusable commands` block, and reaching exit 0 meant appending a
+    verbatim-URL section to a trace for a URL that was never a source for that trace's subject.
+    **The check pushed the record toward a small dishonesty**, which is a worse failure than the one
+    it exists to catch.
+
+    Inline backticks are deliberately NOT stripped. A trace's required header line is
+    `` `<url>` · opened <date> · <route> `` -- the URL in backticks is the citation form, so
+    stripping them here would turn a false positive into a silent false negative, and losing a
+    reference is the failure this tool exists for.
+    """
+    inside, marker = False, ""
+    for i, line in enumerate(text.splitlines(), 1):
+        m = FENCE.match(line)
+        if m:
+            if not inside:
+                inside, marker = True, m.group(1)[0]
+            elif m.group(1)[0] == marker:
+                inside = False
+            continue
+        if not inside:
+            yield i, line
+
+
 def scan(paths):
     """Every URL in those files, as {url: [(relpath, lineno)]}, first occurrence order."""
     found = {}
@@ -97,7 +130,7 @@ def scan(paths):
             text = open(p, errors="replace").read()
         except OSError:
             continue
-        for i, line in enumerate(text.splitlines(), 1):
+        for i, line in outside_fences(text):
             for raw in URL.findall(line):
                 u = normalise(raw)
                 if u:
@@ -193,6 +226,34 @@ def self_test():
                 failures.append(f"{name}: the forge URL was not reported as excluded")
             if "localhost" not in buf.getvalue():
                 failures.append(f"{name}: the local URL was not reported as excluded")
+        # A third case, hand-audited: a dump whose ONLY external URL is inside a fenced command
+        # block, and no trace at all. Red before 2026-09-24, green after -- the URL is an
+        # incantation to re-run, not a source to re-open, and demanding a trace for it is what
+        # produced a falsified one.
+        fenced = os.path.join(tmp, "workstreams", "fenced")
+        os.makedirs(os.path.join(fenced, "dumps"))
+        with open(os.path.join(fenced, "dumps", "2026-09-17-000000-x.md"), "w") as fh:
+            fh.write("## Reusable commands\n\n```bash\n"
+                     'curl -s "https://crates.io/api/v1/crates/x/reverse_dependencies"\n'
+                     "```\n")
+        import io
+        buf = io.StringIO()
+        if run(fenced, tmp, out=buf) != 0:
+            failures.append("a URL inside a fenced block must not be reported as untraced\n"
+                            + buf.getvalue())
+
+        # And its own red partner: the SAME URL in prose, with no trace, still fails. A check that
+        # went green on both would have stopped measuring anything.
+        prose = os.path.join(tmp, "workstreams", "prose")
+        os.makedirs(os.path.join(prose, "dumps"))
+        with open(os.path.join(prose, "dumps", "2026-09-17-000000-x.md"), "w") as fh:
+            fh.write("- the dependents list settled it — "
+                     "https://crates.io/api/v1/crates/x/reverse_dependencies\n")
+        buf = io.StringIO()
+        if run(prose, tmp, out=buf) != 1:
+            failures.append("the same URL in prose, untraced, must still be reported\n"
+                            + buf.getvalue())
+
         empty = os.path.join(tmp, "workstreams", "empty")
         os.makedirs(empty)
         import io

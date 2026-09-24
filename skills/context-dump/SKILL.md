@@ -130,7 +130,7 @@ project does **not** load automatically — read it if you have not.
    `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, named for what it is about:
 
    ```bash
-   lipika stamp --for workstreams/<ws>/reference
+   lipika stamp --for workstreams/<ws>/reference     # a DATE. You supply the topic
    ```
 
    **The unit is a subject, not a link.** A Slack argument, a deck, an incident review and a vendor page
@@ -159,13 +159,41 @@ project does **not** load automatically — read it if you have not.
    - **It fires on a reference a later reader would need to re-open**, not on everything glanced at. A
      session whose work was entirely in-repo writes no trace and no references bullet.
 
+2b. **Dispatch a `tracer` for every subject that is one addressable artifact. Write the rest
+   yourself.**
+
+   Send one `tracer` per subject, all in one message so they run at once. **Open each prompt with
+   the absolute path to write** — `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, the date from
+   `lipika stamp --for workstreams/<ws>/reference`. A tracer given no path writes nothing. Then the
+   address, the subject and the claim it settles — *nothing else*. **Not the substance**: the handoff's cost is text generated, so pasting the source into the prompt
+   spends what the dispatch exists to save. The child re-opens the artifact in a context that is
+   then discarded.
+
+   - **Dispatch** one artifact a child can re-open on its own: a Slack thread, a deck, an incident
+     review, a vendor page, a doc site.
+   - **Write it yourself** when the trace is **synthesis** — a claim across several artifacts plus
+     your judgement. A child has neither, and returns a confident summary of the wrong thing.
+   - **Never dispatch `unopened.md`.** An absence cannot be delegated.
+   - **A tracer that refuses has done its job** — it writes nothing and returns the address and the
+     error. Route that to the unopened list.
+   - **Read what comes back.** A source that settles less than the claim you sent is a correction,
+     and it belongs in your dump.
+
+   You commit once, after every tracer has returned (step 5). Tracers neither commit nor open a pass.
+
    ```bash
    lipika reference-check <ws>    # URLs in dumps no reference/ trace carries. 0 clean · 1 findings
+   lipika trace-check <ws>        # can a later reader get back to the source. 0 clean · 1 findings
    ```
 
-   **A clean exit is not a clean bill** — nothing can see what you read and did not write down. **If it
-   reports untraced URLs that your traces plainly carry, say so and stop** — it matches literal strings,
-   and the fix is the tool, not a machine-readable index bolted onto a document a human has to read.
+   **A clean exit is not a clean bill** — nothing can see what you read and did not write down. **If
+   `reference-check` reports untraced URLs that your traces plainly carry, say so and stop** — it
+   matches literal strings, so a grouped or abbreviated citation reads as untraced, and the fix is
+   the tool rather than a machine-readable index bolted onto a document a human has to read. It
+   skips fenced code: a URL in a `bash` block is a command to re-run, not a source to re-open.
+
+   **`trace-check` names a fact about a document, never an instruction to edit one.** A trace is a
+   record. An older trace it flags stays exactly as it is.
 
 3. **Second pass — what did not make it in?** Before you commit: what would a cold-start you need in a
    month? Sweep for implicit decisions made without the *why*, dead ends ruled out without the reason,
@@ -178,6 +206,26 @@ project does **not** load automatically — read it if you have not.
    **An orientation is a projection over the records: previous orientation + every dump delta since.**
    Read them and write a **new** document. Do not diff-and-patch the old one in your head, and do not
    write from session memory — the dumps are the evidence trail the next agent gets.
+
+   **Do not retype the previous live set. Carry it.**
+
+   ```bash
+   lipika orientation-carry <ws>   # `## Needs the owner` + `## Live items`, verbatim
+   ```
+
+   Paste that in, then do the judgement it cannot: **delete the items whose death conditions
+   fired**, writing each into `## Settled since the last orientation` with the evidence, and author
+   the rest — `## Where this is`, your new items, the escalation ordering, `## References`,
+   `## Recent narrative`. Retyping is where a live set decays: rewording and lost death conditions
+   happen in carried items, not new ones. A carried item keeps its own `as-of`.
+
+   **It exits 1 and names the items that can never leave — act on those.** An item whose death
+   condition reads `dies never` is a **convention, not a live item**, true of every thread. Write it
+   once where it belongs — the vault's `CLAUDE.md`, or Lipika's `design/GOTCHAS.md` for machinery —
+   and let the orientation cite it. Say what you moved and where; *"this is not thread state"* is a
+   basis. `[DEAD END]` and `[ESCALATED]` stay: one is thread-local, the other is what the owner
+   opens the document for. If you judge an item thread-local, paste it back — the tool names, it
+   does not drop.
 
    ```markdown
    ---
@@ -212,9 +260,11 @@ project does **not** load automatically — read it if you have not.
    grows without bound. Which handful matters is your judgement: nothing can rank it, and you did the
    work.
 
-   **Carry every live item forward.** An item leaves the live set only when its death condition has
-   fired — name which, with the evidence. Do not select: a long set about this thread is not the failure
-   mode, and choosing for the next agent is a call you are the worst placed to make.
+   **Carry every live item forward.** An item leaves the live set for exactly two reasons: its
+   death condition **fired** — name which, with the evidence — or it **has none and never will**,
+   in which case it was a convention all along and goes to a durable surface, said out loud. Do not
+   select on anything else: a long set about this thread is not the failure mode, and choosing for
+   the next agent is a call you are the worst placed to make.
 
    **A live item states itself.** "See [[2026-08-19-the-thing]]" is a pointer, and a warning has to fire
    at an agent who does not know to look. Link the detail *after* the statement, never instead of it.
@@ -252,6 +302,12 @@ project does **not** load automatically — read it if you have not.
    ```bash
    cd "$(lipika vault-config path)" && lipika vault-commit -m "…" -- <your paths>
    ```
+
+   **The subject must be 72 characters or fewer** — `vault-commit` refuses a longer one, and it
+   refuses after you have written the whole message. Count it before you write the body.
+
+   **Commit once, after every `tracer` has returned**, with their paths in the pathspec. A commit
+   that races a child leaves that file untracked with nothing to say so.
 
    **Never change HEAD.** No `git checkout -b` — the checkout is shared, so a branch moves HEAD for every
    session in it. Don't push unless asked.
@@ -297,6 +353,8 @@ project does **not** load automatically — read it if you have not.
 Terse and factual, written for a first-time reader who was not in the room. **No agent-local codenames** —
 "Option C", "Track B", "Phase 2", workflow IDs — say what a thing *is*. Filenames carry their stamp:
 `YYYY-MM-DD-HHMMSS-topic.md` for dumps and orientations, from `lipika stamp`; `YYYY-MM-DD-topic.md`
-elsewhere.
+elsewhere. **`stamp --for <dir>` returns the resolution that directory wants** — seconds for
+`dumps/` and `orientation/`, which are read by being newest; a date for `reference/`, which is
+addressed by subject. You always supply the topic.
 **Timestamp every metric**: "9 KB at 2026-08-21", never "9 KB". Better still, cite the reference and let a
 tool answer the number.

@@ -1,0 +1,22 @@
+schema_version: "1.1"
+name: dispatched-traces
+
+# The workspace IS the vault, as in external-references: vault_config's last resort is the
+# directory you are standing in, and inside the sandbox the other three routes are all unavailable.
+context:
+  scaffold_script: scaffold.sh
+
+# HOW TO RUN IT. Measured 2026-09-24: without these flags the case loads, scores 0, and the
+# report reads like a failing change rather than an ungranted one.
+#
+#   claude plugin eval . --case <name> --scaffold \
+#     --allow-tools Bash Write Edit Agent --trust-plugin --runs 1 --max-cost-usd 5
+#
+# `--scaffold` is off by default, so without it the run works in an empty workspace and every
+# file_exists grader fails for the wrong reason. The tool grants are separate from the case's
+# own `allowed_tools`: the case declares what the run MAY use, the flag is the operator saying
+# yes. A grader needing an ungranted tool is reported at load, before anything runs.
+#
+# An eval run also starts LOGGED OUT of the parent's session -- see commit 496d062. Every llm
+# grader throws `judge call failed: Not logged in` when that happens, which is a credential
+# fault and not a score.

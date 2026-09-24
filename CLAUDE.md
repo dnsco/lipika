@@ -95,6 +95,14 @@ strong prior, not ground truth, and **weigh the age** — a figure from today ha
 vault documents by hand from a session rooted here is easy, because the vault looks like just another
 directory in this tree, and it is how a record stops being evidence of a moment.
 
+**One agent writes a thread's documents, and it writes exactly one class of them.** A `tracer`,
+dispatched by `context-dump`, creates one `reference/` trace for one external source it re-opens
+itself. Not a dump, not an orientation, not the index, no commit, never `architecture/`. Loosened
+2026-09-18: the rule had already stopped being *two skills and nothing else* when `curator` gained
+the shared surfaces, so what it actually meant was *nothing else writes a thread's documents*, and
+this adds one document class to that. The forces are in
+`design/vault-and-agent-ontology.md` §11; the measurement is `design/eval-cases/handoff-cost.md`.
+
 ## Developing the machinery
 
 **There is exactly one copy of every file here.** This repo used to be a template that a vault copied,
@@ -133,11 +141,11 @@ stacked PRs sat open for three days and made `main` a fiction.
    *wrong*, and **commit them before the change**. This is the TDD edge: the grader is the test. One
    written afterwards silently agrees with whatever happened — measured, twice.
 
-   *Grader* is `claude plugin eval`'s word for exactly this, so it is ours. Until that tool is
-   ungated — it prints *"currently in early access"* on `2.1.241`, checked 2026-08-24 — graders are
-   prose in the vault's `sources/evals/` and a human scores them. When it opens they become
-   `evals/<case>/graders/*.md` and score themselves. **The name changed to match the tooling we are
-   heading for; the rule did not.**
+   *Grader* is `claude plugin eval`'s word for exactly this, so it is ours. Graders live in
+   `evals/<case>/graders/*.md` and the tool scores them; the vault's `sources/evals/` holds the
+   hand-scored ones from before it shipped. **Every run carries a ceiling** —
+   `--max-cost-usd <usd> --runs 1` — because a case file has no cost key and `runs` defaults to 3.
+   How to run, read and write one: `design/agent-eval-method.md`, *Graders*.
 2. **Author here**, once.
 3. **DEPLOY, if the change ships anything — before the dump, not after.** A change under `skills/`,
    `agents/`, `tools/` or `bin/` is carried by the plugin, and **editing the tree changes nothing

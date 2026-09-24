@@ -25,9 +25,10 @@ used, not written up afterwards from memory. Amendments are dated at the bottom.
 2. **Prove no rule was dropped**, with `lipika recall-check <pre-change-ref> <path>`. Every flag judged in
    writing; never reword a file to satisfy one. `--into` needs **every** survivor when content moves,
    including the source file if it kept some.
-3. **Try it on real work**, then **profile it** — the frozen, verbatim measurement goes in the vault's
-   `sources/evals/`. **Probe first**, always: nothing reports which version of a definition is live, and
-   a rewrite reached through a symlink may not have loaded at all.
+3. **Score it, then try it on real work.** `claude plugin eval` scores the graders in
+   `evals/<case>/graders/`; **every run passes `--max-cost-usd` and `--runs 1`** (below).
+   A profile of real work goes in the vault's `sources/evals/`. **Probe first**, always: a deployed
+   version is not a running one.
 4. **Write the round's summary** into the workstream's own `reference/`, and feed the findings back to
    step 1.
 
@@ -81,6 +82,8 @@ and read the transcript for the call. What an agent did is not confabulable; wha
 | which version is running | `claude plugin list`, and the version directory above. This is the answer to "was my change in force?" |
 | subagent transcripts | `~/.claude/projects/<project-slug>/<session-id>/subagents/agent-<agentId>.jsonl` |
 | task-output symlinks to the same files | `/private/tmp/claude-502/<slug>/<session-id>/tasks/<id>.output` |
+| graders, and the case they run in | `evals/<case>/` in Lipika — `case.yaml`, `prompt.md`, `graders/*.md`, `scaffold.sh` |
+| scored runs | `evals/results/<timestamp>/aggregate-result.json`; the trace survives only under `--keep-temp` |
 | frozen profiling reports | `sources/evals/YYYY-MM-DD-HHMM-<subject>-profile.md`, **`HHMM` from `date -u` when you write it** — not the run's start, not its completion |
 | the findings drawn from them | `workstreams/vault-maintenance/` |
 | the round summary an agent actually reads | `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, newest first |
@@ -107,40 +110,76 @@ the folder path in 139 of 170 documents, named a stale form of its own thread in
 read its value. **Do not give `about:` `up:`'s meaning.** It says *which thread this is about*, never
 hierarchy, containment or parenthood — that is how the retired field kept acquiring purposes.
 
-## The three kinds, and the four verdicts
+## Graders — the suite, and how it runs
 
-**A grader, a score and a profile are different artefacts** and `sources/evals/` holds all three. The
-distinction is carried by the vault's hand-maintained `evals.md`, not by frontmatter — the documents
-are records and are not edited to add a field.
+**`evals/` is the suite.** Each case is `evals/<case>/{case.yaml,prompt.md,scaffold.sh,graders/*.md}`;
+`claude plugin eval` scores every grader. The vault's `sources/evals/` holds profiles and the
+hand-scored graders from before the harness — history, not re-run. Cite a grader by its repo path.
 
-- **grader** — a prediction sealed and committed **before** the change it tests.
-- **score** — a verdict, written after the run, against a grader's text verbatim.
-- **profile** — a measurement of one run. Not a pass/fail.
+- **grader** — a prediction committed **before** the change it tests. Written after, it agrees with
+  whatever happened.
+- **score** — the harness's verdict for one run.
+- **profile** — a measurement of one run, not a pass/fail. Kept in `sources/evals/`.
 
-**Verdicts are PASS, FAIL, UNEXERCISED and SPENT.**
+**When a change needs one.** A **definition** change does: nothing else can be wrong about it in
+advance. A **tool** change gets a hand-audited red case and green case instead. **Graders falsify;
+they do not show improvement** — never eval the version you are replacing.
 
-- **UNEXERCISED** — the prediction never got tested. Scoring it PASS is how a round learns nothing and
-  believes it learned something. Protect this verdict.
-- **SPENT** — the grader described state that no longer existed by the time anyone read it. That is a
-  fault in the grader, not in the change. **So every grader carries its precondition**: the state it
-  assumes. Named 2026-08-25, after four clauses across K3 and K4 turned out to be exactly this.
+**Run the whole suite after any definition change**, not only the case you meant to move. A trim that
+kept every rule's text regressed dispatch paths on 2026-09-24; `recall-check` passed it and a grader
+in another case caught it.
 
-**When does a change need a grader?** A **definition** change does — a definition has no mechanical
-oracle, so a prediction written in advance is the only thing that can be wrong. A **tool** change gets
-a hand-audited **red case and green case** instead; that is a stronger instrument, not a weaker one.
-This states a boundary that was previously an exception: three defect fixes shipped without graders in
-August 2026 and were defensible for exactly this reason, and an unstated exception widens.
+### Running it
 
-**Graders falsify; they do not show improvement.** Improvement needs a baseline against the version
-being replaced, and that is retired — *never eval the version you are replacing; it measures a system
-being deleted*. If improvement signal is wanted it comes from comparing profiles across rounds, which
-is a different artefact and why the kinds are named at all.
+```bash
+ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
+  claude plugin eval . --scaffold --allow-tools Bash Write Edit Agent --trust-plugin \
+  --ablation none --runs 1 --keep-temp --max-cost-usd 7.5          # add --case <name> for one
+```
 
-**The corpus is a lab notebook, not a suite.** Audited 2026-08-25: all 26 documents are
-round-specific, none evergreen, and ten profile roles that no longer exist. A grader names a specific
-change at a specific commit, so it cannot be re-run. *"Run every eval in this folder"* would need
-evals written against invariants instead of changes; none exist yet. `evals.md` is where the first
-would be listed.
+- **Every run carries `--max-cost-usd` and `--runs 1`.** A case has no cost key; `runs` defaults to 3
+  plus a baseline arm. The ceiling is checked before each run launches, so it overruns by the runs in
+  flight. Full suite ~$5.25; one handoff-shaped case $2.45–3.46. The Console limit on
+  `anthropic-eval-key` is the backstop.
+- **Pass the key per command, never `export` it.** The child gets a sealed `HOME`, so OAuth fails
+  (`Not logged in`) and only an env var reaches it; an ambient key displaces OAuth for every session
+  in that shell. The judges run in your process and bill normally.
+- **`--scaffold` is off by default** — without it the seeded vault never exists. **`--allow-tools` is
+  separate from a case's `allowed_tools`**: the case says what a run may use, the flag says yes.
+- **`--keep-temp`, always.** Without it the trace is deleted. The kept directory's `home/` is sealed
+  mode 000; `chmod 700` it and the `sealed/` inside to read it, and never run git in there.
+- **Reports** go to `evals/results/<timestamp>/{report.html,aggregate-result.json}` — gitignored,
+  local.
+- **End every run by linking the owner to its `report.html`** — the path is the last line the run
+  prints. The per-grader lines in a message are a summary; the report is the record he reads.
+
+### Reading it
+
+- **Read the per-grader lines, never the headline.** A grader skipped for the cost ceiling scores as
+  a failure, and the summary can contradict the lines.
+- **Exit 1 is "below threshold" or "a case failed to load".** Read stderr.
+- **A score is only as good as what the grader can see.** Before blaming a definition, read the kept
+  trace. `Task called 0x`, `expected 1..0`, and a judge failing on absent evidence were all grader
+  faults on 2026-09-24.
+
+### Writing one
+
+- **Prefer mechanical.** `regex` with `target: trace` sees the **whole** run: match inside the write
+  it judges — `/reference/[^"]*\.md","content":"…<fact>` — and use lookaheads for several facts.
+  `tool_used` with `input_match` counts calls.
+- **An `llm` judge sees less than it seems.** `focus: trace` is the first and last 12 messages;
+  `files` is paths only; `{source: file, path}` is one literal path. Use a judge only when its focus
+  holds the evidence, and its body is the criteria verbatim.
+- **Keys.** A grader takes `type`, `weight`, `arm` and its type's options; an unknown key rejects the
+  whole case. `tool_used`: `tool`, `input_match`, `min` (**default 1** — an absence check needs
+  `min: 0`), `max`. `tool_order`: `before`/`after`, a name or `{tool, input_match}`, first
+  occurrences. `regex`: `target`, `pattern`, `match: contains | not_contains | count:N`.
+  `file_exists`: `path`, `exists`. Mechanics read from the `2.1.274` bundle:
+  the vault trace `workstreams/2026-09-24-what-does-a-handoff-cost/reference/2026-09-24-plugin-eval-grader-mechanics.md`.
+- **The subagent tool is `Agent`**; `Task` is an alias the trace never records.
+- **Every case needs a free guard** — a `file_exists` on its main output — or a judge can pass an
+  empty workspace.
+- **Test a new grader on a kept trace, green and red**, before paying for a run.
 
 ## What a profile is FOR — read for what is obviously wrong, first
 
@@ -392,3 +431,13 @@ not a reason to hold back a change or re-run a pass.
   the false-positive classes; `obsidian unresolved` reads the index and sees `links:` frontmatter fields no body
   scan reaches. Measured on the same vault at the same commit: **0 and 6, both correct.** The assumption going
   in was that the Python tool duplicated the CLI; it does not.
+
+- **2026-09-24 — graders run under `claude plugin eval`, and every run carries a ceiling.** Steps 3 and
+  the artifacts table now say where graders and scores live. A case file has no cost key — checked in
+  the `2.1.274` schema — and `runs` defaults to 3, so the ceiling is a flag on every invocation:
+  `--max-cost-usd <usd> --runs 1`. One handoff-shaped run is ~$2.45. The same day's two traps, both
+  graders that could not pass whatever the run did, are under *Graders* above.
+
+- **2026-09-24 — *Graders* rewritten for the harness.** Every grader in the three cases is mechanical
+  and runs under `plugin eval`; the lab-notebook framing is retired with the hand-scored corpus. The
+  eval material that was `GOTCHAS.md` §7 lives here now.
