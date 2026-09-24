@@ -150,6 +150,8 @@ ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
   mode 000; `chmod 700` it and the `sealed/` inside to read it, and never run git in there.
 - **Reports** go to `evals/results/<timestamp>/{report.html,aggregate-result.json}` — gitignored,
   local.
+- **End every run by linking the owner to its `report.html`** — the path is the last line the run
+  prints. The per-grader lines in a message are a summary; the report is the record he reads.
 
 ### Reading it
 
