@@ -145,7 +145,7 @@ stacked PRs sat open for three days and made `main` a fiction.
    `evals/<case>/graders/*.md` and the tool scores them; the vault's `sources/evals/` holds the
    hand-scored ones from before it shipped. **Every run carries a ceiling** —
    `--max-cost-usd <usd> --runs 1` — because a case file has no cost key and `runs` defaults to 3.
-   How to run and read one: `design/GOTCHAS.md` §7.
+   How to run, read and write one: `design/agent-eval-method.md`, *Graders*.
 2. **Author here**, once.
 3. **DEPLOY, if the change ships anything — before the dump, not after.** A change under `skills/`,
    `agents/`, `tools/` or `bin/` is carried by the plugin, and **editing the tree changes nothing
