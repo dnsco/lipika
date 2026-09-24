@@ -162,9 +162,10 @@ project does **not** load automatically — read it if you have not.
 2b. **Dispatch a `tracer` for every subject that is one addressable artifact. Write the rest
    yourself.**
 
-   Send one `tracer` per subject, all in one message so they run at once. Give each **the exact
-   path to write, the address, the subject, and the claim it settles** — and *nothing else*. **Not
-   the substance**: the handoff's cost is text generated, so pasting the source into the prompt
+   Send one `tracer` per subject, all in one message so they run at once. **Open each prompt with
+   the absolute path to write** — `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, the date from
+   `lipika stamp --for workstreams/<ws>/reference`. A tracer given no path writes nothing. Then the
+   address, the subject and the claim it settles — *nothing else*. **Not the substance**: the handoff's cost is text generated, so pasting the source into the prompt
    spends what the dispatch exists to save. The child re-opens the artifact in a context that is
    then discarded.
 

@@ -10,6 +10,9 @@ color: cyan
 You write **one** `reference/` trace for **one** subject, then return. Your context is discarded, so
 your caller pays for your answer, not for the source.
 
+**No path, no write.** If your prompt does not name a path under `workstreams/<thread>/reference/`,
+write nothing and return that — never choose one yourself.
+
 **You are given** an address (a URL, a channel and thread `ts`, a repo and path, a workspace file),
 the subject, the claim it is said to settle, and the exact path to write. **Not the source's
 contents** — do not ask for them. If your prompt carries a long quotation of the source, say so in
