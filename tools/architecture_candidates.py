@@ -47,7 +47,10 @@ def stem(path):
 
 # Directories under workstreams/ that GROUP threads rather than being one. A thread here is the
 # child inside them. Kept as data because the set is a vault convention, not a rule of the model.
-CONTAINERS = {"parked"}
+CONTAINERS = {"parked", "archive"}
+# Of those, the ones whose threads have FINISHED. An archived thread moved there on the owner's
+# ruling, so its citations say nothing about what is load-bearing now, however recent its dates.
+FINISHED = {"archive"}
 
 
 def thread_of(rel):
@@ -128,6 +131,9 @@ def live_threads(vault, today, within_days):
             names.append(name)
 
     for name in names:
+        if name.split(os.sep)[0] in FINISHED:
+            excluded[name] = "archived"
+            continue
         d = os.path.join(ws_root, name)
         newest = newest_dated_doc(d)
         if newest is None:
