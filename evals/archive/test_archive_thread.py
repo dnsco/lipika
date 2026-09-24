@@ -3,12 +3,9 @@
 
 Run `python3 evals/archive/test_archive_thread.py`. Exit 0 all pass, 1 any fail.
 
-Obsidian cannot run in a fixture, so a fake `obsidian` on PATH stands in: it answers `vault` with a
-path and performs `move path=... to=...`, logging each call. What this proves is that the tool moves
-EVERY file through Obsidian -- which is what keeps links true -- and refuses, moving nothing, when
-Obsidian is absent (3), serving another vault (4), or the move would clobber, re-archive, or carry
-uncommitted work (6). A thread that does not exist is 5.
-That Obsidian repairs the links is Obsidian's behaviour, not tested here.
+A fake `obsidian` on PATH answers `vault` and performs `move`, logging each call. This proves every
+file moves through Obsidian, and that the tool refuses, moving nothing, with the exit codes in
+`tools/archive_thread.py`. Obsidian's link rewriting is not tested here.
 """
 
 import os

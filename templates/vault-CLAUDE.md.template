@@ -79,12 +79,11 @@ bears on it from the parent, naming the parent in `from:`. Not a pointer — an 
 does not follow a link it was not told it needed.
 
 **A thread ends by not being listed as live.** A dated folder and its last dump's date already record
-the whole lifecycle. When the owner rules a thread finished, it moves whole to
-`workstreams/archive/<thread>/` and every inbound link stays true, because wikilinks resolve by file name
-and the dated names are unique.
+the whole lifecycle. A thread the owner rules finished moves to `workstreams/archive/<thread>/` with
+`lipika archive-thread`, which moves each file through Obsidian so inbound links follow.
 
-**Warnings that stay true live in the thread's `gotchas.md`**, appended and never rewritten. They leave
-the orientation because they can never die.
+**Warnings that stay true go in the thread's `gotchas.md`**, appended, never rewritten. They cannot die,
+so they do not belong in an orientation.
 
 **The date is *opened*, not *current*.** Last-touched is derivable from git and is never written down.
 Folders and notes both carry it, because wikilinks resolve by basename and a second effort on the same

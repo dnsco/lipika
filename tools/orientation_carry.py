@@ -48,9 +48,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
   They are the one class that can only accumulate.
 
   So: **an item whose death condition is `dies never` is a warning that stays true, not a live
-  item.** It goes in the thread's own `gotchas.md`, appended and never rewritten -- ruled 2026-09-24,
-  replacing a shared surface (the vault's `CLAUDE.md`, Lipika's `design/GOTCHAS.md`) that accumulated
-  every thread's warnings in one place. **Two classes are exempt, and neither exemption is about whether
+  item.** It goes in the thread's own `gotchas.md`, appended and never rewritten (2026-09-24; before,
+  a shared surface collected every thread's). **Two classes are exempt, and neither exemption is about whether
   the item can die.** `[DEAD END]` has no death condition by design but is thread-LOCAL -- *do not
   re-propose this, here* -- which no shared surface can say. `[ESCALATED]` is exempt because of who
   reads it: an escalation is what the owner opens the document for, and a standing rule from him is
@@ -59,8 +58,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
   `orientation-audit` reported it dropped with no successor. Silence toward the owner is the worst
   failure this tool has.
 
-  The tool NAMES them and does not drop them. With `--append-gotchas` it also appends them to
-  `gotchas.md` verbatim and exits 0, because the destination is fixed and the move is mechanical.
+  The tool NAMES them and does not drop them. `--append-gotchas` appends them to `gotchas.md`
+  verbatim and exits 0.
 
   Hand-typing was never the bound, which is the objection this answers. That 62.8 KB orientation
   went 9,067 -> 17,095 -> 19,890 -> 28,160 -> 36,545 -> 45,470 -> 49,867 -> 62,817 B across eight
@@ -68,8 +67,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
 
 CONTRACT
 
-  exit 0  the carry is on stdout and every carried item can still die -- or --append-gotchas put
-          the ones that cannot into gotchas.md
+  exit 0  the carry is on stdout, and every carried item can still die or --append-gotchas
+          appended the ones that cannot
   exit 1  the carry is on stdout, AND items that can never leave are listed on stderr. Not an
           error -- a decision to make before pasting. Do not wrap this in `set -e`.
   exit 3  nothing to carry: this thread has no orientation yet, so its first handoff writes one
@@ -236,21 +235,19 @@ later line saying so, and the bytes above it stay as they were.
 
 
 def append_gotchas(ws_dir, immortal, source):
-    """Append each always-true item to the thread's `gotchas.md`, verbatim. (appended, already there).
+    """Append each item not already present, verbatim, to the thread's `gotchas.md`.
 
-    APPEND, never regenerate: an item that cannot die has nothing to drop, so a rewrite could only
-    lose something. An item already present, byte for byte, is not appended again.
+    Never regenerated: an item that cannot die has nothing to drop, so a rewrite could only lose one.
+    Returns (appended, already present).
     """
     path = os.path.join(ws_dir, "gotchas.md")
     existing = open(path, errors="replace").read() if os.path.exists(path) else ""
     new = [raw for raw in immortal if "\n".join(raw) not in existing]
     if new:
-        chunk = [] if existing else [GOTCHAS_HEAD]
-        chunk.append(f"\n## From orientation/{source}\n\n" + "\n".join("\n".join(r) for r in new) + "\n")
+        head = GOTCHAS_HEAD if not existing else ("" if existing.endswith("\n") else "\n")
+        body = "\n".join("\n".join(r) for r in new)
         with open(path, "a") as fh:
-            if existing and not existing.endswith("\n"):
-                fh.write("\n")
-            fh.write("".join(chunk))
+            fh.write(f"{head}\n## From orientation/{source}\n\n{body}\n")
     return len(new), len(immortal) - len(new)
 
 
@@ -287,9 +284,8 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas
         one = " ".join(l.strip() for l in raw)
         print("  · " + markers.one_line(ITEM.sub("", one, count=1)), file=err)
     print("\n  These can never leave a live set, so carrying them is the one thing that only ever\n"
-          "  accumulates. An item that cannot die is not thread state: it is a warning that stays\n"
-          "  true, and it goes in this thread's `gotchas.md`, appended and never rewritten. Run again\n"
-          "  with --append-gotchas to put them there.\n"
+          "  accumulates. An item that cannot die is a warning that stays true, not thread state:\n"
+          "  it goes in this thread's `gotchas.md`. Run again with --append-gotchas to put it there.\n"
           "\n  Measured 2026-09-18: two unrelated threads carried the SAME 19 of these, 24% and 42%\n"
           "  of their live sets. Nothing had ever retired one.\n"
           "\n  If you judge one genuinely thread state, paste it back -- `--all` emits everything\n"

@@ -2,15 +2,10 @@
 """archive-thread -- move a finished thread into `workstreams/archive/`, through Obsidian, or refuse.
 
 WHY THROUGH OBSIDIAN
-  A thread the owner has ruled finished moves whole to `workstreams/archive/<thread>/` (ruled
-  2026-09-24). A bare wikilink resolves by file name and survives a move on its own, but a
-  path-qualified one -- `[[workstreams/<thread>/dumps/x]]` -- does not, and `mv` or `git mv` would
-  leave it dangling with nothing said. `obsidian move` rewrites every inbound link as part of the
-  move, so there is no window in which one is stale. The rule is "use the tool that cannot leave
-  them stale", not "move, then go check".
-
-  The Obsidian CLI moves one FILE per call and has no folder move, so this moves every file in the
-  thread, one call each, and removes the emptied folders after.
+  A bare wikilink resolves by file name and survives a move, but a path-qualified one --
+  `[[workstreams/<thread>/dumps/x]]` -- does not, and `mv` or `git mv` would leave it dangling
+  silently. `obsidian move` rewrites inbound links as part of the move. It moves one file per call
+  and has no folder move, so this makes one call per file, then removes the emptied folders.
 
 WHAT IT REFUSES, MOVING NOTHING
   exit 3  Obsidian is not on PATH, not running, or its CLI is disabled
@@ -19,8 +14,8 @@ WHAT IT REFUSES, MOVING NOTHING
   exit 5  no such thread
   exit 6  the destination exists, the path is already under archive/, or the thread has
           uncommitted changes, which a move would carry off without a record
-  exit 7  a move failed partway. What moved is listed; nothing is rolled back, because a partial
-          state is visible to git and a rollback through the same failing tool is not.
+  exit 7  a move failed partway. What moved is listed and not rolled back: git shows the partial
+          state, and a rollback through the failing tool might not.
 
   exit 0  moved. Prints both halves of the rename for `lipika vault-commit`. It commits nothing.
 

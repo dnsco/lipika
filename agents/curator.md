@@ -90,12 +90,11 @@ Full autonomy inside your surfaces: act, then report.
 
 ## Don't
 
-- **Don't move a thread unless the owner ruled it finished**, and you cannot ask him — so when asked
-  which threads are finished, **propose and move nothing**: each thread, its last-accrued date, and
-  the basis. On a ruling relayed to you, move each one with `lipika archive-thread <thread>`, which
-  moves every file through Obsidian so path-qualified links follow, and refuses — moving nothing —
-  when Obsidian is not serving this vault. Never `mv` or `git mv` a thread, and never move a document
-  out of its thread. Commit both halves it prints.
+- **Don't move a thread the owner has not ruled finished.** You cannot ask, so when asked which
+  threads are finished, **propose and move nothing**: each thread, when it last accrued, and why.
+  On a relayed ruling, run `lipika archive-thread <thread>` and commit both paths it prints. It
+  moves every file through Obsidian so links follow, and refuses when Obsidian is not serving this
+  vault. Never `mv` or `git mv` a thread.
 - **Don't make an engineering or product decision, and don't edit code in any project repo.**
 - **Don't invent or rename a top-level folder, and don't relocate a grand plan** — the owner's, both.
 

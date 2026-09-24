@@ -220,14 +220,13 @@ project does **not** load automatically — read it if you have not.
    happen in carried items, not new ones. A carried item keeps its own `as-of`.
 
    **It exits 1 and names the items that can never leave — act on those.** An item whose death
-   condition reads `dies never` is a **warning that stays true, not a live item**. It goes in this
-   thread's `gotchas.md`: run `lipika orientation-carry <ws> --append-gotchas`, which appends them
-   verbatim and exits 0. **`gotchas.md` is appended to, never rewritten** — a warning that stops being
-   true gets a later line retiring it, and nothing above that line changes. Not the vault's
-   `CLAUDE.md` and not Lipika's `design/GOTCHAS.md`: ruled 2026-09-24, because a shared surface
-   collects every thread's warnings in one place. `[DEAD END]` and `[ESCALATED]` stay in the
-   orientation: one is thread-local, the other is what the owner opens the document for. If you judge
-   an item thread state after all, paste it back — the tool names, it does not drop.
+   condition reads `dies never` is a **warning that stays true, not a live item**. Run
+   `lipika orientation-carry <ws> --append-gotchas` to append them verbatim to this thread's
+   `gotchas.md`. **It is appended to, never rewritten**: retire a warning that stops being true with a
+   later line. Not the vault's `CLAUDE.md` or Lipika's `design/GOTCHAS.md` — a shared surface collects
+   every thread's warnings. `[DEAD END]` and `[ESCALATED]` stay in the orientation: one is
+   thread-local, the other is what the owner opens it for. An item you judge thread state after all,
+   paste back.
 
    ```markdown
    ---
@@ -278,10 +277,9 @@ project does **not** load automatically — read it if you have not.
    that bears on the new thread — reworded freely, each citing the source it came from — then name the
    parent in `from:`. **Carry the references the same way**, the ones still bearing on the new
    question, citing the parent's traces where they are: a new thread does not re-open what the parent
-   traced, and does not copy its traces either. **Copy the parent's `gotchas.md` entries the same
-   way** — the ones that bear on the new question, verbatim, into the new thread's `gotchas.md`
-   under a heading citing the parent. Items that do not bear on it stay behind; that is the whole
-   point of splitting.
+   traced, and does not copy its traces either. **Copy the parent's `gotchas.md` entries that bear on
+   the new question**, verbatim, under a heading citing the parent. Items that do not bear on it stay
+   behind; that is the whole point of splitting.
 
    ```bash
    lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried
@@ -348,8 +346,7 @@ project does **not** load automatically — read it if you have not.
 
 ## Don't
 
-- **Don't move a thread.** A finished thread moves to `workstreams/archive/` only on the owner's
-  ruling, and a handoff is not where that happens.
+- **Don't move a thread.** Archiving needs the owner's ruling, and a handoff is not where it happens.
 - **Don't write a second live orientation for one thread.** If the work has become two threads, that is a
   second dated workstream, and say so.
 
