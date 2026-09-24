@@ -95,7 +95,14 @@ one shape:
 - **ESCALATED is not a flavour of OPEN Q.** It means only the owner can decide it, and it is what a fresh
   session opens with.
 - **Every item carries a death condition.** Writing it costs the author nothing and saves the next agent
-  re-reading everything. A DEAD END is exempt: it fires forever.
+  re-reading everything. A DEAD END is exempt: it fires forever, and it is thread-local — *do not
+  re-propose this, here* — which is why it stays.
+- **An item whose death condition is `dies never` is a CONVENTION, not a live item.** It is a fact
+  about the machine or the workflow, true of every thread, and nothing can ever retire it, so
+  carrying it is the one thing a live set does that only accumulates. Write it once in this file
+  and let orientations cite it. Measured 2026-09-18: two unrelated threads in one vault carried the
+  **same 19** of these, 24% and 42% of their live sets. `lipika orientation-carry` names them at
+  the handoff.
 - **`as-of` is when the item was last *confirmed*, not last copied.**
 - **An item states itself.** "See `[[some-dump]]`" is a pointer, and a pointer is pull; link the detail
   after the statement, never instead of it.
@@ -132,6 +139,10 @@ a rival account of the present.
 - **Any session**: reads freely; writes only through `pickup` and `context-dump`.
 - **`curator`**: the index, the links that cross threads, this file, and the memory pointer. Nothing else
   writes those.
+- **`tracer`**: one `reference/` trace, for one external source it re-opened itself, at a path its
+  caller chose. Dispatched by `context-dump`, several at once. Nothing else — no dump, no
+  orientation, no commit, no pass of its own. It **refuses and writes nothing** when it cannot
+  reach the source, because a fabricated trace is not a slower record but a false one.
 - **`scout`**: nothing. Read-only recon in a context that is discarded.
 - **The owner**: `architecture/`, `epics/`, grand plans, and inventing or renaming a top-level folder.
 

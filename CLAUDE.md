@@ -95,6 +95,14 @@ strong prior, not ground truth, and **weigh the age** — a figure from today ha
 vault documents by hand from a session rooted here is easy, because the vault looks like just another
 directory in this tree, and it is how a record stops being evidence of a moment.
 
+**One agent writes a thread's documents, and it writes exactly one class of them.** A `tracer`,
+dispatched by `context-dump`, creates one `reference/` trace for one external source it re-opens
+itself. Not a dump, not an orientation, not the index, no commit, never `architecture/`. Loosened
+2026-09-18: the rule had already stopped being *two skills and nothing else* when `curator` gained
+the shared surfaces, so what it actually meant was *nothing else writes a thread's documents*, and
+this adds one document class to that. The forces are in
+`design/vault-and-agent-ontology.md` §11; the measurement is `design/eval-cases/handoff-cost.md`.
+
 ## Developing the machinery
 
 **There is exactly one copy of every file here.** This repo used to be a template that a vault copied,

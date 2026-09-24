@@ -364,6 +364,8 @@ history rather than rebuild it.
 | The owner writes an epic's PROSE; an agent keeps its citations true | Which threads exist is mechanical and goes stale fastest; the judgement is not and does not | An agent-maintained citation list that misrepresented the effort |
 | A vault must not hold a COPY of Lipika's machinery — but may hold its own tools and skills | The bill was N copies of one file, not the existence of a `skills/` directory. The test is identity, not location | A vault-local tool or skill that cost what the port loop cost |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its whole toolchain | A patched view that stayed true over months |
+| An agent may create a `reference/` trace, and no other thread document | A trace is a record of one artifact a child can re-open, so a dispatched writer costs the caller only the address — and the caller's own bytes are the whole cost of a handoff. Judgement about what a thread IS stays with the session | A dispatched trace measurably thinner than one the session wrote on the same subject; or a fabricated trace reaching the record |
+| An item whose death condition is `dies never` is a convention, not a live item | It can never leave, so it is the one class that only accumulates — measured at 24% and 42% of two threads' live sets, the same 19 items in both. A fact about the machine is not a fact about the thread | A `dies never` item that a shared surface could not hold without losing what made it useful |
 | An item left out of an orientation stays recoverable from the dumps | Records are immutable and complete, so archaeology is always available | A dropped item that could not be found again |
 | A disposition states its basis | Silent inference is the failure; inference itself is not | An unstated basis nobody later needed |
 | One thread per workstream | Two threads under one prefix put two agents on one path with an advisory warning between them | Two concurrent threads sharing an orientation without either being pushed the other's warnings |
@@ -410,6 +412,29 @@ history rather than rebuild it.
   Against: writing costs span on the one operation inside the north star, and read-only is the strongest
   property that skill has. **Dies when** a pickup's findings are measurably lost to a session ending
   without a handoff, or when read-only is judged worth the loss.
+- ✅ **Settled 2026-09-18 (Dennis) — an agent other than the two skills may write into the vault**,
+  narrowly: a `tracer` creates one `reference/` trace for one external source it re-opened itself.
+  The prose said *two skills write; nothing else does*, which had already stopped being true when
+  `curator` took the shared surfaces, and §8 had already **retired** the write-authority partition
+  — the pass log answers concurrency directly. So the rule was loosened where it was wrong rather
+  than worked around.
+
+  The force: a handoff's throughput is flat at 150–230 B/s in every phase (2026-09-17,
+  `span_s=600`), so its cost is text the session generates. A child that is *told* what a source
+  says costs the same bytes; a child that **re-opens** the source costs ~200 B of address. The
+  risk it buys is a child fabricating a trace it could not reach, which is why the definition
+  refuses rather than writes, and why `evals/dispatched-traces` A4 exists.
+
+  **Dies when** a dispatched trace is measured against a session-written trace on the same subject
+  and found thinner, or a fabrication reaches the record.
+
+- ✅ **Settled 2026-09-18 — the orientation carry is a tool, and it BOUNDS the document.** The
+  objection was that a verbatim carry would let an orientation accrete without limit. Measurement:
+  hand-typing was never the bound — one thread's orientation went 9,067 → 62,817 B across eight
+  handoffs in 48 hours, every byte typed. What is actually unbounded is the immortal fraction, so
+  `orientation-carry` exits non-zero naming it. The tool that makes carrying cheap is the same tool
+  that makes the accumulation visible, which is the only reason making it cheap is safe.
+
 - `[OPEN Q]` **Does the routing note earn its place beside orientation**, or does the index carry its one
   line?
 - `[OPEN Q]` **What is the relevant fraction of a pickup** — of what it loads, how much bore on the work.

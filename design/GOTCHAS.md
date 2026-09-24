@@ -49,7 +49,13 @@ So, stated for an invocation:
 
 - **Read freely.** Any session may read and grep it — as a strong prior, not ground truth, and weigh the age.
 - **`pickup` on the way in, `context-dump` on the way out**, and a handoff writes the next orientation.
-  Nothing else writes.
+- **Two agents write, each one class of document and nothing else.** A `curator` regenerates the
+  shared surfaces no thread owns — the index, the conventions file, the memory pointer — and repairs
+  links that cross threads. A `tracer`, dispatched by `context-dump`, creates one `reference/` trace
+  for one external source it re-opened itself, and refuses rather than writing when it could not
+  reach it. Neither commits; neither touches `architecture/`.
+- **Nothing else writes**, and a session rooted in a code project is the one most likely to forget
+  it — the vault is just another directory in that tree.
 
 ## 3. It is a different git repo
 
