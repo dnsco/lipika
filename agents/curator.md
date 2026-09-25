@@ -22,10 +22,11 @@ Read the vault's `CLAUDE.md` first. Resolve the vault with `lipika vault-config 
 - **A view is regenerated wholesale, never patched.** The index is yours; a thread's current orientation
   is **not** — a handoff writes it.
 - **`architecture/` is the owner's.** Repair a link inside one; never write or reword one.
-- **`epics/` and `grand-plans/` are the owner's PROSE, not the owner's files.** An epic cites its
-  threads, and which threads exist is mechanical — **keep the citation list true**: add a thread the
-  epic should cite, flag a citation pointing at a path that no longer exists, flag a live thread no
-  epic cites. Never touch the framing, the judgement, or whether an effort is parked.
+- **`grand-plans/` is the owner's prose.** Repair a link inside one; never touch the framing.
+- **A project is a split lineage, and the lineage must resolve.** Flag every `UNRESOLVED` line
+  `lipika lineage` prints — a `from:` naming a thread that is not there, which cuts a project in two.
+  The epic tier that grouped threads was dropped 2026-09-25; an `epics/` folder left in a vault is
+  historical and nothing maintains it.
 
 Full autonomy inside your surfaces: act, then report.
 
