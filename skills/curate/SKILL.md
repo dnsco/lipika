@@ -1,6 +1,6 @@
 ---
 name: curate
-description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Groups the threads by epic, then repo, then system, reads each group in its own curator in parallel, and opens with one table: what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why. Then it lists what archiving would lose, asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
+description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Groups the threads by split lineage, then repo, then system, reads each group in its own curator in parallel, and opens with one table: what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why. Then it lists what archiving would lose, asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
 ---
 
 # curate — which threads are finished, and why
@@ -24,7 +24,8 @@ Run 1 of the curator gave a list of names and was unusable for exactly that reas
    The owner named no scope? Use finished candidates and say which threads that is, in one line.
 
 2. **Partition the scope into groups**, first rule that applies:
-   - threads one epic cites (`rg -o '\[\[[^]|]+' epics/`) are one group;
+   - threads of one split lineage are one group — `lipika lineage --json`, its `projects`. A
+     lineage may span repos, and it is what ties one project's threads together;
    - else threads working in the same repo, per their routing note;
    - else threads whose routing notes name the same system.
 

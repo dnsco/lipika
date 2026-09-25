@@ -43,6 +43,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lineage                                    # noqa: E402
 import markers                                    # noqa: E402
 import vault_config                               # noqa: E402
 
@@ -83,18 +84,9 @@ def parent_of(text, vault):
     m = FROM.search(text)
     if not m:
         return None
-    name = m.group(1).strip()
-    cand = os.path.join(vault, "workstreams", name)
-    if os.path.isdir(cand):
-        return cand
-    ws_root = os.path.join(vault, "workstreams")
-    if os.path.isdir(ws_root):
-        for entry in sorted(os.listdir(ws_root)):
-            if entry == name or entry.endswith(name):
-                d = os.path.join(ws_root, entry)
-                if os.path.isdir(d):
-                    return d
-    return None
+    # One resolver for every reader of `from:`, so a parent in archive/ or parked/ resolves.
+    d = lineage.resolve_thread(vault, m.group(1))
+    return str(d) if d else None
 
 
 def orientations(ws_dir):

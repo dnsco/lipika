@@ -94,7 +94,7 @@ import vault_config     # noqa: E402
 
 # The sections a new orientation carries. `## Settled since the last orientation` is NOT one of
 # them: it is a record of the last round's dispositions and belongs to that document.
-CARRIED = ("needs the owner", "live items")
+CARRIED = ("needs the owner", "live items", "prior art")
 
 ORIENT_DOC = re.compile(r"^\d{4}-\d{2}-\d{2}(-\d{4,6})?.*\.md$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)")
@@ -202,7 +202,12 @@ def is_immortal(raw_lines):
 def render(text, keep_immortals):
     """(stdout_lines, immortal_items). Verbatim on both sides."""
     out, immortal = [], []
-    for level, title, body in carried_blocks(text):
+    cblocks = carried_blocks(text)
+    for i, (level, title, body) in enumerate(cblocks):
+        # A heading followed by deeper subsections is kept even with no body of its own.
+        # Dropping `## Live items` because only `###` sections follow it landed the whole live
+        # set under `## Needs the owner` -- measured 2026-09-25, on a real carry.
+        has_sub = i + 1 < len(cblocks) and cblocks[i + 1][0] > level
         kept = []
         for is_item, raw in split_items(body):
             if is_item and not keep_immortals and is_immortal(raw):
@@ -212,7 +217,7 @@ def render(text, keep_immortals):
         # A heading whose every item was immortal is dropped with them: an empty `### Working here
         # at all` in the new document says the section exists and is empty, which is a claim.
         if not any(is_item for is_item, _ in [(ITEM.match(r[0]) is not None, r) for r in kept]):
-            if not any(l.strip() for r in kept for l in r):
+            if not any(l.strip() for r in kept for l in r) and not has_sub:
                 continue
         out.append("#" * level + " " + title)
         for raw in kept:

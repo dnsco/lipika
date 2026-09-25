@@ -29,19 +29,19 @@ Write the delta even when not handing off: it is what survives a session that en
 
 ```
 grand-plans/<name>.md            a standing want. No liveness. The owner's
-epics/<name>.md                  a large effort happening. live · parked · finished. The owner's.
-                                 CITES its threads; does not contain them
 workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
   YYYY-MM-DD-<thread>.md         routing note — what this thread is. Dated to match the folder
   orientation/<stamp>.md         newest wins. Written at handoff
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
   reference/YYYY-MM-DD-<topic>.md  dated trace from source. ONE SUBJECT EACH
   reference/YYYY-MM-DD-unopened.md what was cited and never opened. Newest wins
+  gotchas.md                     warnings that stay true. Append-only
 ```
 
-**Only the epic tier carries state.** An epic is parked by a decision; a workstream falls off by date, so
-a second shelf concept there would only disagree with the date. Membership is the epic's prose — no
-frontmatter field.
+**No tier carries state.** A workstream falls off by date. **A project is a split lineage**: a new
+thread's first orientation names its parent in `from:`, and the chain is one project, across repos if
+it spans them. `lipika lineage` prints it. The epic tier that used to group threads was dropped
+2026-09-25.
 
 One workstream is **one thread of work** — one path prefix, one agent at a time. A second concurrent thread
 is a **new dated workstream**, not a subfolder; see step 4a. Resolve the vault with
@@ -252,6 +252,10 @@ project does **not** load automatically — read it if you have not.
    The handful this thread actually rests on, one line each on what it settled, each linking its own
    trace — and [[YYYY-MM-DD-unopened]], named, for what was cited and never opened.
 
+   ## Prior art
+   Threads that bear on this one, found when it was opened (step 4a). One line each on why. Carried
+   verbatim by `orientation-carry`, so write it once.
+
    ## Recent narrative
    The last handful of dumps, newest first, one or two sentences each, linked.
    ```
@@ -269,7 +273,7 @@ project does **not** load automatically — read it if you have not.
 
    **A live item states itself.** "See [[2026-08-19-the-thing]]" is a pointer, and a warning has to fire
    at an agent who does not know to look. Link the detail *after* the statement, never instead of it.
-   `## Recent narrative` is the one place a pointer is the content.
+   `## Recent narrative` and `## Prior art` are the two places a pointer is the content.
 
 4a. **If you are opening a new thread, its first orientation COPIES what still bears on it.**
 
@@ -280,6 +284,30 @@ project does **not** load automatically — read it if you have not.
    traced, and does not copy its traces either. **Copy the parent's `gotchas.md` entries that bear on
    the new question**, verbatim, under a heading citing the parent. Items that do not bear on it stay
    behind; that is the whole point of splitting.
+
+   **Then find its prior art — in the background, while you write.** The parent is one thread; other
+   threads, archived ones included, may already hold warnings that bear on the new question, and
+   nothing links them. Dispatch one `lipika:scout` with `run_in_background` as soon as the new
+   thread's question is settled, and give it exactly this:
+
+   > Prior art for a new thread, `workstreams/<new-ws>`, split from `<parent>`, asking: <question>.
+   > Across every thread, archive/ and parked/ included (`lipika threads --all`,
+   > `lipika lineage --json`), find the ones whose question or system bears on it. For each, one
+   > line on why, and every `gotchas.md` entry that bears on the new question, quoted verbatim with
+   > its source file. Say which you looked at and rejected. Write nothing.
+
+   It writes its report under `.lipika/reports/` and returns the path; read the report. **It
+   recommends; you decide.** A scout makes no relevance call it can be held to, so read its
+   candidates against the question and keep only what bears on it. Then:
+
+   - write `## Prior art` in the first orientation — the parent's lineage and the threads kept, one
+     line each on why;
+   - append each kept warning **verbatim** to the new `gotchas.md` under `## From <thread>`,
+     creating it with the header `orientation-carry --append-gotchas` writes.
+
+   **Commit after the scout returns**, with the new `gotchas.md` in the pathspec — the same rule as
+   the tracers. A thread whose scout found nothing says so in `## Prior art`: `none found`, and the
+   threads it rejected.
 
    ```bash
    lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried

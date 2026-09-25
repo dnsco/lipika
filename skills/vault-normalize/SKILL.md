@@ -6,7 +6,7 @@ description: Bring a knowledge-base vault that was cloned or migrated from the o
 # vault-normalize — change the shape, never the words
 
 A vault cloned from `knowledge-base-template`, or migrated by hand, is at an older shape: it holds a copy
-of the machinery, it has no `epics/` or `architecture/`, and its parked threads sit on a shelf folder. This
+of the machinery, it has no `architecture/`, and its parked threads sit on a shelf folder. This
 brings the *shape* up to date.
 
 **The invariant, and it is the whole skill: you rename, move, create and delete files. You never change one
@@ -28,7 +28,7 @@ have not found the tool yet.
 Every vault document is a **record** — dated, never edited, corrected only by a newer document: dumps,
 `reference/` traces, `sources/`, `external/`, and every orientation already written — or a **view**,
 regenerated wholesale and never patched: a thread's current orientation, and the index. `architecture/` is
-a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` are the owner's prose.
+a long-lived edited view and **the owner's alone**. `grand-plans/` is the owner's prose, and so is any `epics/` a vault still holds.
 
 ## Do
 
@@ -55,7 +55,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
    lipika init <target-vault> --name <key>
    ```
 
-   It creates the eight tier directories that are absent (`workstreams` `epics` `grand-plans`
+   It creates the seven tier directories that are absent (`workstreams` `grand-plans`
    `architecture` `reference` `values` `sources` `external`), copies `CLAUDE.md` and `.gitignore` from the
    templates **only if absent**, and registers the vault in `~/.config/lipika/config.json`. It prints
    `created` and `kept`; **quote both lines in your report** — `kept CLAUDE.md` is the whole answer to "did
@@ -132,19 +132,18 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
 
 4. **Report a parked shelf. Do NOT hoist it.**
 
-   `workstreams/parked/` looks like the shape the epic tier replaced, and hoisting each entry up one
-   level is mechanical and wikilink-safe. **Do it anyway and you are contradicting a ruling.** An epic
-   *cites* its threads rather than containing them, so moving the folders buys nothing:
+   `workstreams/parked/` looks like a shape to flatten, and hoisting each entry up one level is
+   mechanical and wikilink-safe. **Do it anyway and you are contradicting a ruling.** `parked/` and
+   `archive/` are containers that every tool already reads through, so moving the folders buys nothing:
 
-   > *"An epic cites its threads rather than containing them, so the folders correctly stay put and the
-   > walk keeps seeing one child. The fix was teaching the tool that a container is not a thread."*
+   > *"The folders correctly stay put and the walk keeps seeing one child. The fix was teaching the
+   > tool that a container is not a thread."*
 
    That is a recorded DEAD END, measured 2026-08-21, and `design/vault-and-agent-ontology.md` agrees at
    §4: *"Threads stay where they are, so no link breaks."* When the parked shelf confused
    `architecture-candidates`, the tool was fixed; the folders were deliberately not moved.
 
-   So **report it and move on**: name the shelf entries, and say that their parked-ness lives on an epic
-   rather than in the path. If a future ruling reverses this, the move is `git mv` per entry plus an
+   So **report it and move on**: name the shelf entries. If a future ruling reverses this, the move is `git mv` per entry plus an
    `rmdir`, and it is basename-preserving — but it is not yours to decide.
 
    This step is the reason to read a normalizer's diff rather than trust its summary. *"Mechanical,
@@ -154,7 +153,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
 5. **Perform basename changes only through `lipika obsidian rename`.**
 
    Two documents with the same basename make every `[[link]]` to that name ambiguous, silently. The usual
-   case is an epic sharing a basename with the thread it cites.
+   case is a note sharing a basename with the thread it names.
 
    ```bash
    find . -name '*.md' -not -path './.git/*' -exec basename {} \; | sort | uniq -d
@@ -178,10 +177,11 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
 
 6. **Keep the owner's prose out of it.**
 
-   `epics/`, `grand-plans/` and `architecture/` are the owner's judgement and framing. You may keep an
-   epic's **thread citations** true when a path you moved appears in one — a citation is an address. You
-   may not touch a sentence around it, and a rename in step 5 that would require rewording an epic is a
-   rename you decline.
+   `grand-plans/`, `architecture/` and any leftover `epics/` are the owner's judgement and framing. You
+   may keep a **thread citation** in one true when a path you moved appears in it — a citation is an
+   address. You may not touch a sentence around it, and a rename in step 5 that would require rewording
+   one is a rename you decline. The epic tier was dropped 2026-09-25: report an `epics/` folder, and do
+   not move it — archiving it is the owner's call.
 
 7. **Prove no record changed. This is the deliverable, not a formality.**
 
@@ -230,8 +230,8 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
      document inside the last few weeks. List the paths. It is written by a `context-dump` at the end of
      the next real session in that thread, never by a normalization pass — a view written by someone who
      has not done the work is fiction.
-   - **Epic prose.** Every effort that is now several threads and has no `epics/<name>.md`, and every
-     existing epic whose citations you noticed are thin.
+   - **Broken lineage.** Every `UNRESOLVED` line from `lipika lineage --vault <target>`: a `from:` that
+     names no thread, which cuts one project in two.
    - **`architecture/` nodes.** `lipika architecture-candidates --vault <target>` — exit 1 means candidates
      found and is **not an error**; do not wrap it in `set -e`. Recommend; never write.
    - **Every rename you declined**, with its inbound-link count and the reason.
@@ -257,7 +257,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` and `epics/` 
   file renamed by `lipika obsidian rename`. Nothing else, ever.
 - **Don't delete by directory name.** `skills/` and `tools/` in a vault are not evidence of anything. The
   identity gate in step 3 is the only licence to delete.
-- **Don't write an orientation, an epic, or an `architecture/` node.** Report them.
+- **Don't write an orientation or an `architecture/` node.** Report them.
 - **Don't claim a clean run you did not read.** `git diff --stat` is not evidence. The two `MUST be empty`
   commands and a read of the hunks are.
 

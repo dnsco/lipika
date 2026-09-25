@@ -52,9 +52,15 @@ One rule, and everything else follows from it: **every document in the vault is 
   drafted it** so a later reader can weigh it. Either way, agents produce the dated traces behind it
   and contradict it with them. Narrowed 2026-08-24: the old wording said *no agent writes one*, which
   blocked distilling an agent that genuinely understood a codebase, and had to be overridden.
-- **`epics/` and `grand-plans/` are the owner's prose, not the owner's files.** An epic *cites* its
-  threads, and which threads exist is mechanical — an agent may maintain the citation list, and should.
-  The framing, the judgement and whether an effort is parked stay the owner's.
+- **A project is a split lineage, not a tier.** A thread splits into a new dated thread when its
+  question changes, and names its parent in `from:`; the chain is one project, and may span repos.
+  `lipika lineage` walks it, archived threads included. The `epics/` tier that grouped threads was
+  dropped 2026-09-25, on the owner's ruling that a workstream is a project and the lineage already
+  says which threads are one. `grand-plans/` stays the owner's prose.
+- **A new thread is pushed its prior art.** When `context-dump` opens one, a background `scout` finds
+  the threads that bear on it; the first orientation's `## Prior art` points at them, and their
+  bearing warnings are copied verbatim into the new `gotchas.md`. Push, because a later search is
+  pull, and pull cannot fire when nobody asks.
 
 The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. Its §8 is the list
 of what this system used to do and why each piece is gone — **read it before re-proposing anything**,

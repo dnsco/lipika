@@ -13,13 +13,12 @@ corrected only by a newer document: dumps, `reference/` traces, `sources/`, `ext
 orientation already written — or a **view**, regenerated wholesale and never patched: the current
 orientation and the index. `architecture/` is a long-lived edited view and the owner's alone.
 
-**And three tiers, of which only the middle one carries state.** A **grand plan** (`grand-plans/`) is a
-standing want with no liveness — not started is not dead. An **epic** (`epics/`) is a large effort actually
-happening: live, parked or finished, and parked is a decision someone made. A **workstream**
-(`workstreams/`) is one question being answered, and it has **no status field** — the date it last accrued
-is the whole answer, so a thread that stopped is simply not listed as live. One the owner rules finished
-moves to `workstreams/archive/`, hidden like `parked/`. An epic *cites* its threads rather than containing
-them, so membership is prose in the epic and there is no frontmatter field to check. Grand plans and epics are the owner's; agents write workstreams.
+**And two tiers, neither with a status field.** A **grand plan** (`grand-plans/`) is a standing want with
+no liveness — not started is not dead. A **workstream** (`workstreams/`) is one question being answered:
+the date it last accrued is the whole answer, so a thread that stopped is simply not listed as live. One
+the owner rules finished moves to `workstreams/archive/`, hidden like `parked/`. **A project is a split
+lineage** — each split names its parent in `from:`, and `lipika lineage <ws>` prints the chain, archived
+threads included. Grand plans are the owner's; agents write workstreams.
 
 ## Do
 
