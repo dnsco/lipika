@@ -1,6 +1,6 @@
 ---
 name: curate
-description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Reads each thread in its own curator, in parallel, and opens with one table — what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why — then what archiving would lose, then asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
+description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Partitions threads into groups — by epic, then repo, then system — and reads each group in its own curator, in parallel, and opens with one table — what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why — then what archiving would lose, then asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
 ---
 
 # curate — which threads are finished, and why
@@ -23,16 +23,26 @@ Run 1 of the curator gave a list of names and was unusable for exactly that reas
 
    The owner named no scope? Use finished candidates and say which threads that is, in one line.
 
-2. **Dispatch one `lipika:curator` per thread, all in one message** so they run at once. Each reads
-   and judges its own thread whole. That is one context per thread, not a reader feeding a judge —
-   a split the owner ruled out. Give each exactly this:
+2. **Partition the scope into groups**, first rule that applies:
+   - threads one epic cites (`rg -o '\[\[[^]|]+' epics/`) are one group;
+   - else threads working in the same repo, per their routing note;
+   - else threads whose routing notes name the same system.
 
-   > Curate `workstreams/<thread>` for the owner. Which is it: finished, or still live? Move, write and commit
-   > nothing. The other threads in scope are: <names>. Return the curation block.
+   Say the groups in one line each before dispatching.
 
-   Naming the rest of the scope lets a curator see "subsumed by" and "duplicate".
+   **Never one curator per thread.** Curation's goal is merging, and a curator that sees one thread
+   cannot judge whether a sibling absorbed it. Shipped that way in 0.6.1, against a ruling of one
+   curator per partition.
 
-3. **Assemble one report, in this order, and nothing before the table but one line of framing:**
+3. **Dispatch one `lipika:curator` per group, all in one message** so they run at once. Each reads and
+   judges its group whole, in its own context — not a reader feeding a judge, a split the owner ruled
+   out. Give each exactly this:
+
+   > Curate these threads, as one group, for the owner: <workstreams/…, one per line>. For each: finished,
+   > or still live — and which of them subsume, supersede or duplicate each other. Move, write and commit
+   > nothing. Other groups in scope: <names>. Return one curation block per thread.
+
+4. **Assemble one report, in this order, and nothing before the table but one line of framing:**
 
    **The ledger** — one row per thread:
 
@@ -55,11 +65,11 @@ Run 1 of the curator gave a list of names and was unusable for exactly that reas
    **Detail** — the curators' per-item tables. Write them to a scratch file outside the vault and
    link it, rather than printing them in the message.
 
-4. **Ask for rulings.** Skip this step when told to report only. Use `AskUserQuestion`: one question per thread
+5. **Ask for rulings.** Skip this step when told to report only. Use `AskUserQuestion`: one question per thread
    you advise archiving, four to a call, and options from its row — *Archive*, *Keep*, *Carry first*.
    Describe each option in the thread's own plain words, never with a term the report did not define.
 
-5. **Carry out the rulings.**
+6. **Carry out the rulings.**
    - **Carry first**: hand the live items to the receiving thread's next handoff, by name.
      Never edit that thread's orientation: it is a view, written only by a handoff.
    - **Archive**: run `lipika archive-thread <thread>` once per thread, then commit the paths it
