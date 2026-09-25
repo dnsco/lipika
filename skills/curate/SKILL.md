@@ -1,6 +1,6 @@
 ---
 name: curate
-description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Partitions threads into groups — by epic, then repo, then system — and reads each group in its own curator, in parallel, and opens with one table — what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why — then what archiving would lose, then asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
+description: Decide, with the owner, which knowledge-base vault threads are finished and what in them still lives. Groups the threads by epic, then repo, then system, reads each group in its own curator in parallel, and opens with one table: what each thread asked, how it ended (answered, subsumed, superseded, abandoned, still live) and why. Then it lists what archiving would lose, asks the owner to rule, and archives what he rules finished. Invoke when asked to "curate", "which threads are finished", "clean up the vault", "archive old threads", or "what can we close".
 ---
 
 # curate — which threads are finished, and why
@@ -31,8 +31,7 @@ Run 1 of the curator gave a list of names and was unusable for exactly that reas
    Say the groups in one line each before dispatching.
 
    **Never one curator per thread.** Curation's goal is merging, and a curator that sees one thread
-   cannot judge whether a sibling absorbed it. Shipped that way in 0.6.1, against a ruling of one
-   curator per partition.
+   cannot judge whether a sibling absorbed it.
 
 3. **Dispatch one `lipika:curator` per group, all in one message** so they run at once. Each reads and
    judges its group whole, in its own context — not a reader feeding a judge, a split the owner ruled
