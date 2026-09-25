@@ -17,9 +17,9 @@ orientation and the index. `architecture/` is a long-lived edited view and the o
 standing want with no liveness — not started is not dead. An **epic** (`epics/`) is a large effort actually
 happening: live, parked or finished, and parked is a decision someone made. A **workstream**
 (`workstreams/`) is one question being answered, and it has **no status field** — the date it last accrued
-is the whole answer, so a thread that stopped is simply not listed as live. An epic *cites* its threads
-rather than containing them, so membership is prose in the epic and there is no frontmatter field to
-check. Grand plans and epics are the owner's; agents write workstreams.
+is the whole answer, so a thread that stopped is simply not listed as live. One the owner rules finished
+moves to `workstreams/archive/`, hidden like `parked/`. An epic *cites* its threads rather than containing
+them, so membership is prose in the epic and there is no frontmatter field to check. Grand plans and epics are the owner's; agents write workstreams.
 
 ## Do
 
@@ -47,8 +47,9 @@ check. Grand plans and epics are the owner's; agents write workstreams.
    If the task you were given matches no live thread, say so — that is usually a new thread rather than
    a wrong guess.
 
-2. **Read the newest orientation, and only that one.**
-   `workstreams/<ws>/orientation/` sorts by name; the last is current. Read one.
+2. **Read the newest orientation, and only that one** — plus the thread's `gotchas.md`, if any.
+   `workstreams/<ws>/orientation/` sorts by name; the last is current. `gotchas.md` holds warnings that
+   stay true: they left the orientation because they cannot die, not because they stopped mattering.
 
 3. **Audit it against its predecessor.**
 

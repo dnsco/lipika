@@ -47,9 +47,9 @@ WHAT IT REFUSES TO BE SILENT ABOUT
   facts about the machine, true of every thread, duplicated into each and retyped at every handoff.
   They are the one class that can only accumulate.
 
-  So: **an item whose death condition is `dies never` is a convention, not a live item.** It belongs
-  on a durable surface once -- the vault's `CLAUDE.md`, Lipika's `design/GOTCHAS.md` -- with the
-  orientation citing the surface. **Two classes are exempt, and neither exemption is about whether
+  So: **an item whose death condition is `dies never` is a warning that stays true, not a live
+  item.** It goes in the thread's own `gotchas.md`, appended and never rewritten (2026-09-24; before,
+  a shared surface collected every thread's). **Two classes are exempt, and neither exemption is about whether
   the item can die.** `[DEAD END]` has no death condition by design but is thread-LOCAL -- *do not
   re-propose this, here* -- which no shared surface can say. `[ESCALATED]` is exempt because of who
   reads it: an escalation is what the owner opens the document for, and a standing rule from him is
@@ -58,8 +58,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
   `orientation-audit` reported it dropped with no successor. Silence toward the owner is the worst
   failure this tool has.
 
-  The tool NAMES them and does not drop them. Promoting a landmine to a convention is a judgement
-  with a destination, and the destination is a file the agent has to open.
+  The tool NAMES them and does not drop them. `--append-gotchas` appends them to `gotchas.md`
+  verbatim and exits 0.
 
   Hand-typing was never the bound, which is the objection this answers. That 62.8 KB orientation
   went 9,067 -> 17,095 -> 19,890 -> 28,160 -> 36,545 -> 45,470 -> 49,867 -> 62,817 B across eight
@@ -67,7 +67,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
 
 CONTRACT
 
-  exit 0  the carry is on stdout and every carried item can still die
+  exit 0  the carry is on stdout, and every carried item can still die or --append-gotchas
+          appended the ones that cannot
   exit 1  the carry is on stdout, AND items that can never leave are listed on stderr. Not an
           error -- a decision to make before pasting. Do not wrap this in `set -e`.
   exit 3  nothing to carry: this thread has no orientation yet, so its first handoff writes one
@@ -78,6 +79,7 @@ CONTRACT
 USAGE
   lipika orientation-carry <ws>                  # paste stdout into the new orientation
   lipika orientation-carry <ws> --all            # do not separate the immortals; emit everything
+  lipika orientation-carry <ws> --append-gotchas # append the immortals to <ws>/gotchas.md; exit 0
   lipika orientation-carry --self-test
 """
 
@@ -220,7 +222,36 @@ def render(text, keep_immortals):
     return out, immortal
 
 
-def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False):
+GOTCHAS_HEAD = """---
+type: gotchas
+status: record
+---
+
+# Warnings that stay true in this thread
+
+Append-only. Nothing here is rewritten or removed: a warning that stops being true is retired by a
+later line saying so, and the bytes above it stay as they were.
+"""
+
+
+def append_gotchas(ws_dir, immortal, source):
+    """Append each item not already present, verbatim, to the thread's `gotchas.md`.
+
+    Never regenerated: an item that cannot die has nothing to drop, so a rewrite could only lose one.
+    Returns (appended, already present).
+    """
+    path = os.path.join(ws_dir, "gotchas.md")
+    existing = open(path, errors="replace").read() if os.path.exists(path) else ""
+    new = [raw for raw in immortal if "\n".join(raw) not in existing]
+    if new:
+        head = GOTCHAS_HEAD if not existing else ("" if existing.endswith("\n") else "\n")
+        body = "\n".join("\n".join(r) for r in new)
+        with open(path, "a") as fh:
+            fh.write(f"{head}\n## From orientation/{source}\n\n{body}\n")
+    return len(new), len(immortal) - len(new)
+
+
+def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas=False):
     docs = orientations(ws_dir)
     if not docs:
         print(f"NOTHING TO CARRY: {os.path.basename(ws_dir)} has no orientation/ yet.", file=err)
@@ -241,20 +272,24 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False):
         print(f"\n{len(docs)} orientation(s) in this thread; carried from the newest.", file=err)
         return 0
 
+    if to_gotchas:
+        added, had = append_gotchas(ws_dir, immortal, os.path.basename(current))
+        print(f"\nNOT CARRIED -- {len(immortal)} item(s) whose death condition is `dies never`: "
+              f"{added} appended to gotchas.md, {had} already there.", file=err)
+        return 0
+
     print(f"\nNOT CARRIED -- {len(immortal)} item(s) whose death condition is `dies never`:",
           file=err)
     for raw in immortal:
         one = " ".join(l.strip() for l in raw)
         print("  · " + markers.one_line(ITEM.sub("", one, count=1)), file=err)
     print("\n  These can never leave a live set, so carrying them is the one thing that only ever\n"
-          "  accumulates. An item that cannot die is a CONVENTION, not thread state: write it once\n"
-          "  on a durable surface -- the vault's `CLAUDE.md`, or `design/GOTCHAS.md` in Lipika if\n"
-          "  it is about the machinery -- and let the orientation cite the surface.\n"
+          "  accumulates. An item that cannot die is a warning that stays true, not thread state:\n"
+          "  it goes in this thread's `gotchas.md`. Run again with --append-gotchas to put it there.\n"
           "\n  Measured 2026-09-18: two unrelated threads carried the SAME 19 of these, 24% and 42%\n"
           "  of their live sets. Nothing had ever retired one.\n"
-          "\n  Not dropped for you. Moving one is a judgement with a destination, and you have to\n"
-          "  open the destination. If you decide one is genuinely thread-local, paste it back --\n"
-          "  `--all` emits everything and says nothing.", file=err)
+          "\n  If you judge one genuinely thread state, paste it back -- `--all` emits everything\n"
+          "  and says nothing.", file=err)
     return 1
 
 
@@ -360,6 +395,8 @@ def main(argv=None):
                     help="workstream: a thread name, vault-relative path, or absolute path")
     ap.add_argument("--all", action="store_true",
                     help="emit every item, including ones that can never die, and exit 0")
+    ap.add_argument("--append-gotchas", action="store_true",
+                    help="append the items that can never die to the thread's gotchas.md, and exit 0")
     ap.add_argument("--self-test", action="store_true", help="run the hand-audited cases and exit")
     vault_config.add_argument(ap)
     args = ap.parse_args(argv)
@@ -380,7 +417,7 @@ def main(argv=None):
     else:
         print(f"orientation-carry: no such workstream: {args.scope}", file=sys.stderr)
         return 5
-    return run(ws, keep_immortals=args.all)
+    return run(ws, keep_immortals=args.all, to_gotchas=args.append_gotchas)
 
 
 if __name__ == "__main__":

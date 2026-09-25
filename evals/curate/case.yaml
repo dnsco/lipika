@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: curate
+
+# The workspace IS the vault; the scaffold seeds three threads with known dispositions.
+context:
+  scaffold_script: scaffold.sh
+
+# HOW TO RUN IT -- same flags as orientation-carry, and the key per command:
+#
+#   ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
+#     claude plugin eval . --case curate --scaffold --keep-temp \
+#     --allow-tools Bash Read Grep Glob Skill Agent --trust-plugin --runs 1 --max-cost-usd 5

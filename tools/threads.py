@@ -48,6 +48,11 @@ def question(tdir):
     return ""
 
 
+# Directories that GROUP threads rather than being one: `parked/` holds threads set aside,
+# `archive/` holds threads the owner ruled finished. Both are hidden unless --all.
+CONTAINERS = ("parked", "archive")
+
+
 def threads(vault):
     root = vault.path / "workstreams"
     if not root.is_dir():
@@ -56,10 +61,10 @@ def threads(vault):
     for d in sorted(root.iterdir()):
         if not d.is_dir() or d.name.startswith("."):
             continue
-        if d.name == "parked":
+        if d.name in CONTAINERS:
             for p in sorted(d.iterdir()):
-                if p.is_dir():
-                    out.append((f"parked/{p.name}", newest_dated(p), question(p)))
+                if p.is_dir() and not p.name.startswith("."):
+                    out.append((f"{d.name}/{p.name}", newest_dated(p), question(p)))
             continue
         out.append((d.name, newest_dated(d), question(d)))
     return out
@@ -70,7 +75,7 @@ def main(argv=None):
         description="list the vault's threads; makes no choice, on purpose"
     )
     ap.add_argument("--vault")
-    ap.add_argument("--all", action="store_true", help="include parked threads")
+    ap.add_argument("--all", action="store_true", help="include parked and archived threads")
     args = ap.parse_args(argv)
 
     try:
@@ -81,7 +86,7 @@ def main(argv=None):
 
     rows = threads(vault)
     if not args.all:
-        rows = [r for r in rows if not r[0].startswith("parked/")]
+        rows = [r for r in rows if r[0].split("/")[0] not in CONTAINERS]
     if not rows:
         print("no threads in workstreams/", file=sys.stderr)
         return 1
