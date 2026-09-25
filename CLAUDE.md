@@ -64,7 +64,7 @@ because most obvious ideas here have already been built, measured and retired.
 
 ```
 agents/       role definitions — flat .md, because the registry reads *.md and a directory stops registering
-skills/       pickup and context-dump; SKILL.md is read from disk at invocation, so edits take effect at once
+skills/       pickup, context-dump, curate, vault-normalize; SKILL.md is read from disk at invocation, so edits take effect at once
 tools/        runnable python; every one resolves the vault rather than assuming cwd
 design/       this machinery's own design docs — the ontology, the eval method, the gotchas
 templates/    what a new vault is seeded from, `.template` suffixed
