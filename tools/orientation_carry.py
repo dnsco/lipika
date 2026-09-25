@@ -317,6 +317,10 @@ type: orientation
 ## Settled since the last orientation
 
 - **[OPEN Q] Per-key or per-shard** → per-shard.
+
+## Prior art
+
+- [[2026-09-01-older-cache-thread]] — measured the same invalidation window on the read path.
 """
     red = green.replace("### The path\n", "### The path\n\n"
                         "- **[LANDMINE] The `Edit` tool needs its own `Read`** → dies never · "
@@ -351,6 +355,13 @@ type: orientation
                 failures.append(f"{name}: the settled section belongs to the OLD document")
             if "## Needs the owner" not in got or "### The path" not in got:
                 failures.append(f"{name}: a heading was dropped, so subsections would merge")
+            # `## Live items` has no items of its own, only subsections. Dropping it lands the
+            # live set under `## Needs the owner` -- measured 2026-09-25, on a real carry.
+            if "## Live items" not in got:
+                failures.append(f"{name}: `## Live items` was dropped because only subsections follow it")
+            # Prior art is pointers by design, and carried whole, so the pointers survive handoffs.
+            if "## Prior art" not in got or "older-cache-thread" not in got:
+                failures.append(f"{name}: `## Prior art` was not carried")
         # red's immortal must be OFF stdout and ON stderr, which is the whole separation.
         ws = os.path.join(tmp, "red")
         so, se = io.StringIO(), io.StringIO()

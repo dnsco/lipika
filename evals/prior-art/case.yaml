@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: prior-art
+
+# The workspace IS the vault. The scaffold seeds a parent thread, one related thread it never cites,
+# and one unrelated thread, each with a gotchas.md.
+context:
+  scaffold_script: scaffold.sh
+
+# HOW TO RUN IT -- same flags as curate, and the key per command:
+#
+#   ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
+#     claude plugin eval . --case prior-art --scaffold --keep-temp \
+#     --allow-tools Bash Read Grep Glob Skill Agent Write Edit --trust-plugin --runs 1 --max-cost-usd 5
