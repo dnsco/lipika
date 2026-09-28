@@ -57,10 +57,12 @@ One rule, and everything else follows from it: **every document in the vault is 
   `lipika lineage` walks it, archived threads included. The `epics/` tier that grouped threads was
   dropped 2026-09-25, on the owner's ruling that a workstream is a project and the lineage already
   says which threads are one. `grand-plans/` stays the owner's prose.
-- **A new thread is pushed its prior art.** When `context-dump` opens one, a background `scout` finds
-  the threads that bear on it; the first orientation's `## Prior art` points at them, and their
-  bearing warnings are copied verbatim into the new `gotchas.md`. Push, because a later search is
-  pull, and pull cannot fire when nobody asks.
+- **A new thread is pushed its prior art.** `spin-out` opens it and reads every other thread itself,
+  holding the parent's context; the first orientation's `## Prior art` names the related threads with
+  what each found, and their bearing warnings are copied verbatim into the new `gotchas.md`. Push,
+  because a later search is pull, and pull cannot fire when nobody asks. The `scout` that did this
+  read was retired 2026-09-28: prior art was its only caller, and the relevance call needs the
+  parent's context it never had.
 
 The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. Its §8 is the list
 of what this system used to do and why each piece is gone — **read it before re-proposing anything**,
@@ -121,6 +123,9 @@ repo's* machinery — that is the whole of it. A vault may hold **its own** `too
 machinery. The test when deciding whether something in a vault should be deleted is *"is this a copy
 of something in Lipika?"*, never *"is it in a directory called `skills/`?"* Ruled 2026-08-21, after
 the directory-shaped version of the rule nearly deleted a vault's own `pr-description` skill.
+
+**Branch in this checkout; never a worktree.** Development here is single-threaded per machine, and
+the deploy reads this checkout, so a worktree is only a second tree to reconcile. Ruled 2026-09-28.
 
 **Every change here lands through a pull request, and it is SQUASHED by the owner** — `main` is
 protected, so nothing else can land one. The deploy reads the checkout, so realign before the next
@@ -311,10 +316,7 @@ that stays red on correct content gets dismissed, and one that stays green on a 
   copy the first time the tree changes without a redeploy.
 - **A sub-agent in an unexpected tree reports clean.** A tree at a different commit still computes a
   delta that still looks clean. Every sub-agent given a base ref checks `git rev-parse HEAD` against it
-  first, and **no agent in a shared checkout ever changes HEAD** — creating a branch moves it for every
-  session in that tree.
-- **A sub-agent inherits your cwd while every tool resolves the *configured* vault.** Dispatching from a
-  worktree makes a pass read one tree and index another.
+  first. **In the vault, no agent ever changes HEAD** — its checkout is shared by every session.
 - **The `Edit` tool needs its own `Read`.** A slice read through Bash does not satisfy the guard.
 
 - Everything else that bites, measured: `design/GOTCHAS.md`.

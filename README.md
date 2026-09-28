@@ -65,7 +65,7 @@ A vault's copy diverges on purpose: it should name your real repos, your dated e
 
 The `.gitignore` earns its own template because three of its entries are load-bearing rather than tidy. The
 pass log is appended concurrently by every role, so tracking it makes each pair of parallel passes a merge
-conflict. `.lipika/` holds agent-to-agent reports — a scout's recon, a scope's manifest — which are machinery
+conflict. `.lipika/` holds agent-to-agent reports, which are machinery
 state rather than corpus. And agent worktrees get provisioned inside the vault, so a tracked one nests the repo
 in itself and a recursive grep from the root double-counts every hit. All three are `.gitignore` rather than
 `.git/info/exclude` precisely because exclude does not survive a clone.
@@ -89,9 +89,9 @@ and the whole task tier. `design/vault-and-agent-ontology.md` §8 records each o
 | **`pickup`** (skill) | session start | reads the current orientation, audits it against the last one, opens with what needs the owner, enters plan mode |
 | **`context-dump`** (skill) | learned something, or ending | one dated dump — and at a handoff, a new dated orientation |
 | **`curator`** | the index has drifted | regenerates the index, repairs links crossing threads, owns the shared surfaces |
-| **`scout`** | before an expensive read | reads and reports. Writes nothing, and its context is discarded on return |
+| **`spin-out`** (skill) | the question changed | opens a new thread from its parent, carries what bears on it, reads its prior art, and ends as its first pickup |
 
-The skills run in the main loop, where the context already is. Both roles act and then report a change
+The skills run in the main loop, where the context already is. The curator acts and then reports a change
 list with a reversal per entry, rather than asking first — detect-propose-execute-on-approval produced
 zero proposals in two separate homes.
 

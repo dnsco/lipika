@@ -118,7 +118,7 @@ the **best** placed author, and the rule had to be overridden in practice, which
 is wrong rather than merely inconvenient.
 
 The line is **provenance**, not authorship. **This vault's own machinery agents never write one** —
-`curator`, `scout` and the two capture skills read *documents*, not systems, so their output would be
+`curator` and the capture skills read *documents*, not systems, so their output would be
 a confident summary of the corpus rather than of the thing. An agent that understands the system may
 draft; it becomes an `architecture/` document when the owner has reviewed it, and it **names its
 drafter** so a later reader can weigh it. What is forbidden is not an agent's keystrokes — it is an
@@ -323,11 +323,11 @@ input field and no hook output can change it, so a hook cannot force plan mode �
 | role | scope | does |
 |---|---|---|
 | `curator` | the vault | regenerates the index, repairs links that cross threads, owns the shared surfaces |
-| `scout` | any | read-only recon in a context that is discarded |
+| `tracer` | one external source | re-opens it in a context that is discarded and writes one `reference/` trace (§11) |
 
 **Why there are only two.** Everything inside one thread belongs to the session working in it. What is
-left for a background role is the surfaces no thread can own, and reconnaissance whose cost is worth
-paying in a context that gets thrown away.
+left for a background role is the surfaces no thread can own, and one external source whose re-reading
+is worth paying for in a context that gets thrown away.
 
 **The pass log carries concurrency.** `pass-log.jsonl` at the vault root, untracked, one shared file
 because the question it answers is *what is another agent doing right now* and N logs do not answer it.
@@ -370,6 +370,7 @@ history rather than rebuild it.
 | the write-authority partition | kept parallel agents off each other's files | the pass log answers concurrency directly |
 | the epic tier, `epics/` | grouped a project's threads, carried live · parked · finished | a split's `from:` already records which threads are one project, and a hand-kept citation list was a second copy of it that went stale — measured 2026-09-25, when an epic citing three of seven threads split a curation group in two |
 | warning recall by search at read time | found other threads' warnings when someone looked | pull cannot fire when nobody asks; a new thread is pushed its prior art at creation instead, by a background scout, into its own `gotchas.md` |
+| the `scout` role, and `scope_recon` | read-only recon in a discarded context, forbidden any relevance call | prior art was its only caller, and prior art is a relevance call that needs the parent's context; `spin-out` reads it inline (2026-09-28) |
 
 ## 9. Invariants, with what would falsify each
 
@@ -515,6 +516,11 @@ one. `curate` groups by lineage first. When a thread is opened, a background sco
 bear on it; the first orientation's `## Prior art` points at them, and their bearing `gotchas.md`
 entries are copied verbatim. Prior art is the second section, after `## Recent narrative`, where a
 pointer is the content, and `orientation-carry` carries it.
+
+**2026-09-28 — the scout is retired; `spin-out` opens a thread.** One skill writes the parent's side
+of a split, the new thread's first orientation, and its prior art, reading candidate threads itself
+because it holds the parent's context. Each related thread gets a line on what it found. Inline
+first, measured by `lipika perf`, before parallel readers are considered.
 
 **2026-09-24 — archive, and warnings per thread.** A finished thread moves to `workstreams/archive/` on
 the owner's ruling, reversing §4's rule that a thread stays where it was opened. This is not the retired

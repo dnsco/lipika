@@ -80,9 +80,9 @@ threads included. Grand plans are the owner's; agents write workstreams.
    older, as **a prior, not a rule**: reach back into dumps when the newest document is thin or wrong.
 
 5. **Ask whether the question has changed.** You have just read the whole live set, which no other agent
-   does — a handoff is nearly out of budget and a `scout` is barred from the call. A workstream is one
-   question being answered; if the items are now answering a different one, say so. That is a new dated
-   workstream, and a split is where items stop being carried. Threads are meant to be short, so expect
+   does — a handoff is nearly out of budget. A workstream is one question being answered; if the items
+   are now answering a different one, say so. That is a new dated workstream, opened with
+   `/lipika:spin-out`, and a split is where items stop being carried. Threads are meant to be short, so expect
    this to be yes more often than it feels like it should be.
 
 6. **Ask whether an architecture document is missing.** You read cold, so you are the one who feels it: is there a
@@ -108,7 +108,7 @@ threads included. Grand plans are the owner's; agents write workstreams.
      what it is claimed to settle. A count is not a report. Say it too when the newest document in
      `reference/` long predates the newest dump: the thread has moved past what it can still re-check.
    - **A missing architecture document**, if you found one.
-   - **That this has become two threads**, if it has.
+   - **That this has become two threads**, if it has, and that `/lipika:spin-out` opens the second.
 
 8. **Summarise in plain language before you ask anything.** Laconic, terse, salient: what you now
    know, in the words you would use to someone who has not read the thread. This is not the step-7
