@@ -20,7 +20,8 @@ WHY THIS EXISTS
 
 CONTRACT
   exit 0  checked, and every prior item is accounted for
-  exit 1  something to look at -- an item not carried forward, a weak match, a missing `as-of`
+  exit 1  something to look at -- an item not carried forward, a weak match, a missing `as-of`,
+          or a current orientation that repeats itself
   exit 3  NOTHING WAS CHECKED -- no orientation, or no predecessor to check against
   exit 5  bad invocation
 
@@ -244,6 +245,78 @@ TOKEN_CASES = [
 ]
 
 
+# Shape cases. The reds are cut down from two real orientations built by `str.index("## X")`,
+# which matched inside a bullet and inside `### X` and re-pasted the old document's tail.
+SHAPE_FIXTURES = [
+    # (name, document, fault substrings expected -- empty means clean)
+    ("clean, with a section the template does not name and a heading mentioned in a bullet",
+     "## Where this is\nA thread.\n\n## Live items\n### Working here at all\n"
+     "- [OPEN Q] **the `## References` length bound has nothing measuring it** → dies when "
+     "measured · as-of 2026-09-25\n\n## Settled since the last orientation\n- nothing\n\n"
+     "## Working here at all\nNotes.\n\n## References\n- a trace\n", []),
+
+    ("a slice at a mention inside a bullet: cut heading, repeated section, repeated item",
+     "## Live items\n- [OPEN Q] **Owed: the `## References` length bound has nothing measuring "
+     "it** → dies when carried · as-of 2026-09-25\n- [DEAD END] **The epic tier.** Dropped.\n\n"
+     "## Settled since the last orientation\n- **Deploy 0.7.0** → fired.\n\n"
+     "## References` length bound has nothing measuring it** → dies when carried · as-of "
+     "2026-09-25\n- [DEAD END] **The epic tier.** Dropped.\n\n"
+     "## Settled since the last orientation\n- **Moved by split.**\n\n## References\n- a trace\n",
+     ["cut from mid-sentence", "`## Settled since the last orientation` appears 2 times",
+      "The epic tier"]),
+
+    ("a slice at a subsection heading: the section and its items repeat",
+     "## Live items\n### Working here at all\n- **[LANDMINE] Concurrent passes interleave** → "
+     "check the log · as-of 2026-09-24\n\n## Settled since the last orientation\n- one\n\n"
+     "## Working here at all\n- **[LANDMINE] Concurrent passes interleave** → check the log · "
+     "as-of 2026-09-24\n\n## Settled since the last orientation\n- two\n\n"
+     "## Working here at all\nNotes.\n",
+     ["`## Working here at all` appears 2 times",
+      "`## Settled since the last orientation` appears 2 times", "Concurrent passes"]),
+]
+
+
+SECTION = re.compile(r"^##\s+(.*?)\s*$")
+TYPED_LINE = re.compile(r"^\s*[-*+]\s+\**\[(?:GATE|LANDMINE|OPEN Q|DEAD END|ESCALATED)\]")
+
+
+def shape_faults(text):
+    """[(line, message)] for a repeated `##` section, a repeated typed item, or a heading cut
+    mid-sentence -- what a splice leaves. Not a template check: orientations add their own sections.
+    """
+    faults, seen_sec, seen_item = [], {}, {}
+    for n, line in enumerate(text.splitlines(), 1):
+        m = SECTION.match(line)
+        if m:
+            title = m.group(1)
+            if title.count("`") % 2 or title.count("**") % 2:
+                faults.append((n, f"line {n}: a heading cut from mid-sentence: {line[:90]}"))
+            seen_sec.setdefault(title, []).append(n)
+        elif TYPED_LINE.match(line):
+            seen_item.setdefault(line.strip(), []).append(n)
+    for title, ns in seen_sec.items():
+        if len(ns) > 1:
+            faults.append((ns[1], f"`## {title}` appears {len(ns)} times, lines "
+                                  f"{', '.join(map(str, ns))}"))
+    for item, ns in seen_item.items():
+        if len(ns) > 1:
+            faults.append((ns[1], f"an item appears {len(ns)} times, lines "
+                                  f"{', '.join(map(str, ns))}: {item[:90]}"))
+    return sorted(faults)
+
+
+def shape_test():
+    bad = 0
+    for name, doc, want in SHAPE_FIXTURES:
+        faults = shape_faults(doc)
+        joined = "\n".join(msg for _, msg in faults)
+        ok = (not faults) if not want else all(w in joined for w in want)
+        bad += not ok
+        print(f"  {'ok  ' if ok else 'FAIL'}  shape: {name}"
+              f"{'' if ok else f'  (expected {want or 'no faults'}, got {joined or 'none'})'}")
+    return bad
+
+
 def token_test():
     bad = 0
     for name, a, b, same in TOKEN_CASES:
@@ -257,14 +330,14 @@ def token_test():
 
 def self_test():
     """Red and green cases for the matcher. Exit 0 all pass, 2 any fail."""
-    bad = token_test()
+    bad = token_test() + shape_test()
     for name, departing, successor, expect in FIXTURES:
         found = best_match(departing, accounted_items(successor))[0] != "missing"
         ok = found == expect
         bad += not ok
         print(f"  {'ok  ' if ok else 'FAIL'}  {name}"
               f"{'' if ok else f'  (expected found={expect}, got {found})'}")
-    total = len(FIXTURES) + len(TOKEN_CASES)
+    total = len(FIXTURES) + len(TOKEN_CASES) + len(SHAPE_FIXTURES)
     print(f"\n{total - bad}/{total} fixture(s) pass")
     return 2 if bad else 0
 
@@ -305,6 +378,7 @@ def main(argv):
         print(f"NOT CHECKED: no orientation/ under {args.scope} — nothing handed off yet.")
         print("The first handoff out of this session creates one.")
         return 3
+    malformed = report_shape(docs[-1], vault)
     split = False
     if len(docs) == 1:
         cur = open(docs[0], encoding="utf-8").read()
@@ -391,10 +465,22 @@ def main(argv):
 
     unstated = report_freshness(live_items(cur), today, args.stale_days)
 
-    if missing or weak or unstated:
+    if missing or weak or unstated or malformed:
         return 1
     print("\nclean: every prior item is carried or its disposition is recorded.")
     return 0
+
+
+def report_shape(path, vault):
+    """Print the current orientation's shape faults. A repeated item passes the carry check."""
+    faults = shape_faults(open(path, encoding="utf-8").read())
+    if faults:
+        print(f"MALFORMED — {os.path.relpath(path, vault)} repeats itself. Read it by hand; "
+              "the carry check below counts a repeated item as carried:")
+        for _, msg in faults:
+            print(f"  · {msg}")
+        print()
+    return bool(faults)
 
 
 def report_freshness(items, today, stale_days):
