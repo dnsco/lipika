@@ -57,12 +57,10 @@ One rule, and everything else follows from it: **every document in the vault is 
   `lipika lineage` walks it, archived threads included. The `epics/` tier that grouped threads was
   dropped 2026-09-25, on the owner's ruling that a workstream is a project and the lineage already
   says which threads are one. `grand-plans/` stays the owner's prose.
-- **A new thread is pushed its prior art.** `spin-out` opens it and reads every other thread itself,
-  holding the parent's context; the first orientation's `## Prior art` names the related threads with
-  what each found, and their bearing warnings are copied verbatim into the new `gotchas.md`. Push,
-  because a later search is pull, and pull cannot fire when nobody asks. The `scout` that did this
-  read was retired 2026-09-28: prior art was its only caller, and the relevance call needs the
-  parent's context it never had.
+- **A new thread is pushed its prior art.** `spin-out` reads the other threads when it opens one, inline
+  because relatedness is judged against the parent's context. `## Prior art` names each related thread
+  with what it found; bearing warnings are copied verbatim into the new `gotchas.md`. Push, because
+  pull cannot fire when nobody asks.
 
 The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. Its §8 is the list
 of what this system used to do and why each piece is gone — **read it before re-proposing anything**,

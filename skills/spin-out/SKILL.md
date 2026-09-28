@@ -5,13 +5,12 @@ description: Open a new knowledge-base vault thread split from a parent, because
 
 # spin-out — open a thread, carry what bears on it, find its prior art
 
-A workstream is one question. When the question changes, the answer is a new dated thread, and this
-skill opens it: the parent's side, the new thread's side, and the prior art nothing links to yet.
-It ends as the new thread's first pickup, so the session carries on in the new thread.
+A workstream is one question. When the question changes, this opens the new thread: the parent's
+side, the new thread's side, and the prior art nothing links to yet.
 
-**Everything context-dump says about records, views, stamps, typed live items and commits holds
-here.** Read the vault's `CLAUDE.md` if you have not. This skill does not invoke context-dump: a
-nested skill call ends this one's timing in `lipika perf`, and the run is measured as one span.
+**context-dump's rules on records, views, stamps, typed items and commits hold here.** Read the
+vault's `CLAUDE.md` if you have not. Do not invoke context-dump, or any skill: a nested skill call
+ends this one's span in `lipika perf`.
 
 ## Do
 
@@ -23,8 +22,7 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    lipika pass-log start spin-out "<new question>" --scope workstreams/<parent> --kind dump
    ```
 
-   The new thread is `workstreams/YYYY-MM-DD-<question-slug>/`, today's date, the slug phrased as
-   the question. Read the parent's newest orientation and its `gotchas.md`, and decide which live
+   The new thread is `workstreams/YYYY-MM-DD-<question-slug>/`, dated today. Read the parent's newest orientation and its `gotchas.md`, and decide which live
    items **move** (bear only on the new question), which are **copied** (bear on both) and which
    stay.
 
@@ -44,7 +42,8 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    - `gotchas.md`: the parent's entries that bear on the question, **verbatim**, under
      `## From [[<parent>]]`, with the header `orientation-carry --append-gotchas` writes.
 
-4. **Prior art — read it yourself.** You hold the parent's context, so the relevance call is yours.
+4. **Prior art — read it yourself; never dispatch an agent.** Relatedness is judged against the
+   parent's context, which only you hold.
 
    ```bash
    lipika pass-log start prior-art "<new-ws>" --scope workstreams --kind scout
@@ -53,8 +52,7 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    ```
 
    Skip the parent and its lineage (already named). For every other thread whose question or system
-   could bear on the new one, read its routing note, newest orientation and `gotchas.md` — one
-   workstream at a time, never a grep of the vault root. Then write, in the new orientation:
+   could bear on the new one, read its routing note, newest orientation and `gotchas.md`. Then write, in the new orientation:
 
    ```markdown
    ## Prior art
@@ -62,10 +60,8 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    - [[<thread>]] — what it found that bears on this question, in one or two sentences.
    ```
 
-   **A bullet, not a paragraph.** Caveats, dates and detail stay in that thread, one link away; an
-   orientation that restates its prior art grows with every split.
-
-   `none found` when nothing bears. Do not list threads you read and rejected. Append each warning
+   **A bullet, not a paragraph**: caveats and detail stay in that thread, one link away. `none
+   found` when nothing bears. Do not list threads you rejected. Append each warning
    that bears on the question **verbatim** to the new `gotchas.md` under `## From [[<thread>]]`.
 
    ```bash
@@ -81,8 +77,7 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    lipika pass-log stop spin-out "<new-ws>" --result incremental
    ```
 
-   Do not touch `README.md`; the curator owns the index, and a new thread is absent from it until
-   one runs.
+   Do not touch `README.md`; the curator owns the index.
 
 6. **Open as the new thread's pickup.** Your message, in order:
    - **needs a decision** — every ESCALATED item carried;
@@ -94,7 +89,4 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
 
 ## Don't
 
-- **Don't dispatch an agent to read prior art.** The judgement needs the parent's context.
-- **Don't invoke another lipika skill.** It ends this skill's `perf` span.
-- **Don't move an item that also bears on the parent.** Copy it.
 - **Don't change HEAD in the vault checkout, and don't push.**

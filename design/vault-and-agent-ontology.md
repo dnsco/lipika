@@ -517,10 +517,10 @@ bear on it; the first orientation's `## Prior art` points at them, and their bea
 entries are copied verbatim. Prior art is the second section, after `## Recent narrative`, where a
 pointer is the content, and `orientation-carry` carries it.
 
-**2026-09-28 — the scout is retired; `spin-out` opens a thread.** One skill writes the parent's side
-of a split, the new thread's first orientation, and its prior art, reading candidate threads itself
-because it holds the parent's context. Each related thread gets a line on what it found. Inline
-first, measured by `lipika perf`, before parallel readers are considered.
+**2026-09-28 — the scout is retired; `spin-out` opens a thread.** One skill writes both sides of a
+split and the new thread's prior art, reading candidates inline because it holds the parent's
+context. Each related thread gets a line on what it found. Parallel readers wait on `lipika perf`
+showing inline is too slow.
 
 **2026-09-24 — archive, and warnings per thread.** A finished thread moves to `workstreams/archive/` on
 the owner's ruling, reversing §4's rule that a thread stays where it was opened. This is not the retired
