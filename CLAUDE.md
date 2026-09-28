@@ -203,10 +203,9 @@ stacked PRs sat open for three days and made `main` a fiction.
    2026-08-27.
 
    **Do not compose that message by hand.** `context-dump`'s step 7 prints it, from
-   `lipika handoff-prompt <workstream>` — the installed version, that version's gate command, and
-   every grader whose `up:` names the thread, already fenced for pasting. It **refuses**, exit 3,
-   when the tree is not what is installed: a warning above a pasteable block is read past, and the
-   paste is what survives. A refusal means the deploy did not happen and there is no handoff to
+   `lipika handoff-prompt <workstream> --deployed` — the installed version and that version's gate
+   command, already fenced for pasting. It **refuses**, exit 3, when the tree is not what is
+   installed: a warning above a pasteable block is read past, and the paste is what survives. A refusal means the deploy did not happen and there is no handoff to
    write yet.
 
    *— everything below happens in the NEW session —*

@@ -9,7 +9,7 @@ WHY THIS EXISTS
   arrives without the one thing only the previous one knew.
 
   So the handoff is composed from state instead of memory: the thread, the version that is actually
-  installed, the gate command for THAT version, and the graders to run, by path.
+  installed, and the gate command for THAT version.
 
   It REFUSES rather than warns. A warning printed above a pasteable block is read past; the paste is
   what survives. The failure this exists to catch -- step 3 forgotten, version unbumped, every deploy
@@ -24,7 +24,6 @@ WHY THIS EXISTS
 import argparse
 import filecmp
 import json
-import re
 import shutil
 import sys
 from pathlib import Path
@@ -153,67 +152,7 @@ def newest_orientation(tdir):
     return names[-1] if names else None
 
 
-ABOUT = re.compile(r'^about:\s*"?\[\[([^\]|]+)', re.M)
-
-
-FROM = re.compile(r'^from:\s*"?\[\[([^\]|]+)', re.M)
-
-
-def thread_lineage(tdir):
-    """This thread's slug, then its parent's, following `from:` on the newest orientation.
-
-    A SPLIT SEVERS GRADER SELECTION, and it does so silently -- measured 2026-08-25, on the split
-    that this function was written during. Graders are sealed `about:` the thread they were written
-    in; the work then moves to a successor thread, and the successor has none of its own. The tool
-    printed "No graders are recorded against this thread; there is nothing to score" over six
-    unscored clauses, exit 0, in a block meant to be pasted verbatim into the next session.
-
-    Following `from:` is what `orientation-audit` already does to find a parent's items, so the
-    edge exists and was simply not read here. One hop is deliberate: a chain of threads should not
-    accumulate every grader ever written, and a grader more than one split old is almost certainly
-    spent.
-    """
-    slugs = [tdir.name]
-    o = tdir / "orientation"
-    if o.is_dir():
-        # ANY orientation, not just the newest. The 0.2.6 fix read only the newest, which carries
-        # `from:` on a thread's FIRST orientation and never again -- so the very next handoff
-        # dropped the parent's graders and the split-severance bug came back by another route.
-        # Caught 2026-08-25 on the second handoff into this thread: five eval documents became one,
-        # silently, at exit 0. A thread's parentage does not change, so the oldest orientation that
-        # declares one is the answer.
-        for name in sorted(o.glob("*.md")):
-            m = FROM.search(name.read_text(errors="replace")[:1200])
-            if m:
-                slugs.append(m.group(1).strip())
-                break
-    return slugs
-
-
-def graders_for(vault, tdir):
-    """Every eval document whose `about:` names this thread or the one it split from.
-
-    Sorted newest-first by filename, which is how the vault's stamps sort.
-
-    This parsed a wikilink out of the whole head until 2026-08-25 -- any `[[slug]]` in the first
-    1200 characters, frontmatter or body -- while its docstring claimed it read a key. Nobody
-    could see the drift, because a substring match agrees with the key most of the time. That gap
-    is how `up:` acquired purposes it never had: the docstring was the only description of the
-    behaviour, and it was wrong. Match the key, so the claim and the code fail together.
-    """
-    evals = vault.path / "sources" / "evals"
-    if not evals.is_dir():
-        return []
-    wanted = set(thread_lineage(tdir))
-    hits = []
-    for p in sorted(evals.glob("*.md"), reverse=True):
-        m = ABOUT.search(p.read_text(errors="replace")[:1200])
-        if m and m.group(1).strip() in wanted:
-            hits.append(p)
-    return hits
-
-
-def compose(vault, tdir, version, graders, orientation):
+def compose(vault, tdir, version, orientation):
     """The next session's prompt. Machinery framing ONLY when a deploy was declared.
 
     THE DEFECT THIS FIXES: this emitted the deploy sentence, the version and the four-directory
@@ -252,24 +191,6 @@ def compose(vault, tdir, version, graders, orientation):
             "checkout it names, because that is the half a self-comparison gets wrong.",
             "",
         ]
-    if graders:
-        # Deliberately "eval documents", not "graders". `about:` cannot tell a sealed grader from the
-        # record that scored it -- measured on this tool's own first run, which told a session to
-        # "run" a scoring record. Naming a distinction the frontmatter does not carry would be a
-        # confident wrong answer; naming what was actually found is not.
-        lines.append(
-            "Eval documents recorded against this thread, newest first. The graders among them "
-            "are the ones written before a change; score against their text verbatim, and treat "
-            "anything already scored as a record rather than work:"
-        )
-        for g in graders:
-            lines.append(f"  {g.relative_to(vault.path)}")
-        lines.append("")
-    # No `else`. This used to state "No graders are recorded against this thread; there is nothing
-    # to score" -- a confident negative, twice wrong. It fired over six unscored clauses at a split
-    # (fixed 0.2.6 by following `from:`), and it answers a question a product thread never asked:
-    # a service migration has no graders and needs no sentence saying so. Silence is the honest
-    # output for "nothing found".
     if orientation:
         lines.append(
             f"The orientation pickup will read is {orientation.relative_to(vault.path)} -- "
@@ -320,9 +241,7 @@ def main(argv=None):
             # not MEASURE a stale copy; a thread that is not measuring this machinery has nothing
             # to be stale about, and refusing there would block every product handoff on the state
             # of a repo it never touches.
-            body = compose(
-                vault, tdir, None, graders_for(vault, tdir), newest_orientation(tdir)
-            )
+            body = compose(vault, tdir, None, newest_orientation(tdir))
             print("```")
             print(body)
             print("```")
@@ -370,9 +289,7 @@ def main(argv=None):
                 "then run this again."
             )
 
-        body = compose(
-            vault, tdir, version, graders_for(vault, tdir), newest_orientation(tdir)
-        )
+        body = compose(vault, tdir, version, newest_orientation(tdir))
         # The fence is emitted here, not by the caller: a definition that has to wrap this in
         # prose is a definition that can wrap it wrongly, and the paste is what survives.
         print("```")

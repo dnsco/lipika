@@ -2,7 +2,7 @@
 name: external-references
 description: A thread built on Slack threads and web pages, and no trace of either
 tags: [context-dump, references]
-allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit, TodoWrite]
+allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit, TodoWrite, Agent]
 max_turns: 60
 timeout_seconds: 1800
 expected_outcome: >

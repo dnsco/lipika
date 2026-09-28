@@ -54,6 +54,14 @@ def main():
     check("agents/scout.md is gone", not (REPO / "agents" / "scout.md").exists())
     check("skills/spin-out/SKILL.md exists", (REPO / "skills" / "spin-out" / "SKILL.md").exists())
 
+    dump = (REPO / "skills" / "context-dump" / "SKILL.md").read_text()
+    check("context-dump's post-deploy handoff prompt passes --deployed, which carries the gate",
+          "lipika handoff-prompt <workstream> --deployed" in dump)
+    ext = (REPO / "evals" / "external-references" / "prompt.md").read_text()
+    allowed = re.search(r"^allowed_tools:\s*\[([^\]]*)\]", ext, re.M)
+    check("the external-references case allows Agent, since context-dump dispatches tracers",
+          bool(allowed) and "Agent" in [s.strip() for s in allowed.group(1).split(",")])
+
     spin = REPO / "skills" / "spin-out" / "SKILL.md"
     t = spin.read_text() if spin.exists() else ""
     check("spin-out opens a pass for the run and one for prior-art reading",

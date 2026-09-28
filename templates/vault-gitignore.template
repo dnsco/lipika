@@ -23,7 +23,7 @@ pass-log.jsonl
 .claude/worktrees/
 .claude/settings.local.json
 
-# Agent-to-agent reports: a scout's recon, a scope's manifest, a brief written once and spawned
+# Agent-to-agent reports: a scope's manifest, a brief written once and spawned
 # against. Machinery state, not corpus — nothing in the vault cites it and no document's meaning
 # depends on it, which is the same argument that keeps pass-log.jsonl untracked. Filenames carry
 # the HEAD sha they were taken at, so a stale report is detectable rather than quietly trusted.

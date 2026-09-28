@@ -81,7 +81,12 @@ def installed_vs_tree(tree_arg=None):
         print("           a comparison of a copy against itself cannot fail; pass --tree <checkout>")
         return 1
 
-    declared = hp.manifest_version(tree)
+    try:
+        declared = hp.manifest_version(tree)
+    except hp.Refusal as e:
+        print(f"  MISSING  {e}")
+        print(f"           {tree} is not a Lipika checkout; pass --tree <checkout>")
+        return 1
     stale = hp.differing(tree, inst)
 
     if declared != inst.name:
@@ -117,6 +122,30 @@ def installed_vs_tree(tree_arg=None):
         return 1
     print(f"  ok       installed {inst.name} IS {tree} (skills, agents, tools, bin)")
     return 0
+
+
+def tree_vs_origin(tree_arg=None):
+    """Note commits in the checkout that `origin/main` lacks. A directory source runs them.
+
+    Never sets the exit code: deploying from an unmerged branch is allowed. Compares against the
+    last fetched `origin/main`, without fetching.
+    """
+    try:
+        sys.path.insert(0, str(HERE))
+        import handoff_prompt as hp
+        tree = Path(tree_arg).resolve() if tree_arg else hp.checkout_root()
+    except Exception:
+        return
+    if tree is None:
+        return
+    r = subprocess.run(["git", "-C", str(tree), "rev-list", "--count", "origin/main..HEAD"],
+                       capture_output=True, text=True)
+    if r.returncode != 0 or r.stdout.strip() in ("", "0"):
+        return
+    b = subprocess.run(["git", "-C", str(tree), "rev-parse", "--abbrev-ref", "HEAD"],
+                       capture_output=True, text=True).stdout.strip()
+    print(f"  note     {tree} holds {r.stdout.strip()} commit(s) not on origin/main (HEAD {b}).")
+    print("           A directory source runs them; once squashed, realign before the next deploy.")
 
 
 MARKETPLACES = Path.home() / ".claude" / "plugins" / "known_marketplaces.json"
@@ -223,6 +252,7 @@ def main(argv=None):
               f"$LIPIKA_VAULT")
 
     problems += installed_vs_tree(args.tree)
+    tree_vs_origin(args.tree)
     definition_source()
 
     for name in ("git", "python3"):
