@@ -209,11 +209,6 @@ first 1200 characters while its docstring claimed to read the key, so nobody cou
 apart. **That gap is the mechanism**: a field with no reader accumulates purposes, because the only
 description of its behaviour is prose nothing checks.
 
-**`about:` replaces it on exactly the documents that live outside what they describe** — 11 of them:
-`sources/evals/`, `epics/`, `external/`, `reference/`. There the folder genuinely cannot say which
-thread the document concerns. **It means only that**, and giving it hierarchy, containment or
-parenthood is the failure repeating under a new spelling.
-
 Three loose documents in `workstreams/parked/` had to move into the threads their `up:` named before
 the strip, or the deletion would have orphaned them — they are the ones `architecture-candidates`
 reported as *in no thread and cannot vote*, and moving them retired that finding too.

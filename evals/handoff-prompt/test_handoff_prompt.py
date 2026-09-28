@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Tests for `lipika handoff-prompt`: a deployed handoff carries the gate and picks no graders.
+"""Tests for `lipika handoff-prompt`: a deployed handoff carries the gate.
 
 Run `python3 evals/handoff-prompt/test_handoff_prompt.py`. Exit 0 all pass, 1 any fail.
 
-An eval document naming the thread in `about:` must not appear. Drives `bin/lipika` against a fixture vault, tree and plugin cache.
+Drives `bin/lipika` against a fixture vault, tree and plugin cache.
 """
 
 import json
@@ -34,9 +34,6 @@ def main():
         o = vault / "workstreams" / THREAD / "orientation"
         o.mkdir(parents=True)
         (o / "2026-01-01-000000.md").write_text("## Where this is\nx\n")
-        (vault / "sources" / "evals").mkdir(parents=True)
-        (vault / "sources" / "evals" / "2026-01-01-grader.md").write_text(
-            f'---\nabout: "[[{THREAD}]]"\n---\n# a grader\n')
 
         tree = d / "tree"
         for name in ("skills", "agents", "tools", "bin"):
@@ -54,7 +51,6 @@ def main():
         check("--deployed exits 0 when the tree is what is installed", r.returncode == 0, r.stderr)
         check("--deployed carries the gate command", "lipika doctor" in r.stdout, r.stdout)
         check("--deployed names the installed version", "installed 9.9.9" in r.stdout, r.stdout)
-        check("no grader is chosen by thread", "2026-01-01-grader" not in r.stdout, r.stdout)
 
     print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0

@@ -66,16 +66,10 @@ span repos. `lipika lineage` prints it. An epic tier used to tie a project's thr
 together; it was dropped 2026-09-25, because the lineage already records which threads belong to one
 effort.
 
-**A new thread starts with its prior art.** When one is opened, a scout looks for threads that bear on
-its question, archived ones included. The first orientation's `## Prior art` points at them, and the
+**A new thread starts with its prior art.** `spin-out`, which opens it, reads the other threads for ones
+that bear on its question, archived ones included. The first orientation's `## Prior art` points at them, and the
 warnings from them that bear on it are copied verbatim into the new `gotchas.md`. Search later is pull,
 and pull cannot fire when nobody asks.
-
-`up:` was **retired 2026-08-25** after being measured across the whole vault: it restated the folder
-path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing read it.
-**Do not re-add it, and do not give `about:` its meaning.** `about:` says only *which thread this
-document concerns*, and belongs only on documents that live OUTSIDE that thread -- `sources/evals/`,
-`external/`, `reference/`. Inside a thread the folder already says it.
 
 **One workstream is one thread of work** — one path prefix, one agent at a time. A workstream is heavy
 when it carries *two concurrent threads*, never when it is merely large: two hundred dumps on one thread
@@ -131,8 +125,7 @@ a rival account of the present.
 
 - **Filenames** `YYYY-MM-DD-topic.md`, and `YYYY-MM-DD-HHMM-topic.md` for dumps and orientations, where
   several a day is normal and same-date names do not sort. `architecture/` and `values/` skip the date.
-- **Frontmatter** — `type` / `status` / `date` / `tags`, plus `from:` where it applies, and `about:`
-  only on a document that lives outside the thread it concerns.
+- **Frontmatter** — `type` / `status` / `date` / `tags`, plus `from:` where it applies.
 - **Links** — `[[wikilinks]]` inside the vault; code paths as literal text, with the repo named when
   ambiguous.
 - **Voice** — terse and factual, for a first-time reader. **No agent-local codenames** — say what a thing
@@ -154,7 +147,6 @@ a rival account of the present.
   caller chose. Dispatched by `context-dump`, several at once. Nothing else — no dump, no
   orientation, no commit, no pass of its own. It **refuses and writes nothing** when it cannot
   reach the source, because a fabricated trace is not a slower record but a false one.
-- **`scout`**: nothing. Read-only recon in a context that is discarded.
 - **The owner**: `architecture/`, grand plans, and inventing or renaming a top-level folder.
 
 **An owner's account of what happened outranks an agent's inference about it.** They were there; you have

@@ -29,7 +29,7 @@ to drown the real ones:
   placeholder  <url>, example.com, and anything holding an angle bracket -- template text
 
   Vault-root `reference/` counts as carrying a URL, not just the thread's own: a cross-thread trace
-  lives there by convention, with `about:` naming the thread.
+  lives there by convention.
 
 CONTRACT
   exit 0  no untraced external URL
