@@ -99,26 +99,6 @@ ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
   workspace.
 - **Test a new grader on a kept trace, green and red**, before paying for a run.
 
-## Probe the running session, behaviourally
-
-A green `lipika doctor` proves the installed files are the tree; it does not prove the session in front
-of you has read them. A probe does: **give the new text a command or a write path the old text lacks**,
-dispatch real work, and read the transcript for the call.
-
-**Never ask a role to quote its own definition.** It returns a fluent paraphrase of whatever it is
-operating under and presents it as a quotation — including rules that exist in no version of the file.
-What an agent did is not confabulable; what it says about itself is.
-
-**Give a bare prompt when the question is whether a definition fired.** A prompt that restates the
-definition makes every result unattributable.
-
-**`model:` binds at session start; a definition's body does not.** After changing a role's model,
-restart before profiling it, and read the model back from the transcript:
-
-```bash
-jq -r 'select(.message.model)|.message.model' "$F" | sort -u
-```
-
 ## Where the artifacts live
 
 | artifact | location |
@@ -160,6 +140,16 @@ Do the sanity pass first:
 - **Ask which instruction did not fire.** That is not a lapse to note; it is a rule that needs to become
   a tool.
 - **Name the footguns.** A trap hit twice across rounds is worth more than any number.
+
+**Give a bare prompt when the question is whether a definition fired.** A prompt that restates the
+definition makes every result unattributable.
+
+**A role's `model:` takes effect only in a new session.** After changing one, restart before profiling
+it, and read the model back from the transcript:
+
+```bash
+jq -r 'select(.message.model)|.message.model' "$F" | sort -u
+```
 
 **Numbers are the second pass, and they need not be uniform.** Do not hold back a change to keep a
 measurement comparable, and do not re-run for a clean number. Say what changed, say what you measured,
