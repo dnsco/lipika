@@ -59,8 +59,11 @@ nested skill call ends this one's timing in `lipika perf`, and the run is measur
    ```markdown
    ## Prior art
    - Lineage: [[<root>]] → … → [[<parent>]].
-   - [[<thread>]] — one or two sentences on what it found that bears on this question.
+   - [[<thread>]] — what it found that bears on this question, in one or two sentences.
    ```
+
+   **A bullet, not a paragraph.** Caveats, dates and detail stay in that thread, one link away; an
+   orientation that restates its prior art grows with every split.
 
    `none found` when nothing bears. Do not list threads you read and rejected. Append each warning
    that bears on the question **verbatim** to the new `gotchas.md` under `## From [[<thread>]]`.
