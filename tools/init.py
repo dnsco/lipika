@@ -43,8 +43,7 @@ from pathlib import Path
 import vault_config
 
 TIERS = {
-    "workstreams": "one question being answered each; a thread gets a folder, a folder-note, dumps/ and orientation/",
-    "epics": "a large effort actually happening. live / parked / finished. Cites its threads",
+    "workstreams": "one question being answered each; a split names its parent in `from:`, and the chain is a project",
     "grand-plans": "long-horizon direction the workstreams serve. A standing want, with no liveness",
     "architecture": "how a system is put together. The owner's; agents write the traces behind it",
     "reference": "subsystem maps traced from source, cross-workstream. No status, no next-moves",
@@ -73,7 +72,8 @@ drifts; one line per document is the whole design.
 
 **Nothing here closes.** A workstream has no status field: the date it last accrued is the whole
 answer, and a thread that stopped is simply not listed as live. One the owner has ruled finished
-moves whole to `workstreams/archive/`. Only an epic carries state.
+moves whole to `workstreams/archive/`. Threads that split from one another are one project;
+`lipika lineage` prints the chains.
 
 ## Workstreams
 

@@ -167,7 +167,12 @@ Three things follow, and they are the cost of the bet:
 Falsified by threads that keep needing to be merged back, or by a corpus where finding the live thread
 costs more than reading a long orientation would have.
 
-✅ **Three tiers, and only the middle one carries state.** Built 2026-08-21: `epics/` exists, and the five
+**Retired 2026-09-25: the epic tier.** The owner ruled that a workstream is a project, a goal that may
+span repos, and that the split lineage — each thread's `from:` — is what ties a project's threads
+together. `lipika lineage` walks it. The six `epics/` files were archived. What follows is the
+2026-08-21 design, kept as the record of why the tier existed; see the amendment of that date.
+
+~~Three tiers, and only the middle one carries state.~~ Built 2026-08-21: `epics/` exists, and the five
 efforts that were shelved in `workstreams/parked/` are parked epics.
 
 | tier | what it is | liveness | state | written by |
@@ -363,6 +368,8 @@ history rather than rebuild it.
 | *one marker per separately-statused fact* | stopped a composite marker collapsing distinctions | a writing rule compensating for downstream mechanical action; with judgement restored it has no consumer |
 | the clean-tree halt | protected a losslessness guarantee | the guarantee is gone; what protects a commit is the pathspec |
 | the write-authority partition | kept parallel agents off each other's files | the pass log answers concurrency directly |
+| the epic tier, `epics/` | grouped a project's threads, carried live · parked · finished | a split's `from:` already records which threads are one project, and a hand-kept citation list was a second copy of it that went stale — measured 2026-09-25, when an epic citing three of seven threads split a curation group in two |
+| warning recall by search at read time | found other threads' warnings when someone looked | pull cannot fire when nobody asks; a new thread is pushed its prior art at creation instead, by a background scout, into its own `gotchas.md` |
 
 ## 9. Invariants, with what would falsify each
 
@@ -372,7 +379,7 @@ history rather than rebuild it.
 | Every document is a record or a view | The maintenance bill was entirely the third class | A document that must be both, and stays correct |
 | A record is never edited | It is evidence of a moment; a later moment gets a later document | An edited record nobody had to reconcile |
 | A wikilink is an address, not a claim, so a record's links may be repaired | Repointing a moved target preserves every claim; leaving it dangling loses one. Rename through `lipika obsidian rename`, which moves the links with the file | A link repair that changed what a document asserted |
-| The owner writes an epic's PROSE; an agent keeps its citations true | Which threads exist is mechanical and goes stale fastest; the judgement is not and does not | An agent-maintained citation list that misrepresented the effort |
+| A project is its split lineage; no document lists its threads | Which threads are one effort is already recorded once, in each split's `from:`, and a second list goes stale | Two threads of one effort with no `from:` chain between them, that curation needed grouped |
 | A vault must not hold a COPY of Lipika's machinery — but may hold its own tools and skills | The bill was N copies of one file, not the existence of a `skills/` directory. The test is identity, not location | A vault-local tool or skill that cost what the port loop cost |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its whole toolchain | A patched view that stayed true over months |
 | An agent may create a `reference/` trace, and no other thread document | A trace is a record of one artifact a child can re-open, so a dispatched writer costs the caller only the address — and the caller's own bytes are the whole cost of a handoff. Judgement about what a thread IS stays with the session | A dispatched trace measurably thinner than one the session wrote on the same subject; or a fabricated trace reaching the record |
@@ -501,6 +508,13 @@ however well it encodes a real measurement — rewrite it rather than re-explain
 | this document | the **design** — the shape, the forces, the falsifiers |
 
 ## Amendments
+
+**2026-09-25 — projects are lineage; prior art is pushed.** The epic tier is retired (§4, §8): a
+workstream is a project, and the chain of splits recorded in `from:` is what makes several threads
+one. `curate` groups by lineage first. When a thread is opened, a background scout finds threads that
+bear on it; the first orientation's `## Prior art` points at them, and their bearing `gotchas.md`
+entries are copied verbatim. Prior art is the second section, after `## Recent narrative`, where a
+pointer is the content, and `orientation-carry` carries it.
 
 **2026-09-24 — archive, and warnings per thread.** A finished thread moves to `workstreams/archive/` on
 the owner's ruling, reversing §4's rule that a thread stays where it was opened. This is not the retired

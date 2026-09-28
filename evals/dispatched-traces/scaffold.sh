@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-mkdir -p workstreams epics grand-plans architecture reference values sources external research-notes
+mkdir -p workstreams grand-plans architecture reference values sources external research-notes
 
 cat > CLAUDE.md <<'VAULT'
 # This vault
@@ -24,7 +24,7 @@ Durable cross-session memory for engineering work. Every document here is a **re
 never edited, corrected only by a newer document -- or a **view**, regenerated wholesale and never
 patched.
 
-Tiers: `workstreams/` one question being answered each; `epics/`; `grand-plans/`; `architecture/`;
+Tiers: `workstreams/` one question being answered each; `grand-plans/`; `architecture/`;
 `reference/`; `values/`; `sources/`; `external/`.
 VAULT
 

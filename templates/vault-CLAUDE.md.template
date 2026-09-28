@@ -44,31 +44,38 @@ check, a dump written today has not had time to drift.
   architecture/<system>.md         VIEW — the owner's. Stable name, no date, as-of <sha>
   reference/YYYY-MM-DD-<topic>.md  RECORD — a trace from source, cross-thread
   grand-plans/<name>.md            a standing want. No liveness. The owner's
-  epics/<name>.md                  VIEW — a large effort happening. live · parked · finished.
-                                   The owner's. CITES its threads; does not contain them
   workstreams/
     YYYY-MM-DD-<thread>/
+    archive/<thread>/              threads the owner ruled finished, moved whole
       YYYY-MM-DD-<thread>.md       routing note, dated to match the folder
-      orientation/YYYY-MM-DD-HHMM.md   newest wins
-      dumps/YYYY-MM-DD-HHMM-<topic>.md immutable
+      orientation/YYYY-MM-DD-HHMMSS.md   newest wins; the first names its parent in `from:`
+      dumps/YYYY-MM-DD-HHMMSS-<topic>.md immutable
+      gotchas.md                       warnings that stay true. Append-only
       reference/YYYY-MM-DD-<topic>.md  dated traces, thread-local
   sources/  external/  values/
 ```
 
-**Three tiers, and only the middle one carries state.** A grand plan is a standing want — *not started* is
-not *dead*, so it has no liveness. An **epic** is a large effort actually happening, and it is the only
-tier with a status: an epic is **parked** by a decision someone made. A **workstream** is one question
-being answered and has **no status field** — the date it last accrued is the whole answer, so a thread
-that stopped is simply not listed as live. A second shelf concept at that tier would only disagree with
-the date.
+**Two tiers, and neither has a status field.** A grand plan is a standing want — *not started* is not
+*dead*, so it has no liveness. A **workstream** is one question being answered, and the date it last
+accrued is the whole answer: a thread that stopped is simply not listed as live, and one the owner rules
+finished moves to `workstreams/archive/`.
 
-Membership is prose in the epic. There is no frontmatter field for it, deliberately.
+**A project is a split lineage.** When a thread's question changes, the answer is a new dated thread,
+and its first orientation names the parent in `from:`. The chain of splits is one project, and it may
+span repos. `lipika lineage` prints it. An epic tier used to tie a project's threads
+together; it was dropped 2026-09-25, because the lineage already records which threads belong to one
+effort.
+
+**A new thread starts with its prior art.** When one is opened, a scout looks for threads that bear on
+its question, archived ones included. The first orientation's `## Prior art` points at them, and the
+warnings from them that bear on it are copied verbatim into the new `gotchas.md`. Search later is pull,
+and pull cannot fire when nobody asks.
 
 `up:` was **retired 2026-08-25** after being measured across the whole vault: it restated the folder
 path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing read it.
 **Do not re-add it, and do not give `about:` its meaning.** `about:` says only *which thread this
 document concerns*, and belongs only on documents that live OUTSIDE that thread -- `sources/evals/`,
-`epics/`, `external/`, `reference/`. Inside a thread the folder already says it.
+`external/`, `reference/`. Inside a thread the folder already says it.
 
 **One workstream is one thread of work** — one path prefix, one agent at a time. A workstream is heavy
 when it carries *two concurrent threads*, never when it is merely large: two hundred dumps on one thread
@@ -148,7 +155,7 @@ a rival account of the present.
   orientation, no commit, no pass of its own. It **refuses and writes nothing** when it cannot
   reach the source, because a fabricated trace is not a slower record but a false one.
 - **`scout`**: nothing. Read-only recon in a context that is discarded.
-- **The owner**: `architecture/`, `epics/`, grand plans, and inventing or renaming a top-level folder.
+- **The owner**: `architecture/`, grand plans, and inventing or renaming a top-level folder.
 
 **An owner's account of what happened outranks an agent's inference about it.** They were there; you have
 artifacts. When a measurement contradicts what they told you, **say so and stop** — say what you saw, ask
