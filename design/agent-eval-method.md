@@ -104,8 +104,8 @@ on.
 
 **`about:` names the thread the eval concerns, and it is the only frontmatter link here**, because
 `sources/evals/` is flat and the folder cannot say which thread a document is about.
-`tools/handoff_prompt.py` parses it to find the graders for a handoff. **This is the one place the key
-belongs.** It replaced `up:`, retired 2026-08-25 after being measured across the vault: `up:` restated
+Nothing reads it since 0.8.3: graders are not tied to threads (ruled 2026-09-28), so `handoff-prompt`
+no longer selects on it. It replaced `up:`, retired 2026-08-25 after being measured across the vault: `up:` restated
 the folder path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing
 read its value. **Do not give `about:` `up:`'s meaning.** It says *which thread this is about*, never
 hierarchy, containment or parenthood — that is how the retired field kept acquiring purposes.
