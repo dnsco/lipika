@@ -1,5 +1,5 @@
 schema_version: "1.1"
-name: prior-art
+name: spin-out
 
 # The workspace IS the vault. The scaffold seeds a parent thread, one related thread it never cites,
 # and one unrelated thread, each with a gotchas.md.
