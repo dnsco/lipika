@@ -107,7 +107,7 @@ itself. Not a dump, not an orientation, not the index, no commit, never `archite
 2026-09-18: the rule had already stopped being *two skills and nothing else* when `curator` gained
 the shared surfaces, so what it actually meant was *nothing else writes a thread's documents*, and
 this adds one document class to that. The forces are in
-`design/vault-and-agent-ontology.md` §11; the measurement is `design/eval-cases/handoff-cost.md`.
+`design/vault-and-agent-ontology.md` §7; the measurement is `design/eval-cases/handoff-cost.md`.
 
 ## Developing the machinery
 

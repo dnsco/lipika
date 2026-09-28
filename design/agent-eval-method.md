@@ -5,428 +5,277 @@ date: 2026-08-18
 tags: [vault, meta, agents, evals, forensics, method]
 ---
 
-# How the vault's agents get developed, measured and changed
+# How the machinery gets tested, measured and changed
 
-The method behind the operating machinery (the `pickup` and `context-dump` skills, and the `curator` and
-`scout` roles) and the
-development role that measures them (the profiler, which runs as an ad-hoc brief against this document rather than
-as a definition): where a change to one is authored, how its cost is measured, where the measurement is kept, and
-what may be concluded from it. Cross-workstream reference — the *record* of what each round found lives
-in the vault's own maintenance record, and the normative rules live in [[CLAUDE]]. This carries neither; it carries the
-procedure.
+How a change to a skill, agent definition or tool is tested before it ships, and how a run of the real
+thing is measured afterwards. The loop that orders these steps — graders first, author, deploy, dump,
+restart, gate, probe, eval — is in `CLAUDE.md` and is not restated here.
 
-**Written 2026-08-18, before the round it describes**, deliberately: it is meant to be amended in place as it is
-used, not written up afterwards from memory. Amendments are dated at the bottom.
+## Two layers of test
 
-## The loop, and why it is a loop
+| layer | where | tests | run |
+|---|---|---|---|
+| CLI suite | `evals/<name>/test_*.py` | a tool's mechanics — exit codes, output, refusals, against fixtures it builds itself | `python3 evals/<name>/test_<name>.py`; exit 0 all pass, 1 any fail |
+| graders | `evals/<case>/graders/*.md` | an agent's judgement, in a scaffolded vault | `claude plugin eval` |
 
-1. **Author it here**, in `github.com/dnsco/lipika`. There is one copy of every definition, skill and
-   tool; the port loop that used to be steps 1–2 was retired 2026-08-20 with the duplication it managed.
-2. **Prove no rule was dropped**, with `lipika recall-check <pre-change-ref> <path>`. Every flag judged in
-   writing; never reword a file to satisfy one. `--into` needs **every** survivor when content moves,
-   including the source file if it kept some.
-3. **Score it, then try it on real work.** `claude plugin eval` scores the graders in
-   `evals/<case>/graders/`; **every run passes `--max-cost-usd` and `--runs 1`** (below).
-   A profile of real work goes in the vault's `sources/evals/`. **Probe first**, always: a deployed
-   version is not a running one.
-4. **Write the round's summary** into the workstream's own `reference/`, and feed the findings back to
-   step 1.
+**Mechanics go in the CLI suite.** A tool change gets a hand-audited red case and a green case there,
+written red first. It is deterministic, costs nothing, and runs in seconds.
 
-Step 5 is not a duplicate of step 4. **A frozen eval is written for whoever audits the measurement; the summary
-is written for the next agent, which will not read the eval.** So it is short — what changed this round, what was
-run, then the findings and the numbers an agent needs to size its own work: current definition bytes, the last
-measured span per role against its budget, and the traps that cost a call. One per round, dated,
-`workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`; the newest is the one to read. It carries **no live status
-and no next-moves** — those belong to the task frontier, and a summary that grows them has become a second
-frontier.
+**Graders are only for what a model decides.** A definition change needs them, committed **before** the
+change: a grader written afterwards agrees with whatever happened. **Graders falsify; they do not show
+improvement** — never eval the version you are replacing.
 
-Step 5's return edge is what makes this a loop rather than a checklist. Every durable improvement to these roles
-so far came from a profile, not from re-reading a definition.
-
-**One condition on step 4 that is easy to miss, and it was stated wrongly here until 2026-08-24.** The old
-text said a definition is served stale "possibly for the whole session" and that the exercise run wants a fresh
-session. **The documentation says the opposite**: Claude Code watches `~/.claude/agents/` and `.claude/agents/`
-and loads edits within seconds, and restart is required only for an `agents/` directory absent at session start,
-`--add-dir` directories, and `--disable-slash-commands`. Skills have documented live change detection.
-
-What was actually measured on 2026-08-20 is narrower: an in-place edit **at a symlink's target** had not loaded
-at +15 minutes, against an earlier "a few minutes" on a file owned **directly** in `~/.claude/agents/`. That is
-one observation of a lower bound, not a duration — and the two conditions differing points at the symlink, not
-at a timer. Suspected cause: a watcher registered on the link that never fires when only the target changes,
-which would make the staleness **unbounded**. **Prompt caching is not the mechanism** — it keys on the exact
-token prefix, so changed text is a cache miss and the new text runs.
-
-**Resolved 2026-08-24 by deploying instead of waiting.** Lipika installs as a plugin, and the installed copy
-is a versioned snapshot rather than a live view of the tree. So a round now *deploys*: bump the version in both
-`.claude-plugin/` manifests, `claude plugin marketplace update lipika`, `claude plugin update lipika@lipika`,
-restart. Measured the same day: **at an unchanged version, `install`, `update` and `marketplace update` are all
-silent no-ops** — the bump is what makes a deploy happen, and skipping it measures the previous round.
-
-That dissolves the staleness question rather than managing it: each round leaves a distinct versioned directory,
-so which version is live is a number you can print. **Probe anyway** — it costs one question and it is the only
-check that reads behaviour rather than a manifest.
-
-**Probe behaviourally. Never ask a role to quote its own definition.** Measured the same day: a `scout` asked to
-quote the command it had been told to use returned a rule that has **never existed in any version of that
-file, in any repo** — verified by `grep -rl` and `git log --all -S`, both empty. It produced a fluent paraphrase
-of the rule it was operating under and presented it as a quotation, which reads as confirmation and is worthless
-as evidence. So: give the new text **a command or a write path the old text does not have**, dispatch real work,
-and read the transcript for the call. What an agent did is not confabulable; what it says about itself is.
-
-## Where the artifacts live
-
-| artifact | location |
-|---|---|
-| definitions, as authored | `agents/<role>.md` and `skills/<name>/SKILL.md` in Lipika. One copy; there is no template to port to |
-| definitions, as RUNNING | `~/.claude/plugins/cache/lipika/lipika/<version>/` — a snapshot taken at deploy. Editing the tree does not change it |
-| which version is running | `claude plugin list`, and the version directory above. This is the answer to "was my change in force?" |
-| subagent transcripts | `~/.claude/projects/<project-slug>/<session-id>/subagents/agent-<agentId>.jsonl` |
-| task-output symlinks to the same files | `/private/tmp/claude-502/<slug>/<session-id>/tasks/<id>.output` |
-| graders, and the case they run in | `evals/<case>/` in Lipika — `case.yaml`, `prompt.md`, `graders/*.md`, `scaffold.sh` |
-| scored runs | `evals/results/<timestamp>/aggregate-result.json`; the trace survives only under `--keep-temp` |
-| frozen profiling reports | `sources/evals/YYYY-MM-DD-HHMM-<subject>-profile.md`, **`HHMM` from `date -u` when you write it** — not the run's start, not its completion |
-| the findings drawn from them | `workstreams/vault-maintenance/` |
-| the round summary an agent actually reads | `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, newest first |
-
-Timestamp an eval filename **to the minute**, from the profiled agent's completion time, so several evals in one
-day cannot collide:
-
-```bash
-D=~/.claude/projects/<project-slug>/<session-id>/subagents
-stat -f '%Sm' -t '%Y-%m-%d-%H%M' "$D/agent-<agentId>.jsonl"
-```
-
-Frontmatter on an eval: `type: eval`, `date`, `tags`, plus a provenance paragraph naming the
-transcript it was read from. Profiles additionally carry `subject`.
+**Run the whole grader suite after any definition change**, not only the case you meant to move. A trim
+that keeps every rule's text can still regress another case's dispatch path, and `recall-check` will not
+see it.
 
 ## Graders — the suite, and how it runs
 
-**`evals/` is the suite.** Each case is `evals/<case>/{case.yaml,prompt.md,scaffold.sh,graders/*.md}`;
-`claude plugin eval` scores every grader. The vault's `sources/evals/` holds profiles and the
-hand-scored graders from before the harness — history, not re-run. Cite a grader by its repo path.
+### Anatomy of a case
 
-- **grader** — a prediction committed **before** the change it tests. Written after, it agrees with
-  whatever happened.
-- **score** — the harness's verdict for one run.
-- **profile** — a measurement of one run, not a pass/fail. Kept in `sources/evals/`.
+`evals/<case>/` holds four things:
 
-**When a change needs one.** A **definition** change does: nothing else can be wrong about it in
-advance. A **tool** change gets a hand-audited red case and green case instead. **Graders falsify;
-they do not show improvement** — never eval the version you are replacing.
-
-**Run the whole suite after any definition change**, not only the case you meant to move. A trim that
-kept every rule's text regressed dispatch paths on 2026-09-24; `recall-check` passed it and a grader
-in another case caught it.
+- **`case.yaml`** — `schema_version`, `name`, and `context.scaffold_script`. A comment carries the command
+  that runs the case. It has no cost key.
+- **`prompt.md`** — frontmatter, then the prompt the run receives, verbatim. The frontmatter holds
+  `name`, `description`, `tags`, `allowed_tools`, `max_turns`, `timeout_seconds`, and
+  `expected_outcome`: the prose the judges read as the target.
+- **`scaffold.sh`** — seeds the workspace, which **is** the vault the run works in: threads, dumps,
+  orientations with known dispositions. It runs as the operator, outside the sandbox, so it never calls
+  `lipika init` and writes only under `$PWD`.
+- **`graders/*.md`** — one prediction per file. Frontmatter is the grader's type and options; the body
+  says what it checks, and for an `llm` judge the body is the criteria verbatim.
 
 ### Running it
 
 ```bash
 ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
-  claude plugin eval . --scaffold --allow-tools Bash Write Edit Agent --trust-plugin \
+  claude plugin eval . --scaffold --allow-tools Bash Write Edit --trust-plugin \
   --ablation none --runs 1 --keep-temp --max-cost-usd 7.5          # add --case <name> for one
 ```
 
-- **Every run carries `--max-cost-usd` and `--runs 1`.** A case has no cost key; `runs` defaults to 3
-  plus a baseline arm. The ceiling is checked before each run launches, so it overruns by the runs in
-  flight. Full suite ~$5.25; one handoff-shaped case $2.45–3.46. The Console limit on
+- **Every run carries `--max-cost-usd` and `--runs 1`.** `runs` defaults to 3 plus a baseline arm. The
+  ceiling is checked before each run launches, so it overruns by the runs in flight. The Console limit on
   `anthropic-eval-key` is the backstop.
-- **Pass the key per command, never `export` it.** The child gets a sealed `HOME`, so OAuth fails
-  (`Not logged in`) and only an env var reaches it; an ambient key displaces OAuth for every session
-  in that shell. The judges run in your process and bill normally.
-- **`--scaffold` is off by default** — without it the seeded vault never exists. **`--allow-tools` is
-  separate from a case's `allowed_tools`**: the case says what a run may use, the flag says yes.
-- **`--keep-temp`, always.** Without it the trace is deleted. The kept directory's `home/` is sealed
-  mode 000; `chmod 700` it and the `sealed/` inside to read it, and never run git in there.
-- **Reports** go to `evals/results/<timestamp>/{report.html,aggregate-result.json}` — gitignored,
-  local.
-- **End every run by linking the owner to its `report.html`** — the path is the last line the run
-  prints. The per-grader lines in a message are a summary; the report is the record he reads.
+- **`--allow-tools` grants the gated tools, and only those: `Bash`, `Write`, `Edit`, `WebFetch`,
+  `WebSearch`.** A case's `allowed_tools` asks; `Read`, `Glob`, `Grep`, `Skill`, `Agent` and `TodoWrite`
+  are granted without the flag. A case asking for a gated tool it was not granted is listed on stderr as
+  `not granted`. `Bash Write Edit` covers every case.
+- **Pass the key per command, never `export` it.** The child gets a sealed `HOME`, so OAuth fails and
+  only an env var reaches it; an ambient key displaces OAuth for every session in that shell. The judges
+  run in your process and bill normally.
+- **`--scaffold` is off by default**; without it the seeded vault never exists.
+- **`--keep-temp`, always.** Without it the trace is deleted. The kept directory's `home/` is sealed mode
+  000; `chmod 700` it and the `sealed/` inside to read it, and never run git in there.
+- **Reports** go to `evals/results/<timestamp>/{report.html,aggregate-result.json}`, gitignored. End every
+  run by linking the owner to its `report.html` — the last line the run prints. A summary of the
+  per-grader lines is not the record he reads.
 
 ### Reading it
 
-- **Read the per-grader lines, never the headline.** A grader skipped for the cost ceiling scores as
-  a failure, and the summary can contradict the lines.
+- **Read the per-grader lines, never the headline.** A grader skipped for the cost ceiling scores as a
+  failure, and the summary can contradict the lines.
 - **Exit 1 is "below threshold" or "a case failed to load".** Read stderr.
 - **A score is only as good as what the grader can see.** Before blaming a definition, read the kept
-  trace. `Task called 0x`, `expected 1..0`, and a judge failing on absent evidence were all grader
-  faults on 2026-09-24.
+  trace: a grader counting the wrong tool name, or a judge failing on evidence outside its focus, looks
+  exactly like a regression.
 
 ### Writing one
 
-- **Prefer mechanical.** `regex` with `target: trace` sees the **whole** run: match inside the write
-  it judges — `/reference/[^"]*\.md","content":"…<fact>` — and use lookaheads for several facts.
+- **Prefer mechanical.** `regex` with `target: trace` sees the **whole** run: match inside the write it
+  judges — `/reference/[^"]*\.md","content":"…<fact>` — and use lookaheads for several facts.
   `tool_used` with `input_match` counts calls.
-- **An `llm` judge sees less than it seems.** `focus: trace` is the first and last 12 messages;
-  `files` is paths only; `{source: file, path}` is one literal path. Use a judge only when its focus
-  holds the evidence, and its body is the criteria verbatim.
+- **An `llm` judge sees less than it seems.** `focus: trace` is the first and last 12 messages; `files` is
+  paths only; `{source: file, path}` is one literal path. Use a judge only when its focus holds the
+  evidence.
 - **Keys.** A grader takes `type`, `weight`, `arm` and its type's options; an unknown key rejects the
-  whole case. `tool_used`: `tool`, `input_match`, `min` (**default 1** — an absence check needs
-  `min: 0`), `max`. `tool_order`: `before`/`after`, a name or `{tool, input_match}`, first
-  occurrences. `regex`: `target`, `pattern`, `match: contains | not_contains | count:N`.
-  `file_exists`: `path`, `exists`. Mechanics read from the `2.1.274` bundle:
-  the vault trace `workstreams/2026-09-24-what-does-a-handoff-cost/reference/2026-09-24-plugin-eval-grader-mechanics.md`.
+  whole case. `tool_used`: `tool`, `input_match`, `min` (**default 1** — an absence check needs `min: 0`),
+  `max`. `tool_order`: `before`/`after`, a name or `{tool, input_match}`, first occurrences. `regex`:
+  `target`, `pattern`, `match: contains | not_contains | count:N`. `file_exists`: `path`, `exists`. The
+  mechanics, read from the harness bundle, are the vault trace
+  `workstreams/2026-09-24-what-does-a-handoff-cost/reference/2026-09-24-plugin-eval-grader-mechanics.md`.
 - **The subagent tool is `Agent`**; `Task` is an alias the trace never records.
-- **Every case needs a free guard** — a `file_exists` on its main output — or a judge can pass an
-  empty workspace.
+- **Every case needs a free guard** — a `file_exists` on its main output — or a judge can pass an empty
+  workspace.
 - **Test a new grader on a kept trace, green and red**, before paying for a run.
 
-## What a profile is FOR — read for what is obviously wrong, first
+## Probe the running session, behaviourally
 
-**The point is catching the traps we keep falling into, not producing comparable numbers.** Every
-improvement that has held came from someone reading a transcript and noticing something glaring: a loop that
-called `git` inside `$( )` and failed twice without being diagnosed, a regex that blew up and burned 105
-seconds to return two rows, an agent that read a 29KB file every sub-agent already had as its system prompt, a
-spawn that never passed the key its own instructions demanded.
+A green `lipika doctor` proves the installed files are the tree; it does not prove the session in front
+of you has read them. A probe does: **give the new text a command or a write path the old text lacks**,
+dispatch real work, and read the transcript for the call.
 
-None of those needed a controlled comparison. They needed someone to look.
+**Never ask a role to quote its own definition.** It returns a fluent paraphrase of whatever it is
+operating under and presents it as a quotation — including rules that exist in no version of the file.
+What an agent did is not confabulable; what it says about itself is.
 
-So do the sanity pass first, and do not let it wait on measurement hygiene:
+**Give a bare prompt when the question is whether a definition fired.** A prompt that restates the
+definition makes every result unattributable.
 
-- **Scan the call list end to end.** Anything that returned nothing, errored, or ran absurdly long against its
-  neighbours is the finding. Two identical failures in a row means nobody read the first one.
-- **Ask what was re-derived.** A fact supplied in the prompt and then recomputed is pure waste, and it recurs.
+**`model:` binds at session start; a definition's body does not.** After changing a role's model,
+restart before profiling it, and read the model back from the transcript:
+
+```bash
+jq -r 'select(.message.model)|.message.model' "$F" | sort -u
+```
+
+## Where the artifacts live
+
+| artifact | location |
+|---|---|
+| definitions, as authored | `agents/<role>.md` and `skills/<name>/SKILL.md` in Lipika |
+| definitions, as installed | `~/.claude/plugins/cache/lipika/lipika/<version>/`, a snapshot taken at deploy; `lipika doctor` compares it with the tree and names where definitions are read from |
+| subagent transcripts | `~/.claude/projects/<project-slug>/<session-id>/subagents/agent-<agentId>.jsonl` |
+| task-output symlinks to the same files | `/private/tmp/claude-502/<slug>/<session-id>/tasks/<id>.output` |
+| cases, graders and CLI suites | `evals/` in Lipika |
+| scored runs | `evals/results/<timestamp>/`; the trace survives only under `--keep-temp` |
+| frozen profiles | the vault's `sources/evals/YYYY-MM-DD-HHMM-<subject>-profile.md` |
+| what a round found | a dump in the thread doing the work |
+
+**Name a profile to the minute, from the profiled agent's completion time**, so several in one day cannot
+collide:
+
+```bash
+stat -f '%Sm' -t '%Y-%m-%d-%H%M' "$D/agent-<agentId>.jsonl"
+```
+
+A profile's frontmatter is `type: eval`, `date`, `tags` and `subject`, plus a provenance paragraph naming
+the transcript it was read from. It reproduces the agent's report as returned: `sources/` is frozen, and a
+paraphrased measurement stops being one.
+
+## What a profile is for — the obvious thing, first
+
+**A profile exists to catch the traps we keep falling into, not to produce comparable numbers.** The
+improvements that hold come from someone reading a transcript and noticing something glaring: a command
+failing twice undiagnosed, a regex burning minutes to return two rows, an agent reading a file it already
+had as its system prompt, a spawn missing the key its instructions demanded.
+
+Do the sanity pass first:
+
+- **Scan the call list end to end.** Anything that returned nothing, errored, or ran absurdly long against
+  its neighbours is the finding. Two identical failures in a row means nobody read the first one.
+- **Ask what was re-derived.** A fact supplied in the prompt and then recomputed is pure waste.
 - **Ask what landed in the wrong context.** Recon in the one context that must survive to the end is the
-  most expensive place to put it.
-- **Ask which instruction did not fire.** If a definition said to do something and the transcript shows it
-  did not happen, that is not a lapse to note — it is a rule that needs to become a tool.
-- **Name the footguns.** A trap hit twice across rounds is worth more than any number in this document.
+  most expensive place for it.
+- **Ask which instruction did not fire.** That is not a lapse to note; it is a rule that needs to become
+  a tool.
+- **Name the footguns.** A trap hit twice across rounds is worth more than any number.
 
-**Numbers are the second pass, and they do not have to be uniform.** Do not hold back a change to keep a
-measurement comparable, do not re-run a pass for a clean number, and do not present a confound as though it
-disqualified the round. Say what changed, say what you measured, move on. This is a craft as much as a
-measurement — the transcripts are evidence, not an experiment, and the goal is a faster, less trap-prone
-system, not a tidy series.
+**Numbers are the second pass, and they need not be uniform.** Do not hold back a change to keep a
+measurement comparable, and do not re-run for a clean number. Say what changed, say what you measured,
+move on.
 
 ## Reading a transcript
 
-**Never `cat` or `Read` one whole.** It overflows context and exceeds the 30KB Bash cap. Slice it with `jq`:
+**Never `cat` or `Read` one whole** — it overflows context and the Bash output cap. Use the tool:
 
 ```bash
-# what it did, one row per call
+lipika agent-transcript --list                                # sessions and subagents, newest first
+lipika agent-transcript <agent-id>                            # calls, per-tool totals, cost
+lipika agent-transcript <agent-id> --calls --min-bytes 2000   # just the expensive reads
+lipika agent-transcript <agent-id> --grep orientation-audit   # did the check actually run
+lipika agent-transcript <agent-id> --thinking                 # the largest reasoning blocks, in full
+```
+
+It prints one row per call with the bytes it returned, a per-tool aggregate, and cost with the traps below
+applied. Classifying each row as load-bearing, duplicated or unused is the judgement, and stays yours. For
+anything it does not answer, slice with `jq`:
+
+```bash
 jq -r 'select(.message.content) | .message.content[]? | select(.type=="tool_use")
        | "\(.name)\t\((.input.command // .input.file_path // "") | tostring | gsub("\n";" ⏎ "))"' "$F" | cut -c1-170 | nl -ba
-
-# when it did it
-jq -r 'select(.message.content) | select(.message.content[]?|select(.type=="tool_use")) | .timestamp' "$F" | nl -ba
-
-# what it cost
 jq -r 'select(.message.usage) | "\(.message.usage.cache_read_input_tokens // 0)\t\(.message.usage.output_tokens // 0)"' "$F" | nl -ba
 ```
 
-**Do not hand-roll the mechanical half.** `tools/agent_transcript.py` finds a transcript (including under a
-worktree's own project slug), lists a session's subagents, and prints one row per tool call with the bytes that
-call returned into context, a per-tool aggregate, and the cost figures with every trap below already applied:
+The traps, each of which has produced a wrong number:
 
-```bash
-lipika agent-transcript --list                      # sessions and subagents, newest first
-lipika agent-transcript <agent-id>                  # calls, per-tool totals, cost
-lipika agent-transcript <agent-id> --calls --min-bytes 2000   # just the expensive reads
-lipika agent-transcript <agent-id> --grep orientation-audit   # did the check actually run
-```
-
-Bytes-returned is the denominator of a relevant-fraction measurement; classifying each row as load-bearing,
-duplicated or never-used is the judgement, and that stays yours. The `jq` recipes below remain the reference for
-anything the tool does not answer.
-
-Four traps, each of which has produced a wrong number here:
-
-- **Number by CALL, not by line.** Heredocs span many lines and inflate every count. The `gsub` collapse above is
-  what makes the numbering trustworthy.
-- **A resume is not a unit of work.** Resuming an agent re-pays its whole prior transcript as input before it does
-  anything new, so **never sum a resumed agent's token figures**. Measured: one clerk's three runs sum to 213,957
-  while a single well-specified call is 65,545, and run 2 made three calls yet cost more than run 1's eighteen.
-  One head-librarian's naive sum of 237,630 overstates an uninterrupted run by ~44%. **Re-spawn with a tight
-  brief rather than resume.**
-- **Cache-creation is not context paid for.** Summing `cache_creation_input_tokens` against a peak read counts
-  churn *within* one run as cost, and the number it produces looks like a context problem that is not there. Read
-  `cache_read_input_tokens` for what a turn actually loaded, and report the peak rather than the sum.
-- **A backgrounded child's report is not in its parent's transcript.** It arrives out of band, so the delegate's
-  context cost cannot be attributed from the parent alone — measured 2026-08-19, a 28,436 B scout report was
-  absent from the dispatcher's file entirely. Profile the child's own transcript, or say the number is a floor.
-- **A worktree session gets its own project slug.** The artifact table above assumes one slug per repo; a session
-  rooted in `<repo>/.claude/worktrees/<name>` writes under a slug derived from that path, so transcripts are not
-  where the table says. Resolve the slug from the session, not from the repo.
-- **Never collapse newlines in a command preview.** The `gsub` in the recipe above uses ` ⏎ ` for exactly this
-  reason: collapsing to `|` fabricates pipelines, and five multi-line commands read as broken `x | echo` before
-  the raw input was checked. A trap that invents a defect is worse than one that hides a number.
-- **A live transcript grows while you read it.** Say where you stopped, and say the file was still being appended
-  to. One profile here did exactly that and was right to.
+- **Number by call, not by line.** Heredocs span many lines; the `gsub` collapse is what makes numbering
+  trustworthy.
+- **Never collapse newlines to `|`.** It fabricates pipelines; ` ⏎ ` does not.
+- **A resume is not a unit of work.** A resumed agent re-pays its whole prior transcript as input, so never
+  sum its token figures. Re-spawn with a tight brief rather than resume.
+- **Cache creation is not context paid for.** Read `cache_read_input_tokens` for what a turn loaded, and
+  report the peak rather than the sum.
+- **A backgrounded child's report is not in its parent's transcript.** Profile the child's own transcript,
+  or say the number is a floor.
+- **A worktree session has its own project slug.** Resolve the slug from the session, not the repo.
+- **A live transcript grows while you read it.** Say where you stopped.
 
 ## Reporting a profile
 
-**Every profile opens with a qualitative read of how the run went, before any figure.** Not optional, not a
-closing paragraph — a profile that is only numbers reliably misses the thing worth fixing, and the numbers are
-the evidence for the read rather than a substitute for it. Its material is the agent's own reasoning:
+**Open with a qualitative read of how the run went, before any figure**, from the agent's own reasoning.
+Answer these, each pointing at a call number or a quoted line:
 
-```bash
-lipika agent-transcript <agent-id> --thinking      # the largest blocks, in full
-```
-
-Answer these in your own words, each pointing at a call number or a quoted line:
-
-- **Where did it thrash?** Repeated attempts at one thing, a range guessed three times, an approach abandoned
-  and resumed. Note what it was trying to satisfy — thrashing is usually a rule it could not meet, not
-  incompetence, and the fix is then the rule.
-- **What did it re-derive that it already had?** Its own earlier result, its dispatcher's brief, another
-  agent's report. This is the cheapest large saving available and it never shows up as a defect.
-- **Where did it sound confused, or confidently wrong?** A conclusion stated without the read that would
-  support it. A fabricated citation. A rule it restated in a form the definition does not contain.
+- **Where did it thrash?** Thrashing is usually a rule it could not meet, and the fix is then the rule.
+- **What did it re-derive that it already had?** The cheapest large saving, and it never shows as a defect.
+- **Where did it sound confused, or confidently wrong?** A conclusion without the read to support it; a
+  fabricated citation; a rule restated in a form the definition does not contain.
 - **What did it do that nobody asked for**, and what did it decline that it should have raised?
-- **Where did it hesitate for the right reason?** Refusals and self-corrections are the most valuable thing in a
-  transcript and the easiest to optimise away by accident. Name them so a later round does not delete them.
-- **If you could tell this agent one thing before it started, what would it be?** That sentence is usually the
-  next definition change, and it is often not what the numbers point at.
+- **Where did it hesitate for the right reason?** Refusals and self-corrections are the easiest thing to
+  optimise away by accident. Name them.
+- **If you could tell it one thing before it started, what would it be?** That is usually the next
+  definition change.
 
-**A size is not a finding.** Reasoning bytes and block counts locate where to read; they say nothing about
-whether the thinking was good. Measured: one profile reported a 13,451 B thinking block belonging to a role
-whose largest was 6,539 B — the big block was the profiler's own. Quote the line, or say you did not read it.
+Then:
 
-**And do not invent a defect out of transcript shape.** The harness emits reasoning in its own assistant
-message, separate from the one carrying the tool call, so *"turns that thought and called nothing"* counts every
-deliberation. That signal was built here, measured against a real run, and deleted rather than shipped.
+- **A size is not a finding.** Byte counts locate where to read; quote the line, or say you did not read it.
+- **Do not invent a defect from transcript shape.** The harness emits reasoning in its own message, so
+  "turns that thought and called nothing" counts every deliberation.
+- **Report tool calls, tokens and wall clock separately.** Dead waiting shows in no token figure.
+- **Classify every avoidable call**: *defect*, *should be a tool*, *retry-or-refinement loop*, or
+  *duplicated with another role*.
+- **Separate what an agent did from what it was told to do.** A call the definition ordered is the
+  definition's waste.
+- **Check the boundary from the artifacts** — `git status --porcelain`, the writes in the transcript —
+  not from the agent's account of itself.
 
-- **Lead with the glaring problems**, per the section above. A profile whose findings are all deltas has
-  probably missed the thing worth fixing.
-- **Report tool calls, tokens and wall clock separately.** They are separate axes and they move independently —
-  dead waiting shows up in none of the token figures.
-- **Classify every avoidable call** as one of four: *defect* / *should be a tool* / *retry-or-refinement loop* /
-  *duplicated with another role*. Useful because it is per-call: it keeps working when a round changed many
-  things at once, which most rounds do and should.
-- **Separate what an agent did from what it was told to do.** A call ordered by the definition is not the agent's
-  waste; it is the definition's.
-- **Check the boundary from the artifacts, not from the report** — `git status --porcelain`, the actual writes in
-  the transcript — because an agent's account of staying inside its contract is not evidence that it did.
-- **Reproduce the agent's report as returned** when freezing it. `sources/` is frozen by rule, correctable only by
-  appending, and that is the point: a measurement a later consolidation paraphrases stops being a measurement.
+## What profiles have established
 
-## What the profiles have established
+- **Prose in a definition does not fire; a tool with an exit code does.** Prefer a tool that refuses to
+  prose that asks.
+- **Naming a tool does not make an agent reach for it; requiring its output does.** Make the report
+  demand the tool's raw output under a named heading, and the agent cannot conform without running it.
+- **A pass has a floor, and the floor is the cost.** The marginal work is a small fraction; input context
+  is re-paid every turn. Batching work into one pass is nearly free; adding a pass costs a whole floor.
+- **The bottleneck is round trips, not command runtime.** Halving the call count halves the phase; faster
+  commands buy almost nothing.
+- **Wall clock hides where tokens do not.** An idle gap can be most of a span.
+- **A rule with more than one caller belongs in a module they import.** Several tools each re-deriving one
+  rule produce several different bugs.
+- **A tool that hands another tool an input it refuses is a defect in the first tool.** Check the contract
+  between tools you chain, and prefer one that reports an unusable input separately to one that aborts the
+  batch.
+- **Complete markers are the cheapest speed-up.** An agent reading items with complete death conditions
+  and `as-of` does less re-checking.
+- **Running one link check is running half of one.** `lipika dangling-links` scans bodies;
+  `obsidian unresolved` reads the index and sees frontmatter links no body scan reaches. Run both.
+- **`Edit` needs its own `Read`.** A slice read through Bash does not satisfy the guard; `Read` a few lines
+  at the anchor.
 
-Standing conclusions. Each was measured, and each is the reason some rule now takes the shape it does.
+## What must not be optimised away
 
-- **Prose in a definition does not fire; a tool with an exit code does.** Four instances in one session: a scope
-  screen shipped unsatisfiable and went unnoticed until used; "dispatch a scout if recon runs past a handful of
-  commands" did not fire across fourteen recon commands; an agent told to prefer the Obsidian CLI never checked
-  which tree it was answering about; and a checker reported "no frozen-tier files changed" nine times having read
-  no diff. Every fix that held was a script. **Prefer a tool that refuses to prose that asks** — and it is the
-  cheaper end, since a definition is a system prompt paid on every invocation.
-- **A pass has a floor, and the floor is the cost.** The marginal work — reading three overlapping docs and
-  emitting the survivor — was ~19k of a 185.9k pass, 10%. The rest is paid regardless of backlog, and input
-  context is re-paid every turn, so the floor is multiplied by turn count. **Batching docs into one scope is
-  nearly free; adding a scope costs a whole floor.**
-- **The bottleneck is round trips, not command runtime.** Strip one outlier and commands were 9% of a phase while
-  model generation between calls was 59%. Halving the call count halves the phase; making commands faster buys
-  almost nothing.
-- **Wall clock hides where tokens do not.** One run's 915s idle gap was 55% of its span and appears in no token
-  figure.
-- **The porting placeholders are the most-repeated trap in this record**, broken a different way almost every
-  time they are touched: a live placeholder shipped into a file agents load as a system prompt; a substitution
-  that rewrote a tool's own docstring and then its comparison code, making the checker a silent no-op; a private
-  vault path leaked upward into the public template; and a port tool that skipped inline code spans as
-  "discussion" and so left every real usage unsubstituted, because paths here are always written in backticks.
-  Four rounds, four variants, one cause: each tool re-deriving which tokens exist and where one may appear. Both
-  answers lived in one imported module rather than in each tool, and the whole mechanism was **retired
-  2026-08-20** along with the duplication that needed it. The transferable finding is not about
-  placeholders: **four tools each re-deriving one rule produced four different bugs**, so a rule with
-  more than one caller belongs in a module they import, not in prose each of them interprets.
-- **Complete markers are the cheapest speed-up found.** Same role, same workstream: 65,545 tokens / 18 calls /
-  365s with incomplete markers against 48,811 / 13 / 117s with complete ones, on a *larger* entry.
+Before efficiency work touches a definition, **name the judgement acts it must preserve**. Each is a read
+of specific prose against a claim, followed by a decision *not* to act:
 
-## Naming what must not be optimised away
-
-Before any efficiency work touches a definition, **name the judgement acts it must preserve**, from the profiles.
-Each is a read of specific prose against a claim followed by a decision *not* to act, and none of them can be
-batched:
-
-- rejecting a sub-agent's finding as a false positive after reading the cited lines, where acting would have
-  damaged a correct doc;
-- recording a scope that did no work as `skipped` rather than consolidated, so it still reads "not looked at";
-- refusing to invent a convention when a supplied decision's premise turned out to be wrong;
-- verifying a load-bearing manifest claim rather than trusting it, and verifying that deleted content survived in
-  its named survivor;
-- reporting an uncorroborated claim *as* uncorroborated, and classifying a pre-existing flag as history rather
-  than one's own;
-- refusing to credit a check that had become self-confirming;
-- and the clerk refusing to strike an item on source-code evidence when the entry carried no marker, then naming
-  the distinction once the marker arrived: *"the fact did not change; the licence did."*
+- rejecting a sub-agent's finding as a false positive after reading the cited lines;
+- recording a pass that did no work as `skipped`, so it still reads "not looked at";
+- refusing to invent a convention when a supplied decision's premise is wrong;
+- verifying a load-bearing claim rather than trusting it, and verifying that deleted content survived
+  where it was said to;
+- reporting an uncorroborated claim *as* uncorroborated;
+- refusing to credit a check that has become self-confirming;
+- declining to strike an item on evidence that does not license it: *"the fact did not change; the
+  licence did."*
 
 A cheaper agent that no longer does these is not cheaper; it is a different agent.
 
-## Choosing a model for the work
+## Choosing a model
 
-Mid-tier for forensic and mechanical work — transcript profiling, manifest validation, port checks, factual state
-manifests. That is where the wall clock goes, and it was measured doing it well. Keep the strongest model for
-judgement-bearing prose, because every failure that has mattered here was **distinction-collapse**: *failed* vs
-*never requested*, *identical* vs *flattened*, *settled* vs *settled-but-unexecuted*, *fixed* vs *unfixed*.
+Mid-tier for forensic and mechanical work — transcript profiling, manifest validation, factual state.
+The strongest model for judgement-bearing prose, because the failures that matter are
+**distinction-collapse**: *failed* vs *never requested*, *identical* vs *flattened*, *settled* vs
+*settled-but-unexecuted*.
 
-**`model:` is per-agent; `effortLevel` is not.** A role's model is set in its own frontmatter, so the split
-above is encodable and should be encoded — prose telling an invoker to choose has measurably not fired. Effort
-is session-wide, subagents inherit it, and the `Agent` tool exposes no per-agent override, so it can only be
-stated. Say when it changed rather than hiding it, and then keep going: a confound is a caveat on one number,
-not a reason to hold back a change or re-run a pass.
-
-## Amendments
-
-*Dated notes added as this method gets used. Append; do not rewrite the sections above from memory.*
-
-- **2026-08-18 — written**, before the round it describes, from three frozen profiles in `sources/evals/` and the
-  findings in the eval round that produced them.
-
-- **2026-08-18 — a definition's BODY refreshes live; its `model:` frontmatter does not.** Measured in one
-  session: `agents/scout.md` was edited to `model: sonnet` and dispatched without a restart. It used
-  `scope_recon.py`, `frontier_lag_check.py` and `obsidian unresolved` — all instructions that exist only in the
-  edited body and were absent from its prompt — and ran as `claude-opus-5` throughout. So a body edit takes
-  effect immediately and a model pin does not: it binds at session start. **Restart before profiling a role
-  whose model you just changed**, or you measure a different quantity than the one you set. Read the model back
-  from the transcript rather than assuming either way:
-
-  ```bash
-  jq -r 'select(.message.model)|.message.model' "$F" | sort -u
-  ```
-
-- **2026-08-18 — do not restate a definition's contents in the prompt you profile it with.** The clerk was
-  dispatched with a prompt that named `frontier_slice.py` and described the archivist drain, both of which its
-  edited definition also carried. When it used the drain and did *not* use the slice, neither result was
-  attributable: prompt and definition said the same thing. **Give a bare prompt when the question is whether a
-  definition fired.** The scout run was designed that way afterwards and settled the question in one dispatch.
-
-- **2026-08-18 — a tool that hands another tool an input it refuses is a defect in the first tool.**
-  `scope_recon.py --markers` emitted single-segment `repo#N` refs; `verify_pr_markers.py` refuses that form and
-  aborts the entire batch on one bad ref, so a scout lost its whole marker resolution and re-spelled by hand.
-  Neither tool was wrong in isolation. **Check the contract between tools you chain, not just each one's
-  output** — and prefer a tool that reports the unusable input separately to one that poisons a batch with it.
-
-- **2026-08-19 — naming a tool in a definition does not make an agent reach for it. Requiring its OUTPUT does.**
-  Measured cleanly on the `scout`'s first run, dispatched with a bare prompt so only the definition was in play:
-  its headline instruction is to start with `scope_recon.py`, and it instead ran six hand-written shell calls
-  first, then ran the tool eighth — where it reproduced what those calls had already computed, to the same doc
-  counts, the same folder-note byte figure and the same delta. The `frontier-clerk` did the same thing with
-  `frontier_slice.py`, paging back 92% of a 44KB frontier through six round trips, though that run cannot
-  attribute the failure because the prompt named the tool too.
-
-  The fix that does not need a new script: **make the report schema demand the tool's output.** The scout must
-  now open its report with `scope_recon.py`'s raw output under a named heading; the clerk must cite the slice
-  line number for every line it changes. An agent can still hand-roll, but it cannot produce a conforming report
-  without having run the tool. Prefer this to removing the agent's ability to hand-roll — the scout used `Bash`
-  legitimately for git facts the tool does not emit.
-
-- **2026-08-19 — a tool-based read does not satisfy the `Edit` guard.** `Edit` refuses a file the session has
-  not opened with `Read`, and reading through `Bash` — `sed`, or a slicing tool — does not count. So "stop
-  paging with `sed`, use the slice tool" and "write with `Edit`" are in direct tension, and the first `Edit`
-  after a tool-based read will fail. The cheap answer, which the clerk found unaided and which now sits in its
-  definition: `Read` ten lines at the first anchor's offset, using the slice's own line numbers. One small read,
-  once — not a re-read of the file the slice existed to avoid.
-
-- **2026-08-18 — running one link check is running half of one.** `dangling_links.py` scans bodies and knows
-  the false-positive classes; `obsidian unresolved` reads the index and sees `links:` frontmatter fields no body
-  scan reaches. Measured on the same vault at the same commit: **0 and 6, both correct.** The assumption going
-  in was that the Python tool duplicated the CLI; it does not.
-
-- **2026-09-24 — graders run under `claude plugin eval`, and every run carries a ceiling.** Steps 3 and
-  the artifacts table now say where graders and scores live. A case file has no cost key — checked in
-  the `2.1.274` schema — and `runs` defaults to 3, so the ceiling is a flag on every invocation:
-  `--max-cost-usd <usd> --runs 1`. One handoff-shaped run is ~$2.45. The same day's two traps, both
-  graders that could not pass whatever the run did, are under *Graders* above.
-
-- **2026-09-24 — *Graders* rewritten for the harness.** Every grader in the three cases is mechanical
-  and runs under `plugin eval`; the lab-notebook framing is retired with the hand-scored corpus. The
-  eval material that was `GOTCHAS.md` §7 lives here now.
+**`model:` is per-agent; effort is not.** A role's model is set in its frontmatter, so encode the split
+there — prose telling an invoker to choose does not fire. Effort is session-wide and subagents inherit it,
+so it can only be stated. Say when it changed, and keep going: a confound is a caveat on one number.
