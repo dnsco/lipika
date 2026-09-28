@@ -245,10 +245,8 @@ TOKEN_CASES = [
 ]
 
 
-# Shape cases. Both reds are real: on 2026-09-28 one handoff assembled two orientations by
-# slicing the previous one at `old.index("## References")` and `old.index("## Working here at
-# all")`. The first matched a mention inside a bullet, the second matched inside `### Working
-# here at all`, and each slice re-pasted the old live items and Settled section below the new.
+# Shape cases. The reds are cut down from two real orientations built by `str.index("## X")`,
+# which matched inside a bullet and inside `### X` and re-pasted the old document's tail.
 SHAPE_FIXTURES = [
     # (name, document, fault substrings expected -- empty means clean)
     ("clean, with a section the template does not name and a heading mentioned in a bullet",
@@ -283,12 +281,8 @@ TYPED_LINE = re.compile(r"^\s*[-*+]\s+\**\[(?:GATE|LANDMINE|OPEN Q|DEAD END|ESCA
 
 
 def shape_faults(text):
-    """[(line, message)] for the marks a splice leaves; empty when the document is sound.
-
-    Not a template check: real orientations add sections of their own (`## Working here at all`),
-    and refusing those was measured to flag seven sound documents. What a splice leaves is
-    repetition, and a heading that begins mid-sentence -- neither appeared in any of 93 orientations
-    except the two that were spliced.
+    """[(line, message)] for a repeated `##` section, a repeated typed item, or a heading cut
+    mid-sentence -- what a splice leaves. Not a template check: orientations add their own sections.
     """
     faults, seen_sec, seen_item = [], {}, {}
     for n, line in enumerate(text.splitlines(), 1):
@@ -478,15 +472,11 @@ def main(argv):
 
 
 def report_shape(path, vault):
-    """Print the current orientation's shape faults first, since they make the rest unreliable.
-
-    A spliced document repeats items, so the carry check below counts them as carried and
-    reports clean -- which is how two spliced orientations passed this audit on 2026-09-28.
-    """
+    """Print the current orientation's shape faults. A repeated item passes the carry check."""
     faults = shape_faults(open(path, encoding="utf-8").read())
     if faults:
-        print(f"MALFORMED — {os.path.relpath(path, vault)} repeats itself, the mark of a splice. "
-              "Read it by hand; the carry check below counts a repeated item as carried:")
+        print(f"MALFORMED — {os.path.relpath(path, vault)} repeats itself. Read it by hand; "
+              "the carry check below counts a repeated item as carried:")
         for _, msg in faults:
             print(f"  · {msg}")
         print()

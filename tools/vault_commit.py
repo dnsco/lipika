@@ -24,8 +24,7 @@ WHAT IT REFUSES
   - a pathspec naming one half of a detected rename without the other
   - a message that is empty, or a subject line over --subject-max (default 72)
   - staged changes outside the pathspecs you named, unless --allow-foreign-index
-  - an orientation that repeats a section or an item, the mark of a handoff assembled by
-    slicing the previous one (`orientation_audit.shape_faults`)
+  - an orientation that repeats a section or an item (`orientation_audit.shape_faults`)
 
 USAGE
   python3 tools/vault_commit.py -m "message" -- <paths...>
@@ -161,16 +160,13 @@ def main():
     if not changed_in_specs:
         die(3, "nothing to commit under those pathspecs:", *[f"  {s}" for s in specs])
 
-    # At commit, because an orientation is written once and read cold: a splice that re-pastes
-    # the previous document's tail reads as carried to every later check. Two did, 2026-09-28.
     for p in changed_in_specs:
         f = vault / p
         if p.endswith(".md") and f.parent.name == "orientation" and f.is_file():
             faults = orientation_audit.shape_faults(f.read_text(errors="replace"))
             if faults:
                 die(2, f"REFUSED: {p} repeats itself.", *[f"  {m}" for _, m in faults], "",
-                    "A section or item appearing twice is what slicing the previous orientation",
-                    "at a heading string leaves. Rebuild it from `lipika orientation-carry`.")
+                    "Rebuild it from `lipika orientation-carry`, not by slicing the old one.")
 
     if not args.allow_foreign_index:
         foreign = [p for st, p, new in entries
