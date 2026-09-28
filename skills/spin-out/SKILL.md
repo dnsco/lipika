@@ -60,8 +60,8 @@ ends this one's span in `lipika perf`.
    - [[<thread>]] — what it found that bears on this question, in one or two sentences.
    ```
 
-   **A bullet, not a paragraph**: caveats and detail stay in that thread, one link away. `none
-   found` when nothing bears. Do not list threads you rejected. Append each warning
+   **A bullet, not a paragraph.** Caveats, dates and detail stay in that thread, one link away; an
+   orientation that restates its prior art grows with every split. `none found` when nothing bears. Do not list threads you rejected. Append each warning
    that bears on the question **verbatim** to the new `gotchas.md` under `## From [[<thread>]]`.
 
    ```bash
