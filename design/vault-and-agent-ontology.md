@@ -369,8 +369,7 @@ history rather than rebuild it.
 | the clean-tree halt | protected a losslessness guarantee | the guarantee is gone; what protects a commit is the pathspec |
 | the write-authority partition | kept parallel agents off each other's files | the pass log answers concurrency directly |
 | the epic tier, `epics/` | grouped a project's threads, carried live · parked · finished | a split's `from:` already records which threads are one project, and a hand-kept citation list was a second copy of it that went stale — measured 2026-09-25, when an epic citing three of seven threads split a curation group in two |
-| warning recall by search at read time | found other threads' warnings when someone looked | pull cannot fire when nobody asks; a new thread is pushed its prior art at creation instead, by a background scout, into its own `gotchas.md` |
-| the `scout` role, and `scope_recon` | read-only recon in a discarded context, forbidden any relevance call | prior art was its only caller, and prior art is a relevance call that needs the parent's context; `spin-out` reads it inline (2026-09-28) |
+| warning recall by search at read time | found other threads' warnings when someone looked | pull cannot fire when nobody asks; a new thread is pushed its prior art at creation instead, by `spin-out`, into its own `gotchas.md` |
 
 ## 9. Invariants, with what would falsify each
 
