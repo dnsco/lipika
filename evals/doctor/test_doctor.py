@@ -34,22 +34,28 @@ def git(tree, *args):
 def doctor(tree):
     return subprocess.run([sys.executable, str(LIPIKA), "doctor", "--tree", str(tree)],
                           capture_output=True, text=True,
-                          env=dict(os.environ, LIPIKA_TELEMETRY="0")).stdout
+                          env=dict(os.environ, LIPIKA_TELEMETRY="0"))
 
 
 def main():
     with tempfile.TemporaryDirectory() as d:
         tree = Path(d) / "tree"
         tree.mkdir()
+        r = doctor(tree)
+        check("a tree with no plugin manifest is reported, not a traceback",
+              "Traceback" not in r.stderr and "plugin.json" in r.stdout, r.stderr[-300:])
+
+        (tree / ".claude-plugin").mkdir()
+        (tree / ".claude-plugin" / "plugin.json").write_text('{"version": "0.0.0"}')
         git(tree, "init", "-q", "-b", "main")
         git(tree, "commit", "-q", "--allow-empty", "-m", "one")
         git(tree, "update-ref", "refs/remotes/origin/main", "HEAD")
-        out = doctor(tree)
+        out = doctor(tree).stdout
         check("a tree at origin/main reports no unmerged commits", "not on origin/main" not in out,
               out)
 
         git(tree, "commit", "-q", "--allow-empty", "-m", "two")
-        out = doctor(tree)
+        out = doctor(tree).stdout
         check("a tree ahead of origin/main says how many commits it holds",
               "1 commit(s) not on origin/main" in out, out)
 
