@@ -3,8 +3,7 @@
 
 Run `python3 evals/dangling-links/test_dangling_links.py`. Exit 0 all pass, 1 any fail.
 
-Scoped to a subdirectory it resolved links against that subdirectory alone, so every link out of
-it was reported dangling. Drives `bin/lipika` against a fixture vault that is a git repository.
+Drives `bin/lipika` against a fixture vault that is a git repository.
 """
 
 import os

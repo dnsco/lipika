@@ -26,10 +26,6 @@ import re, subprocess, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import vault_config  # noqa: E402
 
-# Print usage rather than raising IndexError on a bare invocation. A traceback out of a
-# checker reads as "the tool is broken" and gets abandoned, where a usage line gets fixed
-# and re-run -- and this is the check whose 0-vs-6 disagreement with the Obsidian index is
-# the reason both must be run.
 if len(sys.argv) > 1 and sys.argv[1] in {"-h", "--help"}:
     print("usage: dangling_links.py [dir] [memory-dir]\n"
           "  dir defaults to the configured vault; a subdirectory resolves against its repository\n"

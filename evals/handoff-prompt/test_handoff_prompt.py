@@ -3,8 +3,7 @@
 
 Run `python3 evals/handoff-prompt/test_handoff_prompt.py`. Exit 0 all pass, 1 any fail.
 
-Graders are not tied to threads (owner, 2026-09-28), so an eval document naming the thread in
-`about:` must not appear. Drives `bin/lipika` against a fixture vault, tree and plugin cache.
+An eval document naming the thread in `about:` must not appear. Drives `bin/lipika` against a fixture vault, tree and plugin cache.
 """
 
 import json

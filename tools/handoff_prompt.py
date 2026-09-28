@@ -9,7 +9,7 @@ WHY THIS EXISTS
   arrives without the one thing only the previous one knew.
 
   So the handoff is composed from state instead of memory: the thread, the version that is actually
-  installed, and the gate command for THAT version. Graders are not tied to threads, so it names none.
+  installed, and the gate command for THAT version.
 
   It REFUSES rather than warns. A warning printed above a pasteable block is read past; the paste is
   what survives. The failure this exists to catch -- step 3 forgotten, version unbumped, every deploy

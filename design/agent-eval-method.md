@@ -99,15 +99,13 @@ stat -f '%Sm' -t '%Y-%m-%d-%H%M' "$D/agent-<agentId>.jsonl"
 Frontmatter on an eval: `type: eval`, `date`, `tags`, `about:`, plus a provenance paragraph naming the
 transcript it was read from. Profiles additionally carry `subject`. **This prescription was corrected
 2026-08-25** — it had said `type: source` / `kind: eval` / `time` / `subject`, which no document
-written since 2026-08-21 followed, and it omitted `about:`, which is the only field anything selects
-on.
+written since 2026-08-21 followed, and it omitted `about:`.
 
 **`about:` names the thread the eval concerns, and it is the only frontmatter link here**, because
-`sources/evals/` is flat and the folder cannot say which thread a document is about.
-Nothing reads it since 0.8.3: graders are not tied to threads (ruled 2026-09-28), so `handoff-prompt`
-no longer selects on it. It replaced `up:`, retired 2026-08-25 after being measured across the vault: `up:` restated
-the folder path in 139 of 170 documents, named a stale form of its own thread in 15 more, and nothing
-read its value. **Do not give `about:` `up:`'s meaning.** It says *which thread this is about*, never
+`sources/evals/` is flat and the folder cannot say which thread a document is about. Nothing reads it:
+graders are not tied to threads. It replaced `up:`, retired 2026-08-25 after being measured across the
+vault: `up:` restated the folder path in 139 of 170 documents, named a stale form of its own thread in
+15 more, and nothing read its value. **Do not give `about:` `up:`'s meaning.** It says *which thread this is about*, never
 hierarchy, containment or parenthood — that is how the retired field kept acquiring purposes.
 
 ## Graders — the suite, and how it runs
