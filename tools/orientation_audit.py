@@ -244,6 +244,55 @@ TOKEN_CASES = [
 ]
 
 
+# Shape cases. Both reds are real: on 2026-09-28 one handoff assembled two orientations by
+# slicing the previous one at `old.index("## References")` and `old.index("## Working here at
+# all")`. The first matched a mention inside a bullet, the second matched inside `### Working
+# here at all`, and each slice re-pasted the old live items and Settled section below the new.
+SHAPE_FIXTURES = [
+    # (name, document, fault substrings expected -- empty means clean)
+    ("clean, with a section the template does not name and a heading mentioned in a bullet",
+     "## Where this is\nA thread.\n\n## Live items\n### Working here at all\n"
+     "- [OPEN Q] **the `## References` length bound has nothing measuring it** → dies when "
+     "measured · as-of 2026-09-25\n\n## Settled since the last orientation\n- nothing\n\n"
+     "## Working here at all\nNotes.\n\n## References\n- a trace\n", []),
+
+    ("a slice at a mention inside a bullet: cut heading, repeated section, repeated item",
+     "## Live items\n- [OPEN Q] **Owed: the `## References` length bound has nothing measuring "
+     "it** → dies when carried · as-of 2026-09-25\n- [DEAD END] **The epic tier.** Dropped.\n\n"
+     "## Settled since the last orientation\n- **Deploy 0.7.0** → fired.\n\n"
+     "## References` length bound has nothing measuring it** → dies when carried · as-of "
+     "2026-09-25\n- [DEAD END] **The epic tier.** Dropped.\n\n"
+     "## Settled since the last orientation\n- **Moved by split.**\n\n## References\n- a trace\n",
+     ["cut from mid-sentence", "`## Settled since the last orientation` appears 2 times",
+      "The epic tier"]),
+
+    ("a slice at a subsection heading: the section and its items repeat",
+     "## Live items\n### Working here at all\n- **[LANDMINE] Concurrent passes interleave** → "
+     "check the log · as-of 2026-09-24\n\n## Settled since the last orientation\n- one\n\n"
+     "## Working here at all\n- **[LANDMINE] Concurrent passes interleave** → check the log · "
+     "as-of 2026-09-24\n\n## Settled since the last orientation\n- two\n\n"
+     "## Working here at all\nNotes.\n",
+     ["`## Working here at all` appears 2 times",
+      "`## Settled since the last orientation` appears 2 times", "Concurrent passes"]),
+]
+
+
+def shape_faults(text):
+    return []
+
+
+def shape_test():
+    bad = 0
+    for name, doc, want in SHAPE_FIXTURES:
+        faults = shape_faults(doc)
+        joined = "\n".join(msg for _, msg in faults)
+        ok = (not faults) if not want else all(w in joined for w in want)
+        bad += not ok
+        print(f"  {'ok  ' if ok else 'FAIL'}  shape: {name}"
+              f"{'' if ok else f'  (expected {want or 'no faults'}, got {joined or 'none'})'}")
+    return bad
+
+
 def token_test():
     bad = 0
     for name, a, b, same in TOKEN_CASES:
@@ -257,14 +306,14 @@ def token_test():
 
 def self_test():
     """Red and green cases for the matcher. Exit 0 all pass, 2 any fail."""
-    bad = token_test()
+    bad = token_test() + shape_test()
     for name, departing, successor, expect in FIXTURES:
         found = best_match(departing, accounted_items(successor))[0] != "missing"
         ok = found == expect
         bad += not ok
         print(f"  {'ok  ' if ok else 'FAIL'}  {name}"
               f"{'' if ok else f'  (expected found={expect}, got {found})'}")
-    total = len(FIXTURES) + len(TOKEN_CASES)
+    total = len(FIXTURES) + len(TOKEN_CASES) + len(SHAPE_FIXTURES)
     print(f"\n{total - bad}/{total} fixture(s) pass")
     return 2 if bad else 0
 
