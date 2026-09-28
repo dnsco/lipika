@@ -57,7 +57,7 @@ def main():
         check("--deployed names the installed version", "installed 9.9.9" in r.stdout, r.stdout)
         check("no grader is chosen by thread", "2026-01-01-grader" not in r.stdout, r.stdout)
 
-    print(f"\n{'FAIL' if failures else 'ok'}: {len(failures)} failure(s)")
+    print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
 
 

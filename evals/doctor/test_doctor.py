@@ -59,7 +59,7 @@ def main():
         check("a tree ahead of origin/main says how many commits it holds",
               "1 commit(s) not on origin/main" in out, out)
 
-    print(f"\n{'FAIL' if failures else 'ok'}: {len(failures)} failure(s)")
+    print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
 
 

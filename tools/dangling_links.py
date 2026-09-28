@@ -9,6 +9,9 @@ classes are known false positives and would otherwise drown the real findings:
   memory  project-memory notes wikilinked as if they were vault docs
 A name that is BOTH a memory note and a real vault doc is NOT excluded.
 
+Given a subdirectory, it scans only that subdirectory but resolves links against the whole git
+repository holding it. With no argument it scans the configured vault.
+
 Linked worktrees under the vault root are skipped: they are other trees, and resolving
 against them answers about the wrong one.
 
@@ -18,20 +21,27 @@ fields, which this never scans; this has exclusion classes (prose examples, tool
 targets, project-memory notes) the index has no concept of. Measured 2026-08-18 on one vault:
 this reported 0 dangling while the index reported 6 unresolved, and both were right.
 """
-import re, sys, pathlib
+import re, subprocess, sys, pathlib
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import vault_config  # noqa: E402
 
 # Print usage rather than raising IndexError on a bare invocation. A traceback out of a
 # checker reads as "the tool is broken" and gets abandoned, where a usage line gets fixed
 # and re-run -- and this is the check whose 0-vs-6 disagreement with the Obsidian index is
 # the reason both must be run.
-if len(sys.argv) < 2 or sys.argv[1] in {"-h", "--help"}:
-    sys.exit("usage: dangling_links.py <vault-root> [memory-dir]\n"
-             "  e.g. python3 tools/dangling_links.py .\n"
-             "  exit 0 = no dangling links, 1 = at least one (read the classes it excluded)")
+if len(sys.argv) > 1 and sys.argv[1] in {"-h", "--help"}:
+    print("usage: dangling_links.py [dir] [memory-dir]\n"
+          "  dir defaults to the configured vault; a subdirectory resolves against its repository\n"
+          "  exit 0 = no dangling links, 1 = at least one (read the classes it excluded)")
+    sys.exit(0)
 
-root = pathlib.Path(sys.argv[1]).resolve()
-if not root.is_dir():
-    sys.exit(f"not a directory: {root}")
+scan = (pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else vault_config.resolve().path).resolve()
+if not scan.is_dir():
+    sys.exit(f"not a directory: {scan}")
+top = subprocess.run(["git", "-C", str(scan), "rev-parse", "--show-toplevel"],
+                     capture_output=True, text=True).stdout.strip()
+root = pathlib.Path(top).resolve() if top else scan
 memdir = pathlib.Path(sys.argv[2]).expanduser() if len(sys.argv) > 2 else None
 
 SKIP_DIRS = {".git", "obsidian-skills", ".obsidian", "node_modules"}
@@ -66,7 +76,7 @@ def strip_inline_code(line):
 
 findings = {"dangling": [], "prose": [], "tool": [], "memory": []}
 
-for p in sorted(md_files(root)):
+for p in sorted(md_files(scan)):
     in_fence = False
     for i, raw in enumerate(p.read_text(errors="replace").splitlines(), 1):
         if FENCE.match(raw):

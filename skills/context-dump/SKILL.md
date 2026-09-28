@@ -309,7 +309,7 @@ project does **not** load automatically — read it if you have not.
    session, and a restart nobody needs trains the reader to skip the block.
 
    ```bash
-   lipika handoff-prompt <workstream>
+   lipika handoff-prompt <workstream> --deployed
    ```
 
    **Print its output verbatim as the last thing in your message.** It arrives already fenced; do not
@@ -321,9 +321,9 @@ project does **not** load automatically — read it if you have not.
    paraphrase: it means the deploy did not happen, so there is no valid handoff to write yet. Deploy,
    then run it again.
 
-   It composes the prompt from the machine — the installed version, that version's gate command, and
-   every grader whose `about:` names this thread. **It does not restate the live set**, and neither should
-   you: the orientation you just wrote is what the next session reads.
+   It composes the prompt from the machine — the installed version and that version's gate command.
+   Without `--deployed` it prints neither and refuses nothing. **It does not restate the live set**, and
+   neither should you: the orientation you just wrote is what the next session reads.
 
 ## Don't
 

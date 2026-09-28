@@ -55,7 +55,7 @@ def main():
         check("a bare call scans the configured vault", r.returncode == 1 and "nowhere" in r.stdout,
               (r.stdout + r.stderr)[-300:])
 
-    print(f"\n{'FAIL' if failures else 'ok'}: {len(failures)} failure(s)")
+    print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
 
 
