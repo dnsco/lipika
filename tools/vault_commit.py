@@ -24,6 +24,8 @@ WHAT IT REFUSES
   - a pathspec naming one half of a detected rename without the other
   - a message that is empty, or a subject line over --subject-max (default 72)
   - staged changes outside the pathspecs you named, unless --allow-foreign-index
+  - an orientation that repeats a section or an item, the mark of a handoff assembled by
+    slicing the previous one (`orientation_audit.shape_faults`)
 
 USAGE
   python3 tools/vault_commit.py -m "message" -- <paths...>
@@ -37,9 +39,13 @@ USAGE
 """
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import orientation_audit                          # noqa: E402
 
 
 def git(vault, *args, check=False):
@@ -154,6 +160,17 @@ def main():
                         if covered(new or p, specs) or covered(p, specs)]
     if not changed_in_specs:
         die(3, "nothing to commit under those pathspecs:", *[f"  {s}" for s in specs])
+
+    # At commit, because an orientation is written once and read cold: a splice that re-pastes
+    # the previous document's tail reads as carried to every later check. Two did, 2026-09-28.
+    for p in changed_in_specs:
+        f = vault / p
+        if p.endswith(".md") and f.parent.name == "orientation" and f.is_file():
+            faults = orientation_audit.shape_faults(f.read_text(errors="replace"))
+            if faults:
+                die(2, f"REFUSED: {p} repeats itself.", *[f"  {m}" for _, m in faults], "",
+                    "A section or item appearing twice is what slicing the previous orientation",
+                    "at a heading string leaves. Rebuild it from `lipika orientation-carry`.")
 
     if not args.allow_foreign_index:
         foreign = [p for st, p, new in entries

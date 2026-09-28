@@ -20,7 +20,8 @@ WHY THIS EXISTS
 
 CONTRACT
   exit 0  checked, and every prior item is accounted for
-  exit 1  something to look at -- an item not carried forward, a weak match, a missing `as-of`
+  exit 1  something to look at -- an item not carried forward, a weak match, a missing `as-of`,
+          or a current orientation that repeats itself
   exit 3  NOTHING WAS CHECKED -- no orientation, or no predecessor to check against
   exit 5  bad invocation
 
@@ -277,8 +278,37 @@ SHAPE_FIXTURES = [
 ]
 
 
+SECTION = re.compile(r"^##\s+(.*?)\s*$")
+TYPED_LINE = re.compile(r"^\s*[-*+]\s+\**\[(?:GATE|LANDMINE|OPEN Q|DEAD END|ESCALATED)\]")
+
+
 def shape_faults(text):
-    return []
+    """[(line, message)] for the marks a splice leaves; empty when the document is sound.
+
+    Not a template check: real orientations add sections of their own (`## Working here at all`),
+    and refusing those was measured to flag seven sound documents. What a splice leaves is
+    repetition, and a heading that begins mid-sentence -- neither appeared in any of 93 orientations
+    except the two that were spliced.
+    """
+    faults, seen_sec, seen_item = [], {}, {}
+    for n, line in enumerate(text.splitlines(), 1):
+        m = SECTION.match(line)
+        if m:
+            title = m.group(1)
+            if title.count("`") % 2 or title.count("**") % 2:
+                faults.append((n, f"line {n}: a heading cut from mid-sentence: {line[:90]}"))
+            seen_sec.setdefault(title, []).append(n)
+        elif TYPED_LINE.match(line):
+            seen_item.setdefault(line.strip(), []).append(n)
+    for title, ns in seen_sec.items():
+        if len(ns) > 1:
+            faults.append((ns[1], f"`## {title}` appears {len(ns)} times, lines "
+                                  f"{', '.join(map(str, ns))}"))
+    for item, ns in seen_item.items():
+        if len(ns) > 1:
+            faults.append((ns[1], f"an item appears {len(ns)} times, lines "
+                                  f"{', '.join(map(str, ns))}: {item[:90]}"))
+    return sorted(faults)
 
 
 def shape_test():
@@ -354,6 +384,7 @@ def main(argv):
         print(f"NOT CHECKED: no orientation/ under {args.scope} — nothing handed off yet.")
         print("The first handoff out of this session creates one.")
         return 3
+    malformed = report_shape(docs[-1], vault)
     split = False
     if len(docs) == 1:
         cur = open(docs[0], encoding="utf-8").read()
@@ -440,10 +471,26 @@ def main(argv):
 
     unstated = report_freshness(live_items(cur), today, args.stale_days)
 
-    if missing or weak or unstated:
+    if missing or weak or unstated or malformed:
         return 1
     print("\nclean: every prior item is carried or its disposition is recorded.")
     return 0
+
+
+def report_shape(path, vault):
+    """Print the current orientation's shape faults first, since they make the rest unreliable.
+
+    A spliced document repeats items, so the carry check below counts them as carried and
+    reports clean -- which is how two spliced orientations passed this audit on 2026-09-28.
+    """
+    faults = shape_faults(open(path, encoding="utf-8").read())
+    if faults:
+        print(f"MALFORMED — {os.path.relpath(path, vault)} repeats itself, the mark of a splice. "
+              "Read it by hand; the carry check below counts a repeated item as carried:")
+        for _, msg in faults:
+            print(f"  · {msg}")
+        print()
+    return bool(faults)
 
 
 def report_freshness(items, today, stale_days):
