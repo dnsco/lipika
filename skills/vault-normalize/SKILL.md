@@ -119,8 +119,8 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` is the owner'
    claude plugin list
    ```
 
-   Skills and agents then arrive namespaced: `/lipika:pickup`, `/lipika:context-dump`, and the
-   `lipika:curator` and `lipika:scout` roles.
+   Skills and agents then arrive namespaced: `/lipika:pickup`, `/lipika:context-dump`,
+   `/lipika:spin-out`, and the `lipika:curator` and `lipika:tracer` roles.
 
    **Deleting vendored machinery without installing the replacement leaves the reader worse off than
    before** — they have lost their copy and gained nothing. If the install cannot be completed, say so

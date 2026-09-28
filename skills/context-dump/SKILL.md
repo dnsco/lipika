@@ -44,7 +44,7 @@ it spans them. `lipika lineage` prints it. The epic tier that used to group thre
 2026-09-25.
 
 One workstream is **one thread of work** — one path prefix, one agent at a time. A second concurrent thread
-is a **new dated workstream**, not a subfolder; see step 4a. Resolve the vault with
+is a **new dated workstream**, not a subfolder, opened with `/lipika:spin-out`. Resolve the vault with
 `lipika vault-config path`. Full conventions: the vault's `CLAUDE.md`, which a session rooted in a code
 project does **not** load automatically — read it if you have not.
 
@@ -253,7 +253,7 @@ project does **not** load automatically — read it if you have not.
    trace — and [[YYYY-MM-DD-unopened]], named, for what was cited and never opened.
 
    ## Prior art
-   Threads that bear on this one, found when it was opened (step 4a). One line each on why. Carried
+   Threads that bear on this one, written by `spin-out` when the thread was opened. Carried
    verbatim by `orientation-carry`, so write it once.
 
    ## Recent narrative
@@ -275,56 +275,9 @@ project does **not** load automatically — read it if you have not.
    at an agent who does not know to look. Link the detail *after* the statement, never instead of it.
    `## Recent narrative` and `## Prior art` are the two places a pointer is the content.
 
-4a. **If you are opening a new thread, its first orientation COPIES what still bears on it.**
-
-   A split is not a link. Read the parent thread's current orientation and copy across every live item
-   that bears on the new thread — reworded freely, each citing the source it came from — then name the
-   parent in `from:`. **Carry the references the same way**, the ones still bearing on the new
-   question, citing the parent's traces where they are: a new thread does not re-open what the parent
-   traced, and does not copy its traces either. **Copy the parent's `gotchas.md` entries that bear on
-   the new question**, verbatim, under a heading citing the parent. Items that do not bear on it stay
-   behind; that is the whole point of splitting.
-
-   **Then find its prior art — in the background, while you write.** The parent is one thread; other
-   threads, archived ones included, may already hold warnings that bear on the new question, and
-   nothing links them. Dispatch one `lipika:scout` with `run_in_background` as soon as the new
-   thread's question is settled, and give it exactly this:
-
-   > Prior art for a new thread, `workstreams/<new-ws>`, split from `<parent>`, asking: <question>.
-   > Across every thread, archive/ and parked/ included (`lipika threads --all`,
-   > `lipika lineage --json`), find the ones whose question or system bears on it. For each, one
-   > line on why, and every `gotchas.md` entry that bears on the new question, quoted verbatim with
-   > its source file. Say which you looked at and rejected. Write nothing.
-
-   It writes its report under `.lipika/reports/` and returns the path; read the report. **It
-   recommends; you decide.** A scout makes no relevance call it can be held to, so read its
-   candidates against the question and keep only what bears on it. Then:
-
-   - write `## Prior art` in the first orientation — the parent's lineage and the threads kept, one
-     line each on why;
-   - append each kept warning **verbatim** to the new `gotchas.md` under `## From <thread>`,
-     creating it with the header `orientation-carry --append-gotchas` writes.
-
-   **Commit after the scout returns**, with the new `gotchas.md` in the pathspec — the same rule as
-   the tracers. A thread whose scout found nothing says so in `## Prior art`: `none found`, and the
-   threads it rejected.
-
-   ```bash
-   lipika orientation-audit workstreams/<new-ws>    # follows `from:` and checks what you carried
-   ```
-
-   **Do not touch `README.md`. The index has exactly one author, and it is the `curator`.**
-
-   **A new thread is invisible to a human browsing the index until a curator runs, and that is the
-   accepted cost.** Say so if it matters to the owner; do not fix it here. This step used to append
-   the thread's line — link, question, epic — while the curator regenerated the same list as *what
-   the thread is, live or finished, with dates*. Two authors, two shapes: an appended line never
-   looked curated, and the next curator run overwrote it. Removed 2026-08-25 on the ruling that
-   keeping a view current buys churn and disagreement, and that a view regenerated rarely is worth
-   more than one patched constantly.
-
-   **Do not compensate by asking for a curator run** — no cadence, no trigger, no "run the curator
-   after a split". That reintroduces exactly the churn this removed.
+4a. **A new thread is opened by `/lipika:spin-out`, not here.** It writes the parent's side and the
+   new thread's, and finds the new thread's prior art. If this session's question has changed, end
+   this dump and run it.
 
 5. **Commit** in the vault, which is its own repo. Stage **specific paths** — never `git add -A`, never a
    bare `commit`, because other sessions write here.
