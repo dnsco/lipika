@@ -8,7 +8,7 @@ root so a session rooted in a project can read it as in-tree paths.
 **This file does not auto-load through that symlink** (measured), so a session rooted in a code project
 has never read it. That is why `~/.claude/CLAUDE.md` carries a pointer here, and why `pickup` exists.
 
-The machinery that maintains this — the two skills, the roles, the tools — is **Lipika**, a separate repo,
+The machinery that maintains this — the skills, the roles, the tools — is **Lipika**, a separate repo,
 invoked as `lipika <command>`. Nothing here is authored there and nothing there is copied here.
 
 ## The one rule
@@ -45,8 +45,8 @@ check, a dump written today has not had time to drift.
   reference/YYYY-MM-DD-<topic>.md  RECORD — a trace from source, cross-thread
   grand-plans/<name>.md            a standing want. No liveness. The owner's
   workstreams/
-    YYYY-MM-DD-<thread>/
     archive/<thread>/              threads the owner ruled finished, moved whole
+    YYYY-MM-DD-<thread>/
       YYYY-MM-DD-<thread>.md       routing note, dated to match the folder
       orientation/YYYY-MM-DD-HHMMSS.md   newest wins; the first names its parent in `from:`
       dumps/YYYY-MM-DD-HHMMSS-<topic>.md immutable
@@ -62,18 +62,16 @@ finished moves to `workstreams/archive/`.
 
 **A project is a split lineage.** When a thread's question changes, the answer is a new dated thread,
 and its first orientation names the parent in `from:`. The chain of splits is one project, and it may
-span repos. `lipika lineage` prints it. An epic tier used to tie a project's threads
-together; it was dropped 2026-09-25, because the lineage already records which threads belong to one
-effort.
+span repos. `lipika lineage` prints it.
 
 **A new thread starts with its prior art.** `spin-out`, which opens it, reads the other threads for ones
 that bear on its question, archived ones included. The first orientation's `## Prior art` points at them, and the
 warnings from them that bear on it are copied verbatim into the new `gotchas.md`. Search later is pull,
 and pull cannot fire when nobody asks.
 
-**One workstream is one thread of work** — one path prefix, one agent at a time. A workstream is heavy
-when it carries *two concurrent threads*, never when it is merely large: two hundred dumps on one thread
-cost nothing, because orientation is one document and dumps are read on demand.
+**One workstream is one thread of work** — one path prefix, one agent at a time. Keep it small: a
+thread that runs long gathers cruft, absorbs adjacent work and takes longer to audit, and two
+concurrent efforts in one thread each get pushed the other's warnings.
 
 **A second concurrent thread is a new dated workstream**, and its first orientation **copies** what still
 bears on it from the parent, naming the parent in `from:`. Not a pointer — an agent reading one document
@@ -102,12 +100,9 @@ one shape:
 - **Every item carries a death condition.** Writing it costs the author nothing and saves the next agent
   re-reading everything. A DEAD END is exempt: it fires forever, and it is thread-local — *do not
   re-propose this, here* — which is why it stays.
-- **An item whose death condition is `dies never` is a CONVENTION, not a live item.** It is a fact
-  about the machine or the workflow, true of every thread, and nothing can ever retire it, so
-  carrying it is the one thing a live set does that only accumulates. Write it once in this file
-  and let orientations cite it. Measured 2026-09-18: two unrelated threads in one vault carried the
-  **same 19** of these, 24% and 42% of their live sets. `lipika orientation-carry` names them at
-  the handoff.
+- **An item whose death condition is `dies never` is a warning, not a live item.** Nothing can
+  retire it, so carrying it only accumulates. `lipika orientation-carry --append-gotchas` moves it
+  to the thread's `gotchas.md` at the handoff.
 - **`as-of` is when the item was last *confirmed*, not last copied.**
 - **An item states itself.** "See `[[some-dump]]`" is a pointer, and a pointer is pull; link the detail
   after the statement, never instead of it.
@@ -117,13 +112,13 @@ previous orientation takes exactly one, and **carried is the default** — an it
 death condition has fired, and every disposition states its basis. Do not select for the next agent:
 length is not the failure mode. `lipika orientation-audit` catches what vanished in silence.
 
-**Recency is a prior, not a rule.** More recent supersedes older and is trusted more, but the newest
-document can be thin or wrong and you may reach back. What you may not do is read an older orientation as
-a rival account of the present.
+**Recency is a signal, not a rule.** The newest document is the likeliest to be true, and every
+document is a partial view: an older one may be outdated, or may hold context the newest dropped. Read
+for the context the task needs.
 
 ## Conventions
 
-- **Filenames** `YYYY-MM-DD-topic.md`, and `YYYY-MM-DD-HHMM-topic.md` for dumps and orientations, where
+- **Filenames** `YYYY-MM-DD-topic.md`, and `YYYY-MM-DD-HHMMSS-topic.md` for dumps and orientations, named by `lipika stamp`, where
   several a day is normal and same-date names do not sort. `architecture/` and `values/` skip the date.
 - **Frontmatter** — `type` / `status` / `date` / `tags`, plus `from:` where it applies.
 - **Links** — `[[wikilinks]]` inside the vault; code paths as literal text, with the repo named when
@@ -140,7 +135,8 @@ a rival account of the present.
 
 ## Who writes what
 
-- **Any session**: reads freely; writes only through `pickup` and `context-dump`.
+- **Any session**: reads freely; writes only through the skills — `context-dump` and `spin-out` for a
+  thread's documents, `curate` for archiving. `pickup` is read-only.
 - **`curator`**: the index, the links that cross threads, this file, and the memory pointer. Nothing else
   writes those.
 - **`tracer`**: one `reference/` trace, for one external source it re-opened itself, at a path its

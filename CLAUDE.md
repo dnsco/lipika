@@ -14,19 +14,12 @@ this is the scribe.
 repo, and a session rooted here does not load the vault's conventions. `pickup` reads the one document
 that says where the work is and what needs deciding, and it costs a single read.
 
-**What runs on this machine is the INSTALLED PLUGIN VERSION, not the checked-out branch.** Lipika
-installs as a plugin, and the installed copy is a versioned snapshot taken at deploy time. So editing
-the tree — or switching branches — changes nothing until you run step 4 of the loop below. Two
-consequences: "which definitions are in force" is a version number you can print rather than a fact
-about your git state, and an unmerged branch is not silently live **in a client that reads the
-snapshot**.
-
-**That second one is narrower than it was written, measured 2026-08-27.** This marketplace is a
-`directory` source whose `installLocation` is this checkout, and a fresh `claude -p` subprocess loads
-its definitions from **there** — measured three times, from two working directories — while the app
-session that spawned it read a cache snapshot. So for a CLI process the tree *is* live, uncommitted
-edits included, which is the property the plugin install was adopted to remove. `lipika doctor` now
-prints the source and its path rather than leaving it to be assumed.
+**Two clients, two copies.** Lipika installs as a plugin, and the installed copy is a versioned
+snapshot taken at deploy time: an app session reads that snapshot, so editing the tree — or switching
+branches — changes nothing there until you deploy (step 3 of the loop below), and which definitions
+are in force is a version number you can print. But the marketplace is a `directory` source whose
+`installLocation` is this checkout, and a fresh `claude -p` subprocess loads its definitions from
+**there**, uncommitted edits included. `lipika doctor` prints the source and its path.
 
 This replaced hand-made symlinks from `~/.claude/` into the working tree, which had the opposite
 properties: a `git checkout` changed the definitions everywhere including in open sessions, and an
@@ -50,13 +43,11 @@ One rule, and everything else follows from it: **every document in the vault is 
   real accumulated understanding of the system being described may draft one**, and often is the best
   placed to; it becomes an `architecture/` document when the owner has reviewed it, and it **names who
   drafted it** so a later reader can weigh it. Either way, agents produce the dated traces behind it
-  and contradict it with them. Narrowed 2026-08-24: the old wording said *no agent writes one*, which
-  blocked distilling an agent that genuinely understood a codebase, and had to be overridden.
+  and contradict it with them.
 - **A project is a split lineage, not a tier.** A thread splits into a new dated thread when its
   question changes, and names its parent in `from:`; the chain is one project, and may span repos.
-  `lipika lineage` walks it, archived threads included. The `epics/` tier that grouped threads was
-  dropped 2026-09-25, on the owner's ruling that a workstream is a project and the lineage already
-  says which threads are one. `grand-plans/` stays the owner's prose.
+  `lipika lineage` walks it, archived threads included. No tier groups threads; `grand-plans/` stays
+  the owner's prose.
 - **A new thread is pushed its prior art.** `spin-out` reads the other threads when it opens one, inline
   because relatedness is judged against the parent's context. `## Prior art` names each related thread
   with what it found; bearing warnings are copied verbatim into the new `gotchas.md`. Push, because
@@ -102,10 +93,7 @@ directory in this tree, and it is how a record stops being evidence of a moment.
 
 **One agent writes a thread's documents, and it writes exactly one class of them.** A `tracer`,
 dispatched by `context-dump`, creates one `reference/` trace for one external source it re-opens
-itself. Not a dump, not an orientation, not the index, no commit, never `architecture/`. Loosened
-2026-09-18: the rule had already stopped being *two skills and nothing else* when `curator` gained
-the shared surfaces, so what it actually meant was *nothing else writes a thread's documents*, and
-this adds one document class to that. The forces are in
+itself. Not a dump, not an orientation, not the index, no commit, never `architecture/`. The forces are in
 `design/vault-and-agent-ontology.md` §7; the measurement is `design/eval-cases/handoff-cost.md`.
 
 ## Developing the machinery
@@ -118,11 +106,11 @@ placeholder or diffing two copies of a definition, something has regressed.
 repo's* machinery — that is the whole of it. A vault may hold **its own** `tools/` and **its own**
 `skills/`, written by its agents in the course of the work, and they are corpus rather than
 machinery. The test when deciding whether something in a vault should be deleted is *"is this a copy
-of something in Lipika?"*, never *"is it in a directory called `skills/`?"* Ruled 2026-08-21, after
-the directory-shaped version of the rule nearly deleted a vault's own `pr-description` skill.
+of something in Lipika?"*, never *"is it in a directory called `skills/`?"* — the directory-shaped
+test deletes a vault's own work.
 
 **Branch in this checkout; never a worktree.** Development here is single-threaded per machine, and
-the deploy reads this checkout, so a worktree is only a second tree to reconcile. Ruled 2026-09-28.
+the deploy reads this checkout, so a worktree is only a second tree to reconcile.
 
 **Every change here lands through a pull request, and it is SQUASHED by the owner** — `main` is
 protected, so nothing else can land one. The deploy reads the checkout, so realign before the next
@@ -227,13 +215,6 @@ stacked PRs sat open for three days and made `main` a fiction.
    copy the process in front of you loaded. That line never changes the exit code, because a
    directory source is a deliberate setup and not a fault.
 
-   **This was a `diff -rq` loop pasted into the session, and the loop was the defect.** Its relative
-   `$d` form compared whatever directory the session happened to open in, which in a foreign checkout
-   produced a *plausible* staleness finding rather than an obvious error. Its absolute form then
-   compared the installed snapshot against itself — the tool composing it worked out "the tree" as its
-   own directory, so both paths named one folder and nothing could fail. Two shapes of the same
-   mistake in two rounds; the comparison lives in one place now, with an exit code.
-
    `doctor` refuses rather than reporting green when it cannot find a checkout — in a shell where
    `lipika` is the installed snapshot and nothing else is reachable, pass `--tree <checkout>`.
 7. **PROBE.** Ask a question the two versions answer *differently* and read what the role **did**, not
@@ -245,37 +226,11 @@ stacked PRs sat open for three days and made `main` a fiction.
 9. **Summarise the round where the next agent will read it**, and feed the findings back. That return
    edge is the difference between a design that stays true and one that becomes aspirational.
 
-**Why a deploy step at all — this replaced a superstition.** The rule here used to be *wait 15
-minutes, or start a fresh session*, on the belief that a definition edit is "served stale". The
-documentation says close to the opposite: Claude Code **watches** `~/.claude/agents/` and
-`.claude/agents/` and loads edits within seconds, skills have documented live change detection, and
-restart is documented as necessary only for an `agents/` directory absent at session start,
-`--add-dir` directories, and `--disable-slash-commands`. That wrong rule cost three days of a round
-going unmeasured, because it asked for a fresh session and nothing asked any human to open one.
-
-What was actually measured was narrower: an edit reached through a **symlink** had not loaded at +15
-minutes — one observation of a lower bound, not a duration, and consistent with a watcher registered
-on the link that never fires when only the target changes. That would make the staleness **unbounded**.
-Prompt caching is not the mechanism; it keys on the exact prefix, so changed text is a cache *miss*
-and the new text runs.
-
-**Installing as a plugin dissolves the question instead of managing it.** The installed copy is a
-`view` in this repo's own sense — regenerated wholesale by step 4, never edited — and each round
-leaves a distinct, inspectable, versioned directory. "Which version is live" stops being unknowable
-and becomes a number you can print. It also makes this machine match what anyone else installing
-Lipika runs, which the symlinks never did.
-
-**The one way this fails is forgetting step 3**, which silently measures the previous round. Unlike the
-symlink failure it is *detectable*, and `lipika doctor` now detects it rather than this paragraph
-asking you to remember — that is what step 6 runs. It took two rounds to get right: the check shipped
-in `0.3.0` comparing the installed copy against its own directory, which cannot fail, and `0.3.1`
-made the second operand a checkout found by measurement and printed alongside the verdict.
-
-**Why the restart ends the session rather than sitting inside the loop.** Measured 2026-08-24 by
-running the loop on itself: the agent executing it cannot restart, cannot detect a restart, and
-cannot proceed without one. A step only a human can perform, buried mid-loop, stalls there and
-nothing says so — which is exactly how the rule this replaced cost three days. Putting it at the
-boundary makes the stall impossible: the round *ends*, with an explicit ask, the way a handoff does.
+**Why a deploy, and why the restart ends the session.** A definition reached through a symlink may
+never reload when only the link's target changes, so the staleness is unbounded; a versioned install
+makes which copy is live a number you can print, and `lipika doctor` detects a missed deploy. The
+agent running the loop cannot restart, cannot detect a restart and cannot proceed without one, so a
+restart left mid-loop stalls silently — the round ends there instead, with an explicit ask.
 
 **Never eval the version you are replacing.** It measures a system being deleted — retired as an idea
 2026-08-21, and it is the shape a "let us get a baseline first" instinct takes.
@@ -325,5 +280,5 @@ messages and review replies carry the salient facts and none of the conversation
 under 72 characters, and end messages with:
 
 ```
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Co-Authored-By: <the model that did the work> <noreply@anthropic.com>
 ```

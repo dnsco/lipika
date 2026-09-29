@@ -139,9 +139,8 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` is the owner'
    > *"The folders correctly stay put and the walk keeps seeing one child. The fix was teaching the
    > tool that a container is not a thread."*
 
-   That is a recorded DEAD END, measured 2026-08-21, and `design/vault-and-agent-ontology.md` agrees at
-   §4: *"Threads stay where they are, so no link breaks."* When the parked shelf confused
-   `architecture-candidates`, the tool was fixed; the folders were deliberately not moved.
+   That is a recorded DEAD END. When the parked shelf confused `architecture-candidates`, the tool was
+   fixed; the folders were deliberately not moved.
 
    So **report it and move on**: name the shelf entries. If a future ruling reverses this, the move is `git mv` per entry plus an
    `rmdir`, and it is basename-preserving — but it is not yours to decide.
@@ -210,12 +209,8 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` is the owner'
    Take the `dangling-links` count **before** you start as well; a vault at the old shape often has dangles
    already, and the number that matters is that yours did not add one.
 
-   **Two measured traps in these checks.**
+   **A trap in these checks.**
 
-   - **`lipika pass-invariants --vault <target>` does not carry `--vault` into its frozen-tier sub-check**
-     (measured 2026-08-21, `tools/pass_invariants.py:138`). It reports on the *configured* vault while
-     naming yours in the header — accurate data about the wrong tree. Run `frozen-tier-check` directly
-     with `--vault` and read that instead.
    - **`frozen-tier-check` matches `done/` at any depth, not just the root tier.** Hoisting a
      `parked/<thread>/done/` folder would print one `ADDED` line per file inside it. Those are
      renames of a *nested* `done/`, not a change to the frozen root tier; the check still ends

@@ -31,9 +31,8 @@ threads included. Grand plans are the owner's; agents write workstreams.
 
    **Recency is not a resolver.** Several threads accrue in one vault on the same day — this machinery
    and a product migration in another repo are two different questions with two different checkouts —
-   and the commit log interleaves them hour by hour. Measured 2026-08-25: picking "the most recently
-   touched workstream" hands a product session the machinery thread, and two hours earlier would have
-   done the exact reverse. Nothing reports the mismatch, because nothing knows what you meant.
+   and the commit log interleaves them hour by hour, so the most recently touched thread is routinely
+   the wrong one. Nothing reports the mismatch, because nothing knows what you meant.
 
    So: **name the candidates and stop.** One question, listing what is live, and wait. This costs a
    turn; reading the wrong thread costs the session. `vault_config` refuses rather than guessing its
@@ -121,10 +120,8 @@ threads included. Grand plans are the owner's; agents write workstreams.
    plan has formed, not after. This asks for an agenda, not for permission.
 
    **No question or option may name a term that summary did not define.** If an option needs one, the
-   summary earns it first, or the option is rewritten without it. Measured 2026-08-25: a run put
-   *"Key 2's own falsifier"*, *"span on the one operation inside the north star"* and *"the weaker
-   moment"* to the owner as though the frames were shared. He could not answer what he could not
-   parse, and said so.
+   summary earns it first, or the option is rewritten without it. The owner cannot answer what he
+   cannot parse.
 
    **Carry your findings into their answer rather than dropping them.** When the answer redirects the
    work, say which findings still bear on it.
@@ -135,7 +132,8 @@ threads included. Grand plans are the owner's; agents write workstreams.
 
 - **Don't read every dump.** Reach into one for evidence behind a specific item, not to reconstruct the
   story.
-- **Don't read two orientations as two accounts of now.** The older one is a record of a past moment.
+- **Don't weigh an older orientation as current.** It is a view of a past moment: possibly outdated,
+  and possibly holding context the newest one dropped.
 - **Don't fix what the audit found.** You are read-only. It goes in your report, and into your dump later.
 - **Don't write, move or edit anything** — no records, no views, and not `architecture/`.
 - **Don't skip the escalations** because they look like context. They are the reason a human is reading.
