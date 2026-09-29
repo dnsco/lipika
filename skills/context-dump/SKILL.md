@@ -40,8 +40,7 @@ workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
 
 **No tier carries state.** A workstream falls off by date. **A project is a split lineage**: a new
 thread's first orientation names its parent in `from:`, and the chain is one project, across repos if
-it spans them. `lipika lineage` prints it. The epic tier that used to group threads was dropped
-2026-09-25.
+it spans them. `lipika lineage` prints it.
 
 One workstream is **one thread of work** — one path prefix, one agent at a time. A second concurrent thread
 is a **new dated workstream**, not a subfolder, opened with `/lipika:spin-out`. Resolve the vault with
@@ -57,8 +56,7 @@ project does **not** load automatically — read it if you have not.
    dated workstream — that is the normal path, not the exception, and threads are meant to be short. More
    of the same one only when it is the same question.
 
-   **Never resolve it by recency.** This used to say *"usually the most recently touched workstream"*,
-   and several threads accrue in one vault on the same day — this machinery and a product migration in
+   **Never resolve it by recency.** Several threads accrue in one vault on the same day — this machinery and a product migration in
    another repo are two questions with two checkouts, interleaved commit by commit. A dump filed against
    the wrong thread is not a small error: it puts a product finding into the machinery's live set, where
    the next machinery session carries it forward as its own. Nothing detects it.
@@ -90,8 +88,7 @@ project does **not** load automatically — read it if you have not.
    is ahead of the clock; it tells you when that heals. Wait — never invent a later name.** Inventing is
    what put those names ahead in the first place.
 
-   Frontmatter: `type` / `status` / `date` / `tags`. **No `up:`** — retired 2026-08-25; the folder
-   already says which thread this is.
+   Frontmatter: `type` / `status` / `date` / `tags`; the folder already says which thread this is.
 
    - **What you did and what came of it** — PR numbers, commit shas, branch names, what is green and what
      is red.

@@ -7,7 +7,6 @@ description: Decide, with the owner, which knowledge-base vault threads are fini
 
 **The owner does not remember these threads.** A thread name is not a reason, and neither is its
 title. Every line you show him says what the thread was for, in words for someone who never read it.
-Run 1 of the curator gave a list of names and was unusable for exactly that reason.
 
 **You move nothing until he rules.** Reading is free; a move is his call.
 

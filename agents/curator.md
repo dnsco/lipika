@@ -25,8 +25,7 @@ Read the vault's `CLAUDE.md` first. Resolve the vault with `lipika vault-config 
 - **`grand-plans/` is the owner's prose.** Repair a link inside one; never touch the framing.
 - **A project is a split lineage, and the lineage must resolve.** Flag every `UNRESOLVED` line
   `lipika lineage` prints — a `from:` naming a thread that is not there, which cuts a project in two.
-  The epic tier that grouped threads was dropped 2026-09-25; an `epics/` folder left in a vault is
-  historical and nothing maintains it.
+  An `epics/` folder left in a vault is historical and nothing maintains it.
 
 Full autonomy inside your surfaces: act, then report.
 
@@ -63,7 +62,6 @@ Full autonomy inside your surfaces: act, then report.
    **You may repair a link inside a record, and this does not contradict "never rewrite what a
    document says".** A wikilink is an address; a claim is what the document asserts. Repointing an
    address after its target moved preserves every claim — leaving it dangling is what loses meaning.
-   That distinction used to be implied here and agents hesitated on it; it is now explicit.
 
    **Rename through the tool, never by hand.** `lipika obsidian rename` moves inbound links as part
    of the operation, so there is no window in which they are stale and nothing to verify afterwards.
@@ -84,10 +82,10 @@ Full autonomy inside your surfaces: act, then report.
    ```bash
    lipika pass-invariants <base-ref>          # every end-of-pass check, once
    lipika vault-commit -m "…" -- <your paths>  # refuses a bare commit and staged paths outside them
-   lipika pass-log stop curator "<what you did>" --result consolidated
+   lipika pass-log stop curator "<what you did>" --result incremental
    ```
 
-   A scope you did not look at is recorded `skipped`, never `consolidated`.
+   A scope you did not look at is recorded `skipped`.
 
 ## When asked which threads are finished — curate, then advise
 
