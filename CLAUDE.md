@@ -62,9 +62,8 @@ One rule, and everything else follows from it: **every document in the vault is 
   with what it found; bearing warnings are copied verbatim into the new `gotchas.md`. Push, because
   pull cannot fire when nobody asks.
 
-The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. Its §8 is the list
-of what this system used to do and why each piece is gone — **read it before re-proposing anything**,
-because most obvious ideas here have already been built, measured and retired.
+The design, with the forces and the falsifiers: `design/vault-and-agent-ontology.md`. What was tried
+and dropped, and why, is `design/retired.md` — read it before a major change to the vault's shape.
 
 ## Layout
 

@@ -7,29 +7,20 @@ tags: [vault, meta, agents, ontology, design, roles, tools]
 
 # The design — what shape this system has, and why
 
-The design of the vault and the machinery that maintains it: the shape, the forces behind it, and
-what would falsify each part. **Not normative** — `CLAUDE.md` and the skill and agent definitions win
-on any conflict of wording. It carries **parameters, not measurements**: a measured figure is a record
-and lives in the vault, dated; a chosen threshold is a design decision and is revisable here.
+The design of the vault and the machinery that maintains it.
 
-## 1. Purpose, and the forces that shape it
+## 1. Purpose
 
-The vault is durable cross-session memory for engineering work: a **cohesive corpus** read by agents
-that need continuity, deliberately not a stochastic index.
+The vault is durable cross-session memory for engineering work, read by agents that need continuity.
+It is a **push** surface: what bears on the work arrives without being asked for. Negative results —
+ruled-out approaches, gates, landmines — are among its most valuable contents, and the agent about to
+re-propose one does not know to search for it. Curation is the cost.
 
-- **What it buys.** Facts arrive **whether or not the agent thought to ask for them.**
-- **What it costs.** Curation is slow, and it is work.
-- **Why the trade holds.** The corpus's most valuable contents are *negative* results — ruled-out
-  approaches, gates, landmines. A negative result's trigger is someone about to re-propose the thing,
-  who by definition does not know to query for it. Pull retrieval cannot fire on the absence of a
-  query, so the corpus is a **push** surface, whatever the retrieval technology.
+**Context is partitioned as the work is.** Pieces of work start, change and finish, and each gets its
+own thread, so what an agent is pushed stays about its work and short enough to read.
 
-**Work evolves.** A push surface works only while what it pushes is about the work at hand and short
-enough to read at the moment of proposing. Pieces of work emerge, change what they are about, and
-finish; context is partitioned as they do, or one surface accumulates everything.
-
-**Agents write for agents.** The human reader is an occasional scanner, checking orientation and
-correcting mistakes. So agents **act, then report for correction**, rather than ask, then act.
+**Agents write for agents.** The owner scans to check orientation and correct mistakes, so agents act,
+then report for correction.
 
 ## 2. Goals
 
@@ -38,40 +29,32 @@ Judge every change against these, in order.
 1. **An agent is pushed what bears on its work, and little else.** Relevance first, volume second.
 2. **A warning fires unprompted or it does not count.**
 3. **Nothing that was written down becomes unfindable.**
-4. **Any operation somebody waits on finishes inside two minutes.**
+4. **Operations are fast.** The target and how it is measured: `agent-eval-method.md`, *Speed*.
 5. **Adoption is incremental.** No shape is worth a re-architecture.
 6. **Every claim names its enforcement, or admits it has none.**
 
-**Goal 4 is a north star, not a limit on any role.** Its quantity is **span** — wall clock from a
-pass's `start` to its `stop`, what a human waits — computed by `pass_log.py` as `span_s`. As a limit
-it does damage: a fan-out pass at `max(child) + overhead` can never meet it, and it discourages the
-tools §10 argues are the cheap end. Eval, profiling and developer-facing work are exempt.
-`lipika span-report` prints the series and **always exits 0**; an operation over the star is a fact,
-not a backlog item.
-
 ## 3. Records and views
 
-**Every document is a record or a view. Nothing is both.**
+**Vault documents are immutable by default.** A **record** is written once and never edited. The few
+documents that change are **views**, regenerated wholesale rather than patched. Nothing is both.
 
 | | record | view |
 |---|---|---|
 | dated | yes | yes, except `architecture/` |
-| edited | **never** | regenerated wholesale, never patched |
+| edited | **never** (`gotchas.md` is append-only) | regenerated wholesale, never patched |
 | corrected by | writing a newer document | regenerating |
-| examples | dumps, `reference/` traces, `sources/`, `external/`, `gotchas.md`, every orientation already written | the current orientation, the vault index, `architecture/` |
+| examples | dumps, `reference/` traces, `sources/`, `external/`, `gotchas.md`, every orientation once superseded | the current orientation, the vault index, `architecture/` |
 
-**This is the whole design.** A document that is mutable *and* authoritative needs surgical edits, a
-slice tool, a licence check on each edit, a losslessness gate, a byte budget, a closure primitive and a
-role to do the editing. A view needs none of them: its sources are intact, so a bad regeneration is
-fixed by regenerating, and it is written under a target rather than trimmed.
+**Why.** A document that is mutable *and* authoritative needs a toolchain to edit it safely — slicing,
+licence checks, losslessness gates, byte budgets, a role to do the editing. A record needs none. A view
+needs none either: its sources are intact, so a bad regeneration is fixed by regenerating.
 
 **The older append-only tiers have their own reasons.** An edited transcript in `sources/` is no longer
 a transcript, and every document citing it quotes something never said. A rewritten artifact in
 `external/` disagrees with what people received. A dump is evidence of a moment.
 
-**A wikilink is an address, not a claim.** Repointing one when its target is renamed preserves what a
-record says, so a record's links may be repaired — through `lipika obsidian rename`, which moves the
-links with the file.
+**Documents move, so the wikilinks inside a record may be updated to follow them.** A link is an
+address, not a claim. Move with `lipika obsidian rename`, which updates the links with the file.
 
 **`architecture/` is the one long-lived edited view, and it carries the owner's judgement.** It guards
 against a document acquiring authority nobody granted: the most-linked thing in the vault, with no
@@ -107,10 +90,10 @@ vault/
 
 - **A workstream is one question being answered**, and one thread of work: one path prefix, one agent
   at a time. That makes the pass log's prefix partition exact.
-- **Weight is concurrent threads, not bytes.** Two hundred dumps on one thread cost nothing — orientation
-  is one document and dumps are read on demand. Forty dumps across three concurrent efforts is heavy at
-  a fifth the size. A second concurrent effort is a new dated workstream, so there is no task tier and
-  no closure ceremony.
+- **Keep threads small.** A thread that runs long gathers cruft, absorbs adjacent work until its
+  orientation carries more than an agent can use, and takes longer to audit. Several concurrent efforts
+  in one thread is worse: each is pushed the others' warnings. So a second concurrent effort is a new
+  dated workstream, and a thread that has grown past its work splits.
 - **When the question changes, the thread splits** into a new dated workstream, opened by `spin-out`.
   Threads are short-lived, and the split is where selection happens: it is the moment with enough
   information to decide what still bears. Carrying every item at a handoff (§5) is safe only because
@@ -154,8 +137,10 @@ An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN
 - **Every item carries its own `as-of`** — when last *confirmed*, not last copied. An item carried
   unchanged through six handoffs inherits the newest document's name; its own `as-of` is the only thing
   that says otherwise.
-- **Recency is a prior, not a rule.** The newest orientation can be thin or wrong, and an agent may reach
-  back into dumps. It may not treat an older orientation as a rival account of the present.
+- **Recency is a signal, not a rule.** The newest document is the likeliest to be true, and every
+  document is a partial projection. An older orientation or dump is a historical view: possibly
+  outdated, and possibly holding context the newest one dropped. The aim is the context the task needs,
+  not a complete model of the world.
 - **Three dispositions at a handoff: carried, resolved with evidence, escalated.** **Carried is the
   default**; an item leaves only when its death condition has fired. Selecting what to drop would ask the
   least-budgeted agent in the system to predict what the next one needs, and a regenerated view costs the
@@ -224,52 +209,17 @@ session in the tree. And a tree at an unexpected commit reports clean, so an age
 subject is a definition, never a vault document, since nothing in the vault is edited. It is not how to
 check a deliberate deletion — there, the deletions are the deliverable and `git diff` is the record.
 
-## 8. Retired — do not re-propose
-
-Each was a correct answer to a problem this design removes, or a mechanism measured and dropped.
-
-| retired | what it did | why it is gone |
-|---|---|---|
-| the task frontier and parent register | mutable, authoritative state per thread | the third document class; §3 |
-| the `frontier-clerk` | reconciled a register against dumps | there is no register |
-| the `librarian` | consolidated, merged, archived and closed on its own judgement | records are never consolidated; archiving needs the owner's ruling |
-| `frontier_slice` | read a register without its prose | nothing edits a register surgically |
-| `marker_licence_check` | caught an edit claiming more than its evidence | dispositions state their basis |
-| `frontier_lag_check` | had the register fallen behind its dumps | the newest document is the state |
-| `budget_check` and byte budgets | bounded an accumulating document | weight is thread count; a regenerated view cannot accumulate |
-| `orientation_check`, `closure_check` | pulled warnings into a new task; decided a task was finished | no task tier; `orientation-audit` replaces both at pickup |
-| the task tier, `done/`, `historical/`, carry-across | partitioned an accumulating register | splitting a thread |
-| *never infer completion; a marker is the only authority* | stopped an agent upgrading an item without evidence | it made closure impossible; replaced by stating the basis |
-| *one marker per separately-statused fact* | stopped a composite marker collapsing distinctions | compensated for downstream mechanical action that no longer exists |
-| the clean-tree halt | protected a losslessness guarantee | the guarantee is gone; the pathspec protects a commit |
-| the write-authority partition | kept parallel agents off each other's files | the pass log answers concurrency |
-| worktree isolation | a tree per agent | its defects were tools answering about the wrong tree; the clobbers it targeted were bare commits, which a pathspec prevents |
-| the epic tier, `epics/` | grouped a project's threads | `from:` already records which threads are one project; a hand-kept list went stale |
-| `up:` frontmatter | named a document's parent | nothing read it, and most values restated the folder path |
-| `about:` frontmatter | named the thread a document concerns | nothing read it once `handoff-prompt` stopped; graders are not tied to threads |
-| the `scout` | found related threads in the background | `spin-out` reads them inline, with the parent's context |
-| warning recall by search at read time | found other threads' warnings when someone looked | pull cannot fire when nobody asks; prior art is pushed at the split |
-| machinery copied into each vault, and port tooling | kept N copies in step | one copy, installed as a plugin |
-| blocked parent time as a cost | ranked the largest problem | it cost nothing: no tokens, children working throughout |
-| a "turns that thought and called nothing" signal | flagged idle deliberation | the harness emits reasoning in its own message, so it counted every deliberation |
-| loop detectors and scoring over reasoning | classified thrashing | the need was a read, not a classifier |
-| banning mutable measurements | kept figures out of documents | dating them is the fix |
-| a `.locked` suffix while working | marked a file in use | breaks links, Obsidian and git paths; a crash leaves it locked |
-| a status or lock file beside the pass log | a second concurrency store | one store with a derived projection |
-| git tags as pass baselines | one global name per scope | could say neither when a pass ran nor that two agents overlapped |
-
-## 9. Invariants, with what would falsify each
+## 8. Invariants, with what would falsify each
 
 | invariant | why | falsified by |
 |---|---|---|
 | An agent is pushed what bears on its work | A surface full of another thread's warnings fails as a long one does | Recall flat in the irrelevant fraction |
 | Every document is a record or a view | The maintenance bill was entirely the third class | A document that must be both, and stays correct |
 | A record is never edited | It is evidence of a moment; a later moment gets a later document | An edited record nobody had to reconcile |
-| A record's links may be repaired | Repointing a moved target preserves every claim; a dangling link loses one | A link repair that changed what a document asserted |
+| Documents move, and the wikilinks inside them follow | A link is an address, not a claim; a dangling link loses one | A link update that changed what a document asserted |
 | A project is its split lineage; no document lists its threads | Which threads are one effort is recorded once, in `from:` | Two threads of one effort with no `from:` chain, that curation needed grouped |
-| A vault must not hold a copy of Lipika's machinery, but may hold its own tools and skills | The cost was N copies of one file, not a directory named `skills/`. The test is identity | A vault-local tool that cost what the port loop cost |
+| A vault needs no tools or skills of its own for standard maintenance, and may hold them for its own purposes | Maintenance is the installed plugin's job | A vault that needed a local tool to be maintained |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its toolchain | A patched view that stayed true over months |
-| A dispatched agent may create a `reference/` trace, and no other thread document | It costs the caller only an address; judgement about what a thread is stays with the session | A dispatched trace thinner than a session's; a fabrication in the record |
 | A `dies never` item is a convention, not a live item | It can never leave, so it only accumulates | A `dies never` item a shared surface could not hold without losing what made it useful |
 | An item left out of an orientation stays recoverable | Records are immutable and complete | A dropped item that could not be found again |
 | A disposition states its basis | Silent inference is the failure | An unstated basis nobody later needed |
@@ -278,7 +228,7 @@ Each was a correct answer to a problem this design removes, or a mechanism measu
 | `architecture/` is the owner's reviewed judgement, and names its drafter | An unreviewed model becomes confident, most-linked and uncontradicted | A reviewed architecture document surviving a trace that disagreed with it |
 | Prose in a definition does not fire; a tool with an exit code does | Rules that silently failed to fire were fixed by moving them into tools | A rule holding across several passes on prose alone |
 
-## 10. Tool-design rules
+## 9. Tool-design rules
 
 - **Prefer a tool that refuses to prose that asks.** A rule in a definition gets read past; the same
   rule with an exit code fails loudly. A definition is a system prompt paid on every invocation, so the
@@ -295,7 +245,7 @@ Each was a correct answer to a problem this design removes, or a mechanism measu
   reading it where it was. *An item that cannot die is a convention* places machine traps correctly and
   would move an ESCALATED item off the one surface a handoff puts in front of the owner.
 
-## 11. Open questions
+## 10. Open questions
 
 - **May a pickup write a dump?** A pickup confirms things nobody records until the next handoff, and a
   session that ends without one loses them. Appending to the orientation is ruled out — it is a view.
@@ -309,7 +259,7 @@ Each was a correct answer to a problem this design removes, or a mechanism measu
 - **Does regenerating from the previous orientation plus new dumps lose items** that regenerating from
   all records would not? The loss is recoverable; its rate is unknown.
 
-## 12. Maintaining this document
+## 11. Maintaining this document
 
 It describes the system as it is. When the system changes, rewrite the section, in the present tense;
 the pull request is the record of what changed and why. A rule its owner cannot parse has failed —
@@ -319,6 +269,7 @@ rewrite it rather than re-explain it.
 |---|---|
 | `CLAUDE.md` | the normative rules, terse and operative |
 | `agent-eval-method.md` | how a change to a role or tool is tested and measured |
+| `retired.md` | what was tried and dropped, and why — for a major change to the vault's shape |
 | `GOTCHAS.md` | what bites, measured |
 | the vault's dumps and `sources/evals/` | the record — what each round found, with figures |
 | this document | the design — the shape, the forces, the falsifiers |

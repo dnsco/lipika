@@ -80,7 +80,7 @@ view, and the owner's alone, because one written by an agent becomes the most-li
 vault with nothing positioned to contradict it.
 
 Removing the class of document that was mutable *and* authoritative is what retired seven tools, two roles
-and the whole task tier. `design/vault-and-agent-ontology.md` §8 records each one and why.
+and the whole task tier. `design/retired.md` records each one and why.
 
 ## The two skills, and the two roles
 

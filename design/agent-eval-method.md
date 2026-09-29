@@ -99,6 +99,16 @@ ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
   workspace.
 - **Test a new grader on a kept trace, green and red**, before paying for a run.
 
+## Speed
+
+**Any operation somebody waits on should finish inside two minutes** — a north star, not a limit on any
+role. As a limit it does damage: a fan-out pass at `max(child) + overhead` can never meet it, and it
+discourages the tools that are the cheap end. Eval, profiling and developer-facing work are exempt.
+
+The quantity is **span**: wall clock from a pass's `start` to its `stop`, what a human waits, computed by
+`pass_log.py` as `span_s`. `lipika span-report` prints the series and **always exits 0**; an operation
+over the star is a fact, not a backlog item.
+
 ## Where the artifacts live
 
 | artifact | location |
