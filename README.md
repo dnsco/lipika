@@ -129,4 +129,5 @@ shell**, measured, so no definition may interpolate a path; that is why tools ar
 `CLAUDE.md` here is the working guide for this repo. `design/` carries its own documents:
 `vault-and-agent-ontology.md` (the shape, the forces, and what would falsify each invariant),
 `agent-eval-method.md` (how a role gets changed and measured — read it before touching a definition),
-`GOTCHAS.md` (what bites, all of it measured).
+`GOTCHAS.md` (what bites, all of it measured), `retired.md` (what was tried and dropped), and
+`future-work.md` (changes ruled but not built, and the open questions).

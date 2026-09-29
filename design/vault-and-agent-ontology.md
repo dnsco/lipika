@@ -88,13 +88,13 @@ vault/
   pass-log.jsonl                     untracked — who is working where, right now
 ```
 
-- **A workstream is one question being answered**, and one thread of work: one path prefix, one agent
-  at a time. That makes the pass log's prefix partition exact.
+- **A workstream is one discrete body of work** — sometimes a question, sometimes a task like
+  "migrate this test suite". One path prefix, one agent at a time. That makes the pass log's prefix partition exact.
 - **Keep threads small.** A thread that runs long gathers cruft, absorbs adjacent work until its
   orientation carries more than an agent can use, and takes longer to audit. Several concurrent efforts
   in one thread is worse: each is pushed the others' warnings. So a second concurrent effort is a new
   dated workstream, and a thread that has grown past its work splits.
-- **When the question changes, the thread splits** into a new dated workstream, opened by `spin-out`.
+- **When the work changes, the thread splits** into a new dated workstream, opened by `spin-out`.
   Threads are short-lived, and the split is where selection happens: it is the moment with enough
   information to decide what still bears. Carrying every item at a handoff (§5) is safe only because
   of this.
@@ -107,7 +107,7 @@ vault/
   inline, because relatedness is judged against the parent's context. `## Prior art` names each related
   thread with what it found; bearing warnings are copied verbatim into the new `gotchas.md`.
 - **A project is a split lineage.** The chain of `from:` links is one project, and may span repos.
-  `lipika lineage` walks it, archived threads included. No document lists a project's threads.
+  `lipika lineage` walks it, archived threads included.
 - **A thread ends by not being listed as live.** Liveness is "accrued a dated document recently", so
   most threads are dead most of the time and a tool that counts threads excludes the dead ones. When
   the owner rules a thread finished, `lipika archive-thread` moves it to `archive/` through
@@ -217,7 +217,7 @@ check a deliberate deletion — there, the deletions are the deliverable and `gi
 | Every document is a record or a view | The maintenance bill was entirely the third class | A document that must be both, and stays correct |
 | A record is never edited | It is evidence of a moment; a later moment gets a later document | An edited record nobody had to reconcile |
 | Documents move, and the wikilinks inside them follow | A link is an address, not a claim; a dangling link loses one | A link update that changed what a document asserted |
-| A project is its split lineage; no document lists its threads | Which threads are one effort is recorded once, in `from:` | Two threads of one effort with no `from:` chain, that curation needed grouped |
+| A project is its split lineage | Which threads are one effort is recorded once, in `from:` | Two threads of one effort with no `from:` chain, that curation needed grouped |
 | A vault needs no tools or skills of its own for standard maintenance, and may hold them for its own purposes | Maintenance is the installed plugin's job | A vault that needed a local tool to be maintained |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its toolchain | A patched view that stayed true over months |
 | A `dies never` item is a convention, not a live item | It can never leave, so it only accumulates | A `dies never` item a shared surface could not hold without losing what made it useful |
@@ -245,21 +245,7 @@ check a deliberate deletion — there, the deletions are the deliverable and `gi
   reading it where it was. *An item that cannot die is a convention* places machine traps correctly and
   would move an ESCALATED item off the one surface a handoff puts in front of the owner.
 
-## 10. Open questions
-
-- **May a pickup write a dump?** A pickup confirms things nobody records until the next handoff, and a
-  session that ends without one loses them. Appending to the orientation is ruled out — it is a view.
-  The open shape is a pickup emitting a *record*. Against: it costs span, and read-only is that skill's
-  strongest property. Dies when a pickup's findings are measurably lost, or read-only is judged worth it.
-- **Does the routing note earn its place** beside the orientation, or does the index carry its one line?
-- **What is the relevant fraction of a pickup** — of what it loads, how much bore on the work? It is the
-  quantity this design claims to move, and it is unmeasured.
-- **How stale is too stale?** Liveness and staleness use a 14-day window
-  (`architecture-candidates --live-within-days`); it is a chosen parameter, not a measured one.
-- **Does regenerating from the previous orientation plus new dumps lose items** that regenerating from
-  all records would not? The loss is recoverable; its rate is unknown.
-
-## 11. Maintaining this document
+## 10. Maintaining this document
 
 It describes the system as it is. When the system changes, rewrite the section, in the present tense;
 the pull request is the record of what changed and why. A rule its owner cannot parse has failed —
@@ -269,6 +255,7 @@ rewrite it rather than re-explain it.
 |---|---|
 | `CLAUDE.md` | the normative rules, terse and operative |
 | `agent-eval-method.md` | how a change to a role or tool is tested and measured |
+| `future-work.md` | changes ruled but not built, and the open questions |
 | `retired.md` | what was tried and dropped, and why — for a major change to the vault's shape |
 | `GOTCHAS.md` | what bites, measured |
 | the vault's dumps and `sources/evals/` | the record — what each round found, with figures |
