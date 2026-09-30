@@ -67,6 +67,26 @@ def die(code, *lines):
     sys.exit(code)
 
 
+def vault_spec(spec, vault, cwd=None):
+    """A pathspec as the vault-relative path `git status` reports, or None if it is outside.
+
+    Git's rule: relative to the current directory when that is inside the repo, else to the
+    repo root. Existence is never consulted — the old half of a move no longer exists.
+
+    THE DEFECT THIS FIXES: specs compared verbatim, so an absolute or subdirectory-relative
+    one matched nothing and this reported "nothing to commit". Reproduced 2026-09-30.
+    """
+    cwd = Path(cwd or os.getcwd()).resolve()
+    p = Path(spec)
+    if not p.is_absolute():
+        p = (cwd if cwd == vault or vault in cwd.parents else vault) / p
+    try:
+        rel = p.resolve().relative_to(vault).as_posix()
+    except ValueError:
+        return None
+    return "" if rel == "." else rel
+
+
 def covered(path, specs):
     p = Path(path)
     for s in specs:
@@ -77,6 +97,8 @@ def covered(path, specs):
 
 def main():
     ap = argparse.ArgumentParser()
+    if "--self-test" in sys.argv[1:]:
+        return self_test()
     ap.add_argument("-m", "--message", required=True)
     ap.add_argument("--vault", default=None,
                     help="vault path or a name from ~/.config/lipika/config.json; "
@@ -92,7 +114,14 @@ def main():
     args.vault = str(vault_config.resolve_or_exit(args.vault, "vault_commit"))
 
     vault = Path(args.vault).expanduser().resolve()
-    specs = [p for p in args.paths if p != "--"]
+    raw = [p for p in args.paths if p != "--"]
+    specs = [vault_spec(p, vault) for p in raw]
+    outside = [r for r, s in zip(raw, specs) if s is None]
+    if outside:
+        die(2, "REFUSED: pathspec(s) outside the vault:", *[f"  {p}" for p in outside],
+            f"  vault: {vault}")
+    if "" in specs:
+        die(2, "REFUSED: a pathspec names the whole vault, which is a bare commit by another name.")
 
     if not specs:
         die(2,
@@ -133,13 +162,17 @@ def main():
         parts = line.split("\t")
         if parts and parts[0].startswith("R") and len(parts) >= 3:
             renames.append((parts[1], parts[2]))
-    # Also pair an unstaged delete with an untracked add of the same stem -- the shape a
-    # `git mv` leaves if only one half was added.
-    dels = {p for st, p, _ in entries if "D" in st}
-    adds = {p for st, p, _ in entries if st.strip() in ("??", "A")}
+    # Also pair an unstaged delete with an untracked add of the same name -- a move git was not
+    # told about. Only a name unique on each side pairs: every thread has a gotchas.md, so
+    # moving several threads otherwise pairs each delete with every thread's addition.
+    from collections import Counter
+    dels = [p for st, p, _ in entries if "D" in st]
+    adds = [p for st, p, _ in entries if st.strip() in ("??", "A")]
+    dn, an = Counter(Path(d).name for d in dels), Counter(Path(a).name for a in adds)
     for d in dels:
         for a in adds:
-            if Path(d).stem == Path(a).stem and d != a:
+            name = Path(d).name
+            if Path(a).name == name and d != a and dn[name] == 1 and an[name] == 1:
                 renames.append((d, a))
 
     for old, new in renames:
@@ -223,6 +256,75 @@ def main():
         print(f"tree still has {len(after.strip().splitlines())} uncommitted path(s) — expected if "
               f"you are committing one scope at a time.")
     return 0
+
+
+def self_test():
+    """Four threads moved without telling git: 16 deletes and 16 additions.
+
+    - Their 8 pathspecs, vault-relative, absolute or subdirectory-relative, cover all 32.
+    - One thread's 2 pathspecs commit, not refused as half a rename.
+    - A lone move with one half named is refused; so is a path outside the vault.
+    """
+    import tempfile
+    failures = []
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp).resolve()
+        def sh(*a, cwd=root):
+            return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True)
+        sh("init", "-q")
+        names = [f"2026-09-0{i}-t{i}" for i in range(1, 5)]
+        for n in names:
+            for f in (f"{n}.md", "gotchas.md", "dumps/x.md", "orientation/o.md"):
+                (root / "workstreams" / n / f).parent.mkdir(parents=True, exist_ok=True)
+                (root / "workstreams" / n / f).write_text(f"# {n} {f}\n")
+        sh("add", "-A")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")
+        (root / "workstreams" / "archive").mkdir()
+        for n in names:
+            (root / "workstreams" / n).rename(root / "workstreams" / "archive" / n)
+
+        pairs = [(f"workstreams/{n}", f"workstreams/archive/{n}") for n in names]
+        forms = {
+            "vault-relative": (root, [x for pr in pairs for x in pr]),
+            "absolute": (Path("/"), [str(root / x) for pr in pairs for x in pr]),
+            "relative to workstreams/": (root / "workstreams",
+                                         [x.removeprefix("workstreams/") for pr in pairs for x in pr]),
+        }
+        for label, (cwd, specs) in forms.items():
+            r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                                "--dry-run", "-m", "archive", "--", *specs],
+                               cwd=cwd, capture_output=True, text=True)
+            got = r.stdout.split("covered changes:")[-1].split("renames")[0].split()
+            if r.returncode != 0 or len(got) != 32:
+                failures.append(f"{label}: exit {r.returncode}, {len(got)} of 32 covered\n"
+                                f"{r.stdout}{r.stderr}")
+        one = [f"workstreams/{names[0]}", f"workstreams/archive/{names[0]}"]
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "one", "--", *one], capture_output=True, text=True)
+        if r.returncode != 0:
+            failures.append(f"one thread of four moved: exit {r.returncode}, expected 0\n{r.stderr}")
+
+        (root / "lone.md").write_text("lone\n")
+        sh("add", "lone.md")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "lone")
+        (root / "grand-plans").mkdir()
+        (root / "lone.md").rename(root / "grand-plans" / "lone.md")
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "half", "--", "grand-plans/lone.md"],
+                           capture_output=True, text=True)
+        if r.returncode != 2 or "half a rename" not in r.stderr:
+            failures.append(f"a lone move with one half named must be refused, got {r.returncode}")
+
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "x", "--", "/etc/hosts"],
+                           capture_output=True, text=True)
+        if r.returncode != 2:
+            failures.append(f"a path outside the vault must be refused (exit 2), got {r.returncode}")
+    for f in failures:
+        print("FAIL", f, file=sys.stderr)
+    print("self-test: " + ("FAILED" if failures else
+                           "every pathspec form covers 32 of 32; one thread of four commits; a lone half-move is refused"))
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

@@ -102,8 +102,9 @@ class Vault:
         return self.spans_s.get(role)
 
     def is_frozen(self, relpath):
-        """True if a path sits in a tier corrected by appending, never by editing."""
-        parts = Path(relpath).parts
+        """True if a path sits in a tier corrected by appending, never by editing. Only a
+        directory names a tier, so a file called `sources.md` elsewhere is not frozen."""
+        parts = Path(relpath).parts[:-1]
         return any(p in self.frozen_tiers for p in parts)
 
 
