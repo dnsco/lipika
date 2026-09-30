@@ -29,7 +29,7 @@ Write the delta even when not handing off: it is what survives a session that en
 
 ```
 grand-plans/<name>.md            a standing want. No liveness. The owner's
-workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
+workstreams/YYYY-MM-DD-<thread>/ one body of work. NO status field
   YYYY-MM-DD-<thread>.md         routing note — what this thread is. Dated to match the folder
   orientation/<stamp>.md         newest wins. Written at handoff
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
@@ -38,9 +38,9 @@ workstreams/YYYY-MM-DD-<thread>/ one question being answered. NO status field
   gotchas.md                     warnings that stay true. Append-only
 ```
 
-**No tier carries state.** A workstream falls off by date. **A project is a split lineage**: a new
-thread's first orientation names its parent in `from:`, and the chain is one project, across repos if
-it spans them. `lipika lineage` prints it.
+**No tier carries state.** A workstream falls off by date. A thread's first orientation names the
+threads it came from in `from:` — one after a split, several after a re-partition — across repos if the
+work spans them. `lipika lineage` prints it.
 
 One workstream is **one thread of work** — one path prefix, one agent at a time. A second concurrent thread
 is a **new dated workstream**, not a subfolder, opened with `/lipika:spin-out`. Resolve the vault with
@@ -52,9 +52,10 @@ project does **not** load automatically — read it if you have not.
 ## Do
 
 1. **The home is the thread this session worked on. If you cannot name it, ask — do not infer it.**
-   **A workstream is one question being answered.** When the question has changed, the answer is a new
-   dated workstream — that is the normal path, not the exception, and threads are meant to be short. More
-   of the same one only when it is the same question.
+   **A workstream is one body of work, and its `## What this is` describes the problem space.** Work
+   this session did outside that description is a different body of work: a new dated workstream, and
+   that is the normal path, not the exception — short threads keep context small. A question reworded
+   inside the description is the same thread.
 
    **Never resolve it by recency.** Several threads accrue in one vault on the same day — this machinery and a product migration in
    another repo are two questions with two checkouts, interleaved commit by commit. A dump filed against
@@ -99,17 +100,18 @@ project does **not** load automatically — read it if you have not.
      found nor changed belongs to the orientation, not here; repeating it several times a day is how two
      documents start disagreeing. Collected, not scattered through prose, one per line:
 
-     `[TYPE] statement — trigger → consequence → dies when <condition> · as-of YYYY-MM-DD`
+     `[TYPE] statement — trigger → consequence → accepted when <condition> · as-of YYYY-MM-DD`
 
      - **GATE** — a blocking precondition or ordering. The outage-class risk.
      - **LANDMINE** — breaks silently or burns time, with a known avoidance.
      - **OPEN Q** — unresolved, and agents can work on it.
      - **ESCALATED** — unresolved, and **only the owner can decide it**. An item routed here reaches a
        human; an OPEN Q does not.
-     - **DEAD END** — ruled out, with the reason. It has no death condition; it fires forever.
+     - **DEAD END** — ruled out, with the reason. It takes no acceptance clause.
 
-     **Every item carries a death condition** — what would make it stop being true. An item you cannot
-     write one for is usually two.
+     **Acceptance is optional.** `→ accepted when <condition>` is the item's goal — what, checked, would
+     finish it — and a pickup checks it in one call, so give one to work-shaped items. Leave it off facts
+     and warnings rather than inventing one. Older records write `→ dies when …`; it means the same.
 
      **`as-of` is when the item was last *confirmed*, not last copied.** Carrying an item forward does not
      refresh its date.
@@ -210,14 +212,17 @@ project does **not** load automatically — read it if you have not.
    lipika orientation-carry <ws>   # `## Needs the owner` + `## Live items`, verbatim
    ```
 
-   Paste that in, then do the judgement it cannot: **delete the items whose death conditions
-   fired**, writing each into `## Settled since the last orientation` with the evidence, and author
-   the rest — `## Where this is`, your new items, the escalation ordering, `## References`,
-   `## Recent narrative`. Retyping is where a live set decays: rewording and lost death conditions
-   happen in carried items, not new ones. A carried item keeps its own `as-of`.
+   Paste that in, then do the judgement it cannot: **delete the items that are finished**, writing
+   each into `## Settled since the last orientation` with the evidence, and author the rest —
+   `## Where this is`, your new items, the escalation ordering, `## References`, `## Recent narrative`.
+   Retyping is where a live set decays: rewording and lost clauses happen in carried items, not new
+   ones. A carried item keeps its own `as-of`. `## What this is` comes across verbatim; if the thread
+   has none yet, write it — one or two sentences on the problem space, from the routing note and the
+   work — and change it only when the body of work itself is redrawn, which is curate's call.
 
-   **It exits 1 and names the items that can never leave — act on those.** An item whose death
-   condition reads `dies never` is a **warning that stays true, not a live item**. Run
+   **It exits 1 and names the standing warnings — act on those.** An older item closing
+   `→ dies never` is a **warning that stays true, not a live item**; write a new one straight into
+   `gotchas.md`. Run
    `lipika orientation-carry <ws> --append-gotchas` to append them verbatim to this thread's
    `gotchas.md`. **It is appended to, never rewritten**: retire a warning that stops being true with a
    later line. Not the vault's `CLAUDE.md` or Lipika's `design/GOTCHAS.md` — a shared surface collects
@@ -230,11 +235,14 @@ project does **not** load automatically — read it if you have not.
    type: orientation
    status: current
    date: YYYY-MM-DD
-   from: "[[YYYY-MM-DD-<parent-thread>]]"   # only on a thread's FIRST orientation
+   from: "[[YYYY-MM-DD-<parent-thread>]]"   # only on a thread's FIRST orientation; a YAML list if several
    ---
 
+   ## What this is
+   One or two sentences: the problem space this body of work covers. The scope a split is judged against.
+
    ## Where this is
-   Two or three sentences. What this thread is for and what state it is in.
+   Two or three sentences. What state the work is in.
 
    ## Needs the owner
    Every ESCALATED item. If there are none, say so.
@@ -243,7 +251,7 @@ project does **not** load automatically — read it if you have not.
    Every carried GATE / LANDMINE / DEAD END / OPEN Q, in the typed shape, each with its own `as-of`.
 
    ## Settled since the last orientation
-   One line per item whose death condition fired, with the evidence.
+   One line per item finished, with the evidence.
 
    ## References
    The handful this thread actually rests on, one line each on what it settled, each linking its own
@@ -262,10 +270,10 @@ project does **not** load automatically — read it if you have not.
    grows without bound. Which handful matters is your judgement: nothing can rank it, and you did the
    work.
 
-   **Carry every live item forward.** An item leaves the live set for exactly two reasons: its
-   death condition **fired** — name which, with the evidence — or it **has none and never will**,
-   in which case it was a convention all along and goes to a durable surface, said out loud. Do not
-   select on anything else: a long set about this thread is not the failure mode, and choosing for
+   **Carry every live item forward.** An item leaves the live set for exactly two reasons: it is
+   **finished** — its acceptance met, or judged no longer live, either way with the evidence — or it is
+   **a warning that stays true**, which goes to `gotchas.md`, said out loud. Do not select on anything
+   else: a long set about this thread is not the failure mode, and choosing for
    the next agent is a call you are the worst placed to make.
 
    **A live item states itself.** "See [[2026-08-19-the-thing]]" is a pointer, and a warning has to fire
@@ -273,8 +281,8 @@ project does **not** load automatically — read it if you have not.
    `## Recent narrative` and `## Prior art` are the two places a pointer is the content.
 
 4a. **A new thread is opened by `/lipika:spin-out`, not here.** It writes the parent's side and the
-   new thread's, and finds the new thread's prior art. If this session's question has changed, end
-   this dump and run it.
+   new thread's, and finds the new thread's prior art. If this session worked in a different problem
+   space, end this dump and run it.
 
 5. **Commit** in the vault, which is its own repo. Stage **specific paths** — never `git add -A`, never a
    bare `commit`, because other sessions write here.
