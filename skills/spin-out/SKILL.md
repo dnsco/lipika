@@ -22,6 +22,9 @@ ends this one's span in `lipika perf`.
    lipika pass-log start spin-out "<new question>" --scope workstreams/<parent> --kind dump
    ```
 
+   **If `active` lists an open pass on the parent, stop and ask the owner before `start`.** Two
+   sessions once opened the same thread 4 minutes apart, and nothing refuses the second.
+
    The new thread is `workstreams/YYYY-MM-DD-<question-slug>/`, dated today. Read the parent's newest orientation and its `gotchas.md`, and decide which live
    items **move** (bear only on the new question), which are **copied** (bear on both) and which
    stay.

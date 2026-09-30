@@ -67,6 +67,28 @@ def die(code, *lines):
     sys.exit(code)
 
 
+def vault_spec(spec, vault, cwd=None):
+    """A pathspec as the vault-relative path `git status` reports, or None if it is outside.
+
+    Git's own rule: a relative path is relative to the current directory when that is inside
+    the repo, and to the repo root otherwise. Absolute paths are relativised. Existence is
+    never consulted, because the old half of a move no longer exists.
+
+    THE DEFECT THIS FIXES: specs were compared to `git status` verbatim, so an absolute path,
+    or one relative to a subdirectory of the vault, matched nothing and this reported
+    "nothing to commit". Reproduced 2026-09-30 with 8 archive-move pathspecs.
+    """
+    cwd = Path(cwd or os.getcwd()).resolve()
+    p = Path(spec)
+    if not p.is_absolute():
+        p = (cwd if cwd == vault or vault in cwd.parents else vault) / p
+    try:
+        rel = p.resolve().relative_to(vault).as_posix()
+    except ValueError:
+        return None
+    return "" if rel == "." else rel
+
+
 def covered(path, specs):
     p = Path(path)
     for s in specs:
@@ -77,6 +99,8 @@ def covered(path, specs):
 
 def main():
     ap = argparse.ArgumentParser()
+    if "--self-test" in sys.argv[1:]:
+        return self_test()
     ap.add_argument("-m", "--message", required=True)
     ap.add_argument("--vault", default=None,
                     help="vault path or a name from ~/.config/lipika/config.json; "
@@ -92,7 +116,14 @@ def main():
     args.vault = str(vault_config.resolve_or_exit(args.vault, "vault_commit"))
 
     vault = Path(args.vault).expanduser().resolve()
-    specs = [p for p in args.paths if p != "--"]
+    raw = [p for p in args.paths if p != "--"]
+    specs = [vault_spec(p, vault) for p in raw]
+    outside = [r for r, s in zip(raw, specs) if s is None]
+    if outside:
+        die(2, "REFUSED: pathspec(s) outside the vault:", *[f"  {p}" for p in outside],
+            f"  vault: {vault}")
+    if "" in specs:
+        die(2, "REFUSED: a pathspec names the whole vault, which is a bare commit by another name.")
 
     if not specs:
         die(2,
@@ -223,6 +254,57 @@ def main():
         print(f"tree still has {len(after.strip().splitlines())} uncommitted path(s) — expected if "
               f"you are committing one scope at a time.")
     return 0
+
+
+def self_test():
+    """Four thread moves, committed with their 8 pathspecs in each form a caller reaches for.
+
+    Every form must cover all 32 status entries: 16 deletes, 16 additions. Before `vault_spec`, the absolute and the
+    subdirectory-relative forms reported "nothing to commit" (exit 3).
+    """
+    import tempfile
+    failures = []
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp).resolve()
+        def sh(*a, cwd=root):
+            return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True)
+        sh("init", "-q")
+        names = [f"2026-09-0{i}-t{i}" for i in range(1, 5)]
+        for n in names:
+            for f in (f"{n}.md", "gotchas.md", "dumps/x.md", "orientation/o.md"):
+                (root / "workstreams" / n / f).parent.mkdir(parents=True, exist_ok=True)
+                (root / "workstreams" / n / f).write_text(f"# {n} {f}\n")
+        sh("add", "-A")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")
+        (root / "workstreams" / "archive").mkdir()
+        for n in names:
+            (root / "workstreams" / n).rename(root / "workstreams" / "archive" / n)
+
+        pairs = [(f"workstreams/{n}", f"workstreams/archive/{n}") for n in names]
+        forms = {
+            "vault-relative": (root, [x for pr in pairs for x in pr]),
+            "absolute": (Path("/"), [str(root / x) for pr in pairs for x in pr]),
+            "relative to workstreams/": (root / "workstreams",
+                                         [x.removeprefix("workstreams/") for pr in pairs for x in pr]),
+        }
+        for label, (cwd, specs) in forms.items():
+            r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                                "--dry-run", "-m", "archive", "--", *specs],
+                               cwd=cwd, capture_output=True, text=True)
+            got = r.stdout.split("covered changes:")[-1].split("renames")[0].split()
+            if r.returncode != 0 or len(got) != 32:
+                failures.append(f"{label}: exit {r.returncode}, {len(got)} of 32 covered\n"
+                                f"{r.stdout}{r.stderr}")
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "x", "--", "/etc/hosts"],
+                           capture_output=True, text=True)
+        if r.returncode != 2:
+            failures.append(f"a path outside the vault must be refused (exit 2), got {r.returncode}")
+    for f in failures:
+        print("FAIL", f, file=sys.stderr)
+    print("self-test: " + ("FAILED" if failures else
+                           "vault-relative, absolute and subdirectory-relative all cover 32 of 32"))
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

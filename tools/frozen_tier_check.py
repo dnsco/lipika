@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Frozen-tier check — did a pass alter substance in done/, sources/ or external/?
+Frozen-tier check — did a pass alter substance in a frozen tier?
+
+  The tiers are the vault's `frozen_tiers` config key; by default done/, sources/ and external/.
 
 WHAT IT DOES
   Rule F lets the librarian fix `[[links]]` in the frozen tiers and append a dated note,
@@ -25,6 +27,7 @@ USAGE
   python3 tools/frozen_tier_check.py librarian/h2db/full/2026-08-18
   python3 tools/frozen_tier_check.py main --ref-b HEAD
   python3 tools/frozen_tier_check.py <base> workstreams/h2db/      # scope filter
+  python3 tools/frozen_tier_check.py --self-test
 
   The verdict set always comes from the diff. Extra arguments FILTER that set — an exact
   path, or a directory prefix, which is what every caller reaches for. --ref-b compares two
@@ -77,11 +80,21 @@ import argparse
 import os
 import re
 import subprocess
+from pathlib import Path
 
 GIT_CWD = None   # set from the resolved vault in main(); git must run in the vault
+VAULT = None     # the resolved Vault; its `frozen_tiers` decide what is frozen
 import sys
 
-FROZEN = re.compile(r"(^|/)(done|sources|external)/")
+
+def frozen(path):
+    """A markdown file under one of the vault's frozen tiers.
+
+    The tiers come from the vault's config, through `Vault.is_frozen`. This used to be a
+    hard-coded `done|sources|external` pattern, so a vault configuring another tier got a
+    green for edits to it.
+    """
+    return path.endswith(".md") and VAULT.is_frozen(path)
 
 
 def git(*args):
@@ -135,7 +148,7 @@ def untracked_frozen():
         if not line.startswith("??"):
             continue
         path = line[3:].strip().strip('"')
-        if path.endswith(".md") and FROZEN.search(path):
+        if frozen(path):
             rows.append(("?", path))
     return rows
 
@@ -153,7 +166,7 @@ def changed_frozen(ref, ref_b):
         if len(parts) < 2:
             continue
         status, path = parts[0], parts[-1]        # for R/C the last field is the new path
-        if path.endswith(".md") and FROZEN.search(path):
+        if frozen(path):
             rows.append((status[0], path))
     return rows
 
@@ -173,7 +186,9 @@ def selected(rows, filters):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("ref")
+    ap.add_argument("ref", nargs="?")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run the red and green cases in a scratch repo and exit")
     ap.add_argument("paths", nargs="*",
                     help="filter the diff to these exact paths or directory prefixes")
     ap.add_argument("--ref-b", default=None,
@@ -181,10 +196,18 @@ def main():
     import vault_config
     vault_config.add_argument(ap)
     a = ap.parse_args()
-    global GIT_CWD
+    if a.self_test:
+        return self_test()
+    if not a.ref:
+        ap.error("name a git ref, or pass --self-test")
     _v = vault_config.resolve_or_exit(getattr(a, "vault", None), "frozen_tier_check")
-    GIT_CWD = str(_v.path)
     a.paths = [vault_config.vault_relative(p, _v) for p in a.paths]
+    return check(_v, a)
+
+
+def check(vault, a):
+    global GIT_CWD, VAULT
+    VAULT, GIT_CWD = vault, str(vault.path)
 
     rows = changed_frozen(a.ref, a.ref_b)
     # Untracked additions only exist relative to the working tree; a ref-to-ref comparison
@@ -243,6 +266,49 @@ def main():
     tail = f", {len(new_rows)} untracked addition(s)" if new_rows else ""
     print(f"\nchecked {len(rows)} changed frozen file(s), {len(bad)} needing attention{tail}")
     return 1 if bad else 0
+
+
+def self_test():
+    """A configured tier is frozen; a default tier left out of the config is not.
+
+    Red: substance changed under `ledger/`, a tier only the config names -> exit 1.
+    Green: the same file only appended to -> exit 0. And `done/`, dropped from this vault's
+    tiers, is no longer checked -> exit 0. The hard-coded pattern got all three wrong.
+    """
+    import contextlib, io, tempfile
+    from types import SimpleNamespace
+    import vault_config
+    failures = []
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        def sh(*args):
+            subprocess.run(["git", *args], cwd=tmp, check=True, capture_output=True)
+        sh("init", "-q")
+        for d in ("ledger", "done"):
+            (root / d).mkdir()
+            (root / d / "a.md").write_text("original wording\n")
+        sh("add", "-A")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base")
+        v = vault_config.Vault(path=root, name="t", source="self-test", frozen_tiers=("ledger",))
+        a = SimpleNamespace(ref="HEAD", ref_b=None, paths=[])
+
+        def run_case(name, ledger, done, want):
+            (root / "ledger" / "a.md").write_text(ledger)
+            (root / "done" / "a.md").write_text(done)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = check(v, a)
+            if code != want:
+                failures.append(f"{name}: exit {code}, expected {want}\n{buf.getvalue()}")
+
+        run_case("red: substance in a configured tier", "rewritten\n", "original wording\n", 1)
+        run_case("green: append in a configured tier", "original wording\nnote\n",
+                 "original wording\n", 0)
+        run_case("green: an unconfigured default tier", "original wording\n", "rewritten\n", 0)
+    for f in failures:
+        print("FAIL", f, file=sys.stderr)
+    print("self-test: " + ("FAILED" if failures else "configured tier red and green, unconfigured tier ignored"))
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":
