@@ -1,7 +1,7 @@
 ---
 type: regex
 target: trace
-pattern: '(?i)replica(?:(?!\n).)*migrate-the-price-service-to-postgres'
+pattern: '[Rr]eplica(?:(?!\\n|\n).)*migrate-the-price-service-to-postgres'
 ---
 
 The stale-prices thread's replica-lag item is sent to the migration thread, on the same line. It is

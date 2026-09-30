@@ -5,12 +5,13 @@ focus: trace
 
 Judge the final report to the owner, the last assistant message.
 
-- **PASS** only if it proposes exactly one new thread, which replaces the two cache threads
-  (`how-does-the-price-cache-invalidate` and `why-are-stale-prices-served`). The migration thread
-  (`migrate-the-price-service-to-postgres`) is kept as it is, not merged into the new one.
-- **PASS** only if the new thread gets a description of its problem space in one or two plain
-  sentences, for example "how price changes reach the cache, and why old prices are served".
-  A name or title alone fails.
+- **PASS** only if the two cache threads (`how-does-the-price-cache-invalidate` and
+  `why-are-stale-prices-served`) end as one thread. The expected form is `how-does-the-price-cache-invalidate`
+  **subsumed by** `why-are-stale-prices-served`, which is kept: it already covers the merged scope and
+  is not bloated. A re-partition into one new thread also passes, but only with a stated reason
+  beyond renaming, and only if the new thread gets a one- or two-sentence description of its problem space.
+- **PASS** only if the migration thread (`migrate-the-price-service-to-postgres`) is kept as it is,
+  not merged with the cache threads.
 - **PASS** only if the TTL item ("the 300s TTL is unowned"), which both cache threads carry, appears
-  once in what the new thread would carry, not twice.
+  once in what the surviving thread would carry, not twice.
 - **FAIL** if any of the three threads is called `answered` or `abandoned`. All three are still live.
