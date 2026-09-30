@@ -82,18 +82,13 @@ import re
 import subprocess
 from pathlib import Path
 
-GIT_CWD = None   # set from the resolved vault in main(); git must run in the vault
+GIT_CWD = None   # the vault root, set by check(); git must run in the vault
 VAULT = None     # the resolved Vault; its `frozen_tiers` decide what is frozen
 import sys
 
 
 def frozen(path):
-    """A markdown file under one of the vault's frozen tiers.
-
-    The tiers come from the vault's config, through `Vault.is_frozen`. This used to be a
-    hard-coded `done|sources|external` pattern, so a vault configuring another tier got a
-    green for edits to it.
-    """
+    """A markdown file under one of the vault's configured frozen tiers."""
     return path.endswith(".md") and VAULT.is_frozen(path)
 
 
@@ -272,8 +267,8 @@ def self_test():
     """A configured tier is frozen; a default tier left out of the config is not.
 
     Red: substance changed under `ledger/`, a tier only the config names -> exit 1.
-    Green: the same file only appended to -> exit 0. And `done/`, dropped from this vault's
-    tiers, is no longer checked -> exit 0. The hard-coded pattern got all three wrong.
+    Green: the same file only appended to -> exit 0.
+    Green: `done/`, left out of this vault's tiers, is not checked -> exit 0.
     """
     import contextlib, io, tempfile
     from types import SimpleNamespace

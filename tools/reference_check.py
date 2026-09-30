@@ -8,7 +8,7 @@ WHY THIS EXISTS
   frontmatter typing itself `type: reference`. Vault-wide, `reference/` had fired in 2 of 14 threads.
 
   `context-dump` step 2a now names the destination: the URL lives in a trace of its own,
-  `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, one subject each, and a dump cites the trace. So a URL left
+  `workstreams/<ws>/reference/YYYY-MM-DD-<topic>.md`, and a dump cites the trace. So a URL left
   inline in a dump, or dropped when a newer trace was written, is a mechanical finding -- which is
   the half of this that a tool can see.
 

@@ -70,13 +70,11 @@ def die(code, *lines):
 def vault_spec(spec, vault, cwd=None):
     """A pathspec as the vault-relative path `git status` reports, or None if it is outside.
 
-    Git's own rule: a relative path is relative to the current directory when that is inside
-    the repo, and to the repo root otherwise. Absolute paths are relativised. Existence is
-    never consulted, because the old half of a move no longer exists.
+    Git's rule: relative to the current directory when that is inside the repo, else to the
+    repo root. Existence is never consulted — the old half of a move no longer exists.
 
-    THE DEFECT THIS FIXES: specs were compared to `git status` verbatim, so an absolute path,
-    or one relative to a subdirectory of the vault, matched nothing and this reported
-    "nothing to commit". Reproduced 2026-09-30 with 8 archive-move pathspecs.
+    THE DEFECT THIS FIXES: specs compared verbatim, so an absolute or subdirectory-relative
+    one matched nothing and this reported "nothing to commit". Reproduced 2026-09-30.
     """
     cwd = Path(cwd or os.getcwd()).resolve()
     p = Path(spec)
@@ -164,10 +162,9 @@ def main():
         parts = line.split("\t")
         if parts and parts[0].startswith("R") and len(parts) >= 3:
             renames.append((parts[1], parts[2]))
-    # Also pair an unstaged delete with an untracked add of the same name -- the shape a move
-    # leaves when git has not been told. Only a name that appears ONCE on each side pairs:
-    # every thread has a gotchas.md, so moving several threads made every delete pair with every
-    # thread's addition, and committing one thread was refused as half a rename.
+    # Also pair an unstaged delete with an untracked add of the same name -- a move git was not
+    # told about. Only a name unique on each side pairs: every thread has a gotchas.md, so
+    # moving several threads otherwise pairs each delete with every thread's addition.
     from collections import Counter
     dels = [p for st, p, _ in entries if "D" in st]
     adds = [p for st, p, _ in entries if st.strip() in ("??", "A")]
@@ -262,10 +259,11 @@ def main():
 
 
 def self_test():
-    """Four thread moves, committed with their 8 pathspecs in each form a caller reaches for.
+    """Four threads moved without telling git: 16 deletes and 16 additions.
 
-    Every form must cover all 32 status entries: 16 deletes, 16 additions. Before `vault_spec`, the absolute and the
-    subdirectory-relative forms reported "nothing to commit" (exit 3).
+    - Their 8 pathspecs, vault-relative, absolute or subdirectory-relative, cover all 32.
+    - One thread's 2 pathspecs commit, not refused as half a rename.
+    - A lone move with one half named is refused; so is a path outside the vault.
     """
     import tempfile
     failures = []
@@ -300,16 +298,12 @@ def self_test():
             if r.returncode != 0 or len(got) != 32:
                 failures.append(f"{label}: exit {r.returncode}, {len(got)} of 32 covered\n"
                                 f"{r.stdout}{r.stderr}")
-        # One thread of the four, alone. Every thread has a gotchas.md, so pairing by name
-        # alone matched this thread's deletes to the other threads' additions and refused it
-        # as half a rename.
         one = [f"workstreams/{names[0]}", f"workstreams/archive/{names[0]}"]
         r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
                             "--dry-run", "-m", "one", "--", *one], capture_output=True, text=True)
         if r.returncode != 0:
             failures.append(f"one thread of four moved: exit {r.returncode}, expected 0\n{r.stderr}")
 
-        # Its red partner: a single real move, one half named, must still be refused.
         (root / "lone.md").write_text("lone\n")
         sh("add", "lone.md")
         sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "lone")
