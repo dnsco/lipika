@@ -164,13 +164,18 @@ def main():
         parts = line.split("\t")
         if parts and parts[0].startswith("R") and len(parts) >= 3:
             renames.append((parts[1], parts[2]))
-    # Also pair an unstaged delete with an untracked add of the same stem -- the shape a
-    # `git mv` leaves if only one half was added.
-    dels = {p for st, p, _ in entries if "D" in st}
-    adds = {p for st, p, _ in entries if st.strip() in ("??", "A")}
+    # Also pair an unstaged delete with an untracked add of the same name -- the shape a move
+    # leaves when git has not been told. Only a name that appears ONCE on each side pairs:
+    # every thread has a gotchas.md, so moving several threads made every delete pair with every
+    # thread's addition, and committing one thread was refused as half a rename.
+    from collections import Counter
+    dels = [p for st, p, _ in entries if "D" in st]
+    adds = [p for st, p, _ in entries if st.strip() in ("??", "A")]
+    dn, an = Counter(Path(d).name for d in dels), Counter(Path(a).name for a in adds)
     for d in dels:
         for a in adds:
-            if Path(d).stem == Path(a).stem and d != a:
+            name = Path(d).name
+            if Path(a).name == name and d != a and dn[name] == 1 and an[name] == 1:
                 renames.append((d, a))
 
     for old, new in renames:
@@ -295,6 +300,27 @@ def self_test():
             if r.returncode != 0 or len(got) != 32:
                 failures.append(f"{label}: exit {r.returncode}, {len(got)} of 32 covered\n"
                                 f"{r.stdout}{r.stderr}")
+        # One thread of the four, alone. Every thread has a gotchas.md, so pairing by name
+        # alone matched this thread's deletes to the other threads' additions and refused it
+        # as half a rename.
+        one = [f"workstreams/{names[0]}", f"workstreams/archive/{names[0]}"]
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "one", "--", *one], capture_output=True, text=True)
+        if r.returncode != 0:
+            failures.append(f"one thread of four moved: exit {r.returncode}, expected 0\n{r.stderr}")
+
+        # Its red partner: a single real move, one half named, must still be refused.
+        (root / "lone.md").write_text("lone\n")
+        sh("add", "lone.md")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "lone")
+        (root / "grand-plans").mkdir()
+        (root / "lone.md").rename(root / "grand-plans" / "lone.md")
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "half", "--", "grand-plans/lone.md"],
+                           capture_output=True, text=True)
+        if r.returncode != 2 or "half a rename" not in r.stderr:
+            failures.append(f"a lone move with one half named must be refused, got {r.returncode}")
+
         r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
                             "--dry-run", "-m", "x", "--", "/etc/hosts"],
                            capture_output=True, text=True)
@@ -303,7 +329,7 @@ def self_test():
     for f in failures:
         print("FAIL", f, file=sys.stderr)
     print("self-test: " + ("FAILED" if failures else
-                           "vault-relative, absolute and subdirectory-relative all cover 32 of 32"))
+                           "every pathspec form covers 32 of 32; one thread of four commits; a lone half-move is refused"))
     return 1 if failures else 0
 
 
