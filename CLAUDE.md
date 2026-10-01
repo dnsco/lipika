@@ -156,7 +156,7 @@ stacked PRs sat open for three days and made `main` a fiction.
    ```bash
    claude plugin marketplace update lipika
    claude plugin update lipika@lipika        # prints the old -> new version
-   claude plugin tag .                       # validates the two manifests agree; refuses if uncommitted
+   claude plugin tag . --dry-run             # checks the two manifests agree; without --dry-run it also makes a git tag nothing reads
    ```
 
    **Same version is a silent no-op** from `update`, from `install`, and from `marketplace update` —

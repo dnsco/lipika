@@ -50,7 +50,7 @@ see it.
 
 ```bash
 ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
-  claude plugin eval . --scaffold --allow-tools Bash Write Edit --trust-plugin \
+  claude plugin eval . --scaffold --allow-tools Bash Write Edit --trust-plugin --judge-model sonnet \
   --ablation none --runs 1 --keep-temp --max-cost-usd 7.5          # add --case <name> for one
 ```
 
@@ -64,6 +64,9 @@ ANTHROPIC_API_KEY=$(security find-generic-password -s anthropic-eval-key -w) \
 - **Pass the key per command, never `export` it.** The child gets a sealed `HOME`, so OAuth fails and
   only an env var reaches it; an ambient key displaces OAuth for every session in that shell. The judges
   run in your process and bill normally.
+- **`--judge-model sonnet`, always.** The default judge is `haiku`, which voted FAIL 3/3 on curate
+  reports that met every clause — 2026-09-25 and 2026-10-01 — where `sonnet` voted PASS 3/3 on the same
+  case. A case cannot set its judge model; only the flag can. The runner records votes, not reasons.
 - **`--scaffold` is off by default**; without it the seeded vault never exists.
 - **`--keep-temp`, always.** Without it the trace is deleted. The kept directory's `home/` is sealed mode
   000; `chmod 700` it and the `sealed/` inside to read it, and never run git in there.

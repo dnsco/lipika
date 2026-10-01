@@ -203,6 +203,33 @@ def definition_source(path=None):
               "which.")
 
 
+def missing_vaults(config_path=None):
+    """[(name, path)] for each vault the config names whose directory is gone.
+
+    `lipika init` against a scratch directory registers it for good; the directory is deleted with
+    the session and the entry stays, naming nothing. Found 2026-09-24 as `vault-fixture`.
+    """
+    sys.path.insert(0, str(HERE))
+    import vault_config
+    cfg = vault_config.load_config(config_path or vault_config.CONFIG_PATH)
+    return [(n, p) for n, p in sorted((cfg.get("vaults") or {}).items())
+            if not Path(p).expanduser().is_dir()]
+
+
+def self_test():
+    """A config naming one vault that exists and one that does not: only the second is reported."""
+    import json, tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = Path(tmp) / "config.json"
+        cfg.write_text(json.dumps({"default": "here", "vaults": {
+            "here": tmp, "gone": str(Path(tmp) / "deleted")}}))
+        got = missing_vaults(cfg)
+    ok = got == [("gone", str(Path(tmp) / "deleted"))]
+    print("self-test: " + ("a missing vault is reported, a present one is not" if ok
+                           else f"FAILED, got {got}"))
+    return 0 if ok else 1
+
+
 def main(argv=None):
     # It parsed NOTHING until now, which made `lipika doctor --vault <path>` a hard error while
     # `vault-normalize` step 1 said to pass --vault on every command. Recorded as a live landmine
@@ -214,7 +241,10 @@ def main(argv=None):
         help="checkout to compare the installed plugin against; defaults to whatever `lipika` on "
              "PATH resolves to, and only if that is a git checkout",
     )
+    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args(argv)
+    if args.self_test:
+        return self_test()
 
     problems = 0
 
@@ -250,6 +280,11 @@ def main(argv=None):
         print(f"  MISSING  no vault resolved: {e}")
         print(f"           write ~/.config/lipika/config.json, or pass --vault, or set "
               f"$LIPIKA_VAULT")
+
+    for name, path in missing_vaults():
+        print(f"  WARNING  config vault '{name}' names a directory that does not exist: {path}")
+        print("           delete its entry from ~/.config/lipika/config.json")
+        problems += 1
 
     problems += installed_vs_tree(args.tree)
     tree_vs_origin(args.tree)
