@@ -11,21 +11,10 @@ the system as it is; an entry here moves into it when the change ships, and leav
 
 ## Ruled, not built
 
-- **Death conditions become optional.** Today every orientation item must end `→ dies when …`, and the
-  tools enforce it. The ruling: a writer adds one only when it is cheap and checkable, such as a PR
-  merging, and the agent carrying items forward judges whether each is still live. `dies never` stops
-  being a category, and the writer decides what belongs in `gotchas.md`. Touches `context-dump`,
-  `pickup`, `orientation-carry` (its immortal-item detection) and `orientation-audit` (its
-  missing-condition report).
-- **Drop the word "project".** Keep `from:` and `lipika lineage`, described as a thread naming the
-  thread it split from. Touches this design doc, `CLAUDE.md`, the `pickup`, `context-dump` and `curate`
-  skills, and the `curator`.
+_(nothing ruled and unbuilt)_
 
 ## Open questions
 
-- **Should the skills say "one discrete body of work"?** The design doc does. `pickup`, `spin-out` and
-  `context-dump` still call a workstream "one question being answered", and split it "when the question
-  changes".
 - **May a pickup write a dump?** A pickup confirms things nobody records until the next handoff, and a
   session that ends without one loses them. Appending to the orientation is ruled out — it is a view.
   The open shape is a pickup emitting a *record*. Against: it costs span, and read-only is that skill's

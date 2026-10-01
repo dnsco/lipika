@@ -47,8 +47,8 @@ WHAT IT REFUSES TO BE SILENT ABOUT
   facts about the machine, true of every thread, duplicated into each and retyped at every handoff.
   They are the one class that can only accumulate.
 
-  So: **an item whose death condition is `dies never` is a warning that stays true, not a live
-  item.** It goes in the thread's own `gotchas.md`, appended and never rewritten (2026-09-24; before,
+  So: **an item closing `→ dies never` is a warning that stays true, not a live item** -- the
+  closing clause only, since 2026-09-30, when a death condition became optional acceptance. It goes in the thread's own `gotchas.md`, appended and never rewritten (2026-09-24; before,
   a shared surface collected every thread's). **Two classes are exempt, and neither exemption is about whether
   the item can die.** `[DEAD END]` has no death condition by design but is thread-LOCAL -- *do not
   re-propose this, here* -- which no shared surface can say. `[ESCALATED]` is exempt because of who
@@ -92,16 +92,33 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import markers          # noqa: E402
 import vault_config     # noqa: E402
 
-# The sections a new orientation carries. `## Settled since the last orientation` is NOT one of
-# them: it is a record of the last round's dispositions and belongs to that document.
-CARRIED = ("needs the owner", "live items", "prior art")
+# The sections a new orientation carries. `## What this is` is the thread's scope, and changes only
+# when curate redraws the work. `## Settled since the last orientation` is NOT carried: it is a record
+# of the last round's dispositions and belongs to that document.
+CARRIED = ("what this is", "needs the owner", "live items", "prior art")
 
 ORIENT_DOC = re.compile(r"^\d{4}-\d{2}-\d{2}(-\d{4,6})?.*\.md$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)")
 ITEM = re.compile(r"^(\s*)(?:[-*+]|\d+\.)\s+")
-# "dies never", and the handful of spellings that mean it. `re.I` matters: orientations in the
-# wild write `Dies never` mid-sentence as often as `· dies never ·`.
-IMMORTAL = re.compile(r"\bdies\s+never\b|\bfires\s+forever\b|\bnever\s+dies\b", re.I)
+# "dies never", and the handful of spellings that mean it -- matched against the item's CLOSING
+# clause only. Old records say it; since 2026-09-30 nothing new is written that way, because the
+# death condition became optional acceptance and a warning that stays true goes straight to
+# `gotchas.md`. Matching anywhere in the item swept out one whose prose QUOTED `dies never` and
+# which closed `→ dies when shipped`: three false drops at the 2026-09-30 handoff.
+IMMORTAL = re.compile(r"^\W*(?:dies\s+never|fires\s+forever|never\s+dies)\b", re.I)
+ARROW = re.compile(r"→|->")
+AS_OF_SEG = re.compile(r"^\s*as[- ]of\b", re.I)
+
+
+def closing_clause(text):
+    """What the item says finishes it: the text after its last arrow, else its last `·` segment
+    that is not an `as-of`. Prose before it is the item's claim, not its clause."""
+    parts = ARROW.split(text)
+    tail = parts[-1] if len(parts) > 1 else text
+    segs = [s for s in tail.split("·") if s.strip() and not AS_OF_SEG.match(s)]
+    if len(parts) > 1:
+        return segs[0] if segs else ""
+    return segs[-1] if segs else ""
 
 
 def orientations(ws_dir):
@@ -196,7 +213,7 @@ def is_immortal(raw_lines):
     text = " ".join(l.strip() for l in raw_lines)
     if markers.typed_kind(text) in ("DEAD END", "ESCALATED"):
         return False
-    return bool(IMMORTAL.search(text))
+    return bool(IMMORTAL.search(closing_clause(text)))
 
 
 def render(text, keep_immortals):
@@ -279,17 +296,17 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas
 
     if to_gotchas:
         added, had = append_gotchas(ws_dir, immortal, os.path.basename(current))
-        print(f"\nNOT CARRIED -- {len(immortal)} item(s) whose death condition is `dies never`: "
+        print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`: "
               f"{added} appended to gotchas.md, {had} already there.", file=err)
         return 0
 
-    print(f"\nNOT CARRIED -- {len(immortal)} item(s) whose death condition is `dies never`:",
+    print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`:",
           file=err)
     for raw in immortal:
         one = " ".join(l.strip() for l in raw)
         print("  · " + markers.one_line(ITEM.sub("", one, count=1)), file=err)
     print("\n  These can never leave a live set, so carrying them is the one thing that only ever\n"
-          "  accumulates. An item that cannot die is a warning that stays true, not thread state:\n"
+          "  accumulates. A warning that stays true is not thread state:\n"
           "  it goes in this thread's `gotchas.md`. Run again with --append-gotchas to put it there.\n"
           "\n  Measured 2026-09-18: two unrelated threads carried the SAME 19 of these, 24% and 42%\n"
           "  of their live sets. Nothing had ever retired one.\n"

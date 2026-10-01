@@ -89,7 +89,7 @@ and the whole task tier. `design/retired.md` records each one and why.
 | **`pickup`** (skill) | session start | reads the current orientation, audits it against the last one, opens with what needs the owner, enters plan mode |
 | **`context-dump`** (skill) | learned something, or ending | one dated dump — and at a handoff, a new dated orientation |
 | **`curator`** | the index has drifted | regenerates the index, repairs links crossing threads, owns the shared surfaces |
-| **`spin-out`** (skill) | the question changed | opens a new thread from its parent, carries what bears on it, reads its prior art, and ends as its first pickup |
+| **`spin-out`** (skill) | work outside the thread's problem space | opens a new thread from its parent, carries what bears on it, reads its prior art, and ends as its first pickup |
 
 The skills run in the main loop, where the context already is. The curator acts and then reports a change
 list with a reversal per entry, rather than asking first — detect-propose-execute-on-approval produced

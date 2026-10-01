@@ -44,10 +44,13 @@ One rule, and everything else follows from it: **every document in the vault is 
   placed to; it becomes an `architecture/` document when the owner has reviewed it, and it **names who
   drafted it** so a later reader can weigh it. Either way, agents produce the dated traces behind it
   and contradict it with them.
-- **A project is a split lineage, not a tier.** A thread splits into a new dated thread when its
-  question changes, and names its parent in `from:`; the chain is one project, and may span repos.
-  `lipika lineage` walks it, archived threads included. No tier groups threads; `grand-plans/` stays
-  the owner's prose.
+- **A workstream is one body of work, scoped by its described problem space.** Each orientation
+  opens with `## What this is`. Work outside it splits into a new dated thread, which names its parent
+  in `from:`; a reworded question does not. `curate` re-partitions threads drawn along the wrong lines,
+  N into M, and the new threads name every parent. `lipika lineage` walks the `from:` graph, archived
+  threads included. No tier groups threads; `grand-plans/` stays the owner's prose.
+- **An item's acceptance is optional.** `→ accepted when …` is its goal, checkable in one call; the
+  agent carrying items judges liveness. Older records say `→ dies when …`, and the tools read both.
 - **A new thread is pushed its prior art.** `spin-out` reads the other threads when it opens one, inline
   because relatedness is judged against the parent's context. `## Prior art` names each related thread
   with what it found; bearing warnings are copied verbatim into the new `gotchas.md`. Push, because
@@ -153,7 +156,7 @@ stacked PRs sat open for three days and made `main` a fiction.
    ```bash
    claude plugin marketplace update lipika
    claude plugin update lipika@lipika        # prints the old -> new version
-   claude plugin tag .                       # validates the two manifests agree; refuses if uncommitted
+   claude plugin tag . --dry-run             # checks the two manifests agree; without --dry-run it also makes a git tag nothing reads
    ```
 
    **Same version is a silent no-op** from `update`, from `install`, and from `marketplace update` —
