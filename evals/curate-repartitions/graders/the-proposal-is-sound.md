@@ -14,4 +14,6 @@ Judge the final report to the owner, the last assistant message.
   not merged with the cache threads.
 - **PASS** only if the TTL item ("the 300s TTL is unowned"), which both cache threads carry, appears
   once in what the surviving thread would carry, not twice.
-- **FAIL** if any of the three threads is called `answered` or `abandoned`. All three are still live.
+- **FAIL** if any of the three threads is given the verdict `answered` or `abandoned`: the "Ended as"
+  column, or the equivalent label if there is no table. Words in an explanation ("not yet answered",
+  "nothing was abandoned") are not a verdict. All three are still live.
