@@ -318,9 +318,10 @@ def stack(spans):
         for key, name, var in STACK:
             h = (H - T - B) * s[key] / top
             if h >= 0.5:
+                title = html.escape(f"{fmt_t(s['start'])} · {name} {fmt_s(s[key])}")
                 out.append(f'<rect x="{x:.1f}" y="{base - h:.1f}" width="{max(1, bw - 2):.1f}" '
                            f'height="{h:.1f}" fill="var({var})" stroke="var(--surface-1)" stroke-width="1">'
-                           f'<title>{html.escape(f"{fmt_t(s["start"])} · {name} {fmt_s(s[key])}")}</title></rect>')
+                           f'<title>{title}</title></rect>')
                 base -= h
     out.append("</svg>")
     legend = "".join(f'<span><i class="sw" style="background:var({v})"></i>{n}</span>' for _, n, v in STACK)

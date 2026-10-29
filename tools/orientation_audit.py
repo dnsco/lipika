@@ -312,8 +312,8 @@ def shape_test():
         joined = "\n".join(msg for _, msg in faults)
         ok = (not faults) if not want else all(w in joined for w in want)
         bad += not ok
-        print(f"  {'ok  ' if ok else 'FAIL'}  shape: {name}"
-              f"{'' if ok else f'  (expected {want or 'no faults'}, got {joined or 'none'})'}")
+        detail = '' if ok else f"  (expected {want or 'no faults'}, got {joined or 'none'})"
+        print(f"  {'ok  ' if ok else 'FAIL'}  shape: {name}{detail}")
     return bad
 
 
