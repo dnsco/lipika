@@ -226,7 +226,7 @@ a long-lived edited view and **the owner's alone**. `grand-plans/` is the owner'
      the next real session in that thread, never by a normalization pass — a view written by someone who
      has not done the work is fiction.
    - **Broken lineage.** Every `UNRESOLVED` line from `lipika lineage --vault <target>`: a `from:` that
-     names no thread, which cuts one project in two.
+     names no thread, which cuts a lineage in two.
    - **`architecture/` nodes.** `lipika architecture-candidates --vault <target>` — exit 1 means candidates
      found and is **not an error**; do not wrap it in `set -e`. Recommend; never write.
    - **Every rename you declined**, with its inbound-link count and the reason.

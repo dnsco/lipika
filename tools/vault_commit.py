@@ -24,7 +24,8 @@ WHAT IT REFUSES
   - a pathspec naming one half of a detected rename without the other
   - a message that is empty, or a subject line over --subject-max (default 72)
   - staged changes outside the pathspecs you named, unless --allow-foreign-index
-  - an orientation that repeats a section or an item (`orientation_audit.shape_faults`)
+  - an orientation that repeats a section or an item (`orientation_audit.shape_faults`),
+    unless it is moved unchanged
 
 USAGE
   python3 tools/vault_commit.py -m "message" -- <paths...>
@@ -193,9 +194,20 @@ def main():
     if not changed_in_specs:
         die(3, "nothing to commit under those pathspecs:", *[f"  {s}" for s in specs])
 
+    # A move checks nothing new: skip a file byte-identical to one deleted in this change. Without
+    # this, archiving a thread whose old orientation repeats itself was refused, 2026-09-30.
+    moved_blobs = set()
+    for st, p, new in entries:
+        if "D" in st or new:
+            c, out = git(vault, "rev-parse", f"HEAD:{p}")
+            if c == 0:
+                moved_blobs.add(out.strip())
+
     for p in changed_in_specs:
         f = vault / p
         if p.endswith(".md") and f.parent.name == "orientation" and f.is_file():
+            if git(vault, "hash-object", "--", p)[1].strip() in moved_blobs:
+                continue
             faults = orientation_audit.shape_faults(f.read_text(errors="replace"))
             if faults:
                 die(2, f"REFUSED: {p} repeats itself.", *[f"  {m}" for _, m in faults], "",
@@ -320,10 +332,34 @@ def self_test():
                            capture_output=True, text=True)
         if r.returncode != 2:
             failures.append(f"a path outside the vault must be refused (exit 2), got {r.returncode}")
+
+        # A spliced orientation already committed: moving it unchanged commits; a new one is refused.
+        spliced = "## Where this is\nx\n\n## Where this is\ny\n"
+        sh("add", "-A")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "moved")
+        old = root / "workstreams" / "2026-09-05-s" / "orientation"
+        old.mkdir(parents=True)
+        (old / "2026-09-05-000000.md").write_text(spliced)
+        sh("add", "-A")
+        sh("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "spliced")
+        (root / "workstreams" / "2026-09-05-s").rename(root / "workstreams" / "archive" / "2026-09-05-s")
+        mv = ["workstreams/2026-09-05-s", "workstreams/archive/2026-09-05-s"]
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "archive", "--", *mv], capture_output=True, text=True)
+        if r.returncode != 0:
+            failures.append(f"an unchanged move of a spliced orientation must commit, got "
+                            f"{r.returncode}\n{r.stderr}")
+        new = root / "workstreams" / "archive" / "2026-09-05-s" / "orientation" / "2026-09-06-000000.md"
+        new.write_text(spliced + "z\n")
+        r = subprocess.run([sys.executable, os.path.abspath(__file__), "--vault", str(root),
+                            "--dry-run", "-m", "archive", "--", *mv], capture_output=True, text=True)
+        if r.returncode != 2 or "repeats itself" not in r.stderr:
+            failures.append(f"a NEW spliced orientation must still be refused, got {r.returncode}")
     for f in failures:
         print("FAIL", f, file=sys.stderr)
     print("self-test: " + ("FAILED" if failures else
-                           "every pathspec form covers 32 of 32; one thread of four commits; a lone half-move is refused"))
+                           "every pathspec form covers 32 of 32; one thread of four commits; a lone half-move is refused; "
+                           "a spliced orientation moves unchanged, and a new one is refused"))
     return 1 if failures else 0
 
 
