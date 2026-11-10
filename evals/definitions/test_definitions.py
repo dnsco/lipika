@@ -117,6 +117,14 @@ def main():
     check("curate hands items on through the inbox, not 'by name'",
           "lipika inbox send" in curate and "by name" not in curate)
     check("the vault template lists inbox/", "inbox/" in body("templates/vault-CLAUDE.md.template"))
+    # The 2026-11-10 audit: commands a skill prescribes must run as written.
+    for m in re.finditer(r"lipika inbox send[^\n`]*", curate):
+        check(f"curate's send names a slug: `{m.group(0)[:60]}`", "--slug" in m.group(0))
+    check("curate's archive notification slug is unique per parent", "--slug archived-" in curate)
+    check("curate commits the messages it sends", "commit" in curate.split("Carry out the rulings")[-1].lower())
+    check("context-dump does not promise a recovery the carry does not make",
+          "returns the message at the next handoff" not in dump)
+    check("context-dump routes a report around an archived parent", "parent is archived" in dump)
 
     print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0

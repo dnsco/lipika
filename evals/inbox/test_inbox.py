@@ -13,6 +13,7 @@ Drives `bin/lipika`; imports nothing from tools/.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -326,6 +327,63 @@ def main():
         check("archive-thread refuses a thread with pending mail, exit 6, before it needs Obsidian",
               r.returncode == 6 and "unabsorbed" in r.stderr and (vault / "workstreams" / OTHER).is_dir(),
               f"exit {r.returncode}\n{r.stderr}")
+
+    # ---- the 2026-11-10 audit: confinement, the race's loser, [[from]], root mail, gotchas provenance ----
+    with tempfile.TemporaryDirectory() as d:
+        vault = fixture(d)
+        (Path(d) / "outside").mkdir()
+        r = send(vault, "../../outside", CHILD, "escape", BODY)
+        check("a target outside workstreams/ is exit 5 and writes nothing",
+              r.returncode == 5 and not (Path(d) / "outside" / "inbox").exists(), f"exit {r.returncode}\n{r.stderr}")
+        (vault / "workstreams" / "archive" / OLD / "dumps").mkdir(parents=True)
+        r = send(vault, f"archive/{OLD}/dumps", CHILD, "deep", BODY)
+        check("a subdirectory of an archived thread is not a thread: exit 5, nothing written",
+              r.returncode == 5 and not (vault / "workstreams" / "archive" / OLD / "dumps" / "inbox").exists(), r.stderr)
+        check("a live thread's subdirectory is not a thread", send(vault, f"{PARENT}/dumps", CHILD, "deep2", BODY).returncode == 5)
+        check("a container is not a thread", send(vault, "archive", CHILD, "container", BODY).returncode == 5)
+        inbox_dir = vault / "workstreams" / PARENT / "inbox"
+        inbox_dir.mkdir()
+        pre = inbox_dir / f"{NOW}-raced.md"
+        pre.write_text("# first writer\n")
+        r = send(vault, PARENT, CHILD, "raced", BODY)
+        check("an existing file is never truncated: exit 6, bytes unchanged",
+              r.returncode == 6 and pre.read_text() == "# first writer\n", r.stderr)
+        r = send(vault, PARENT, f"[[{CHILD}]]", "bracketed", BODY, now="2026-05-10-120001")
+        p = inbox_dir / "2026-05-10-120001-bracketed.md"
+        check("a `[[thread]]` sender, as `from:` stores it, is accepted",
+              r.returncode == 0 and p.is_file() and f'from: "[[{CHILD}]]"' in p.read_text(), r.stderr)
+
+    with tempfile.TemporaryDirectory() as d:
+        vault = Path(d) / "v"
+        (vault / "workstreams").mkdir(parents=True)
+        send(vault, None, "the owner", "waiting", UNTYPED)
+        r = lipika(vault, "threads")
+        check("root mail is reported when no thread is live", "vault inbox: 1 pending" in r.stdout, f"{r.stdout}{r.stderr}")
+
+    with tempfile.TemporaryDirectory() as d:
+        vault = fixture(d)
+        send(vault, PARENT, CHILD, "warning-only", "# w\n\n- **[LANDMINE] Quote the glob** → dies never · as-of 2026-05-09\n")
+        r = lipika(vault, "orientation-carry", PARENT, "--append-gotchas")
+        g = (vault / "workstreams" / PARENT / "gotchas.md")
+        gt = g.read_text() if g.is_file() else ""
+        check("a message's standing warning lands in gotchas under the message's own heading",
+              f"## From [[{NOW}-warning-only]]" in gt and "Quote the glob" in gt, gt)
+        check("the carry still links a message whose every item went to gotchas",
+              f"### From [[{NOW}-warning-only]]" in r.stdout, r.stdout)
+        (vault / "workstreams" / PARENT / "orientation" / "2026-05-11-100000.md").write_text(r.stdout)
+        check("after that handoff the message is absorbed", lipika(vault, "inbox", PARENT).returncode == 0)
+
+    pattern = next(l for l in (REPO / "evals/inbox-absorb/graders/the-new-orientation-links-the-message.md")
+                   .read_text().splitlines() if l.startswith("pattern:"))[len("pattern:"):].strip().strip("'")
+    msg = "2026-09-23-091500-harness-measured-the-window"
+
+    def trace(body):
+        return json.dumps({"file_path": "/w/workstreams/t/orientation/2026-11-10-010000.md", "content": body},
+                          separators=(",", ":"))
+    check("the grader regex accepts a real wikilink", re.search(pattern, trace(f"## Live items\n\n### From [[{msg}]]\n")) is not None)
+    check("the grader regex accepts a path-qualified wikilink", re.search(pattern, trace(f"[[workstreams/t/inbox/{msg}|m]]")) is not None)
+    check("the grader regex rejects a plain mention", re.search(pattern, trace(f"Mentioned: {msg}")) is None)
+    check("the grader regex rejects a code span", re.search(pattern, trace(f"`[[{msg}]]`")) is None)
 
     # ---- vault-commit takes a sent message by the printed path ----------------------------------
     with tempfile.TemporaryDirectory() as d:
