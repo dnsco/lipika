@@ -33,9 +33,11 @@ import vault_config     # noqa: E402
 
 
 def md_files(root):
+    """Every .md under root. An `inbox/` is skipped: a message neither accrues to nor votes for
+    the thread that received it."""
     for dirpath, dirnames, names in os.walk(root):
         dirnames[:] = [d for d in dirnames
-                       if not d.startswith(".") and d not in ("obsidian-skills", "node_modules")]
+                       if not d.startswith(".") and d not in ("obsidian-skills", "node_modules", "inbox")]
         for n in names:
             if n.endswith(".md"):
                 yield os.path.join(dirpath, n)
@@ -88,7 +90,7 @@ def newest_dated_doc(root):
     """
     best = None
     for dirpath, dirnames, names in os.walk(root):
-        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        dirnames[:] = [d for d in dirnames if not d.startswith(".") and d != "inbox"]
         for n in names:
             m = DATED.match(n)
             if m and (best is None or m.group(1) > best):

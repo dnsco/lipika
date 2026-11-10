@@ -335,7 +335,9 @@ def main():
         git(vault, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "fixture")
         r = send(vault, PARENT, CHILD, "committed", BODY)
         rel = f"workstreams/{PARENT}/inbox/{NOW}-committed.md"
-        r2 = lipika(vault, "vault-commit", "--dry-run", "-m", "x", "--", rel)
+        r2 = subprocess.run([sys.executable, str(LIPIKA), "vault-commit", "--dry-run", "-m", "x",
+                             "--vault", str(vault), "--", rel], capture_output=True, text=True,
+                            env=dict(os.environ, LIPIKA_TELEMETRY="0"))
         check("vault-commit --dry-run covers the sent message", r2.returncode == 0 and rel in r2.stdout,
               f"exit {r2.returncode}\n{r2.stdout}{r2.stderr}")
 

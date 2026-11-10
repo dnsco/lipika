@@ -27,9 +27,12 @@ STAMP = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 
 def newest_dated(tdir):
-    """The latest date appearing in any document name under this thread. None if undated."""
+    """The latest date in any document name under this thread, its inbox excluded: receiving
+    mail is not accruing. None if undated."""
     best = None
     for p in tdir.rglob("*.md"):
+        if "inbox" in p.relative_to(tdir).parts[:-1]:
+            continue
         m = STAMP.match(p.name)
         if m and (best is None or m.group(1) > best):
             best = m.group(1)
@@ -91,10 +94,22 @@ def main(argv=None):
         print("no threads in workstreams/", file=sys.stderr)
         return 1
 
+    import inbox
+    root = vault.path / "workstreams"
+    mail = {}
+    for name, _, _ in rows:
+        n = sum(1 for _, by in inbox.pending(root / name / "inbox", inbox.thread_docs(root / name)) if by is None)
+        if n:
+            mail[name] = n
+    general = sum(1 for _, by in inbox.pending(vault.path / "inbox", inbox.vault_docs(vault.path)) if by is None)
+    if general:
+        print(f"vault inbox: {general} pending")
+
     rows.sort(key=lambda r: (r[1] or "0000-00-00"), reverse=True)
     width = max(len(r[0]) for r in rows)
     for name, date, q in rows:
-        print(f"  {name:<{width}}  {date or 'undated  '}  {q}")
+        tail = f"  mail: {mail[name]}" if name in mail else ""
+        print(f"  {name:<{width}}  {date or 'undated  '}  {q}{tail}")
     print()
     print(f"{len(rows)} thread(s). ASK which one -- newest is not an answer, it is a coincidence "
           "of whichever\nthread committed last, and two of these are usually different repos.",

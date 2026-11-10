@@ -12,8 +12,9 @@ WHAT IT REFUSES, MOVING NOTHING
   exit 4  Obsidian is serving a different vault than the one resolved -- it would rewrite links in
           the wrong tree and report success. The normal state inside a git worktree.
   exit 5  no such thread
-  exit 6  the destination exists, the path is already under archive/, or the thread has
-          uncommitted changes, which a move would carry off without a record
+  exit 6  the destination exists, the path is already under archive/, the thread has
+          uncommitted changes, which a move would carry off without a record, or its inbox
+          holds a message no dump or orientation of it has linked
   exit 7  a move failed partway. What moved is listed and not rolled back: git shows the partial
           state, and a rollback through the failing tool might not.
 
@@ -32,6 +33,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import inbox         # noqa: E402
 import vault_config  # noqa: E402
 
 
@@ -84,6 +86,11 @@ def main(argv=None):
         die(6, f"REFUSING: workstreams/{name} has uncommitted changes. Commit or remove them first,",
                "  or the move carries work off without a record. Nothing was moved.",
                *("  " + line for line in dirty.stdout.splitlines()))
+    unread = [m for m, by in inbox.pending(src / "inbox", inbox.thread_docs(src)) if by is None]
+    if unread:
+        die(6, f"REFUSING: {len(unread)} unabsorbed message(s) in workstreams/{name}/inbox/; nothing was moved.",
+               "  A dump or orientation of this thread that links each one absorbs it.",
+               *(f"  {m.name}" for m in unread))
 
     indexed = None
     for line in obsidian(vault, "vault").stdout.splitlines():
