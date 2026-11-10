@@ -93,7 +93,9 @@ You cannot ask the owner, so this is a report he rules on. **Move, write and com
 verdict from a routing note or an orientation's headline is not curation; the owner cannot rule on it.
 
 1. **Read each candidate thread whole enough to judge it**: its routing note, its newest orientation,
-   its `gotchas.md`, and the dumps since that orientation.
+   its `gotchas.md`, the dumps since that orientation, and `lipika inbox <thread>` — a PENDING message
+   is unread work from another thread, so a thread holding one is not finished; class its items with
+   the rest.
 2. **Class every item in that orientation**, one line each. Group only identical items, and name
    every item in a group — "~30 landmines" is not a class:
    - **done** — its acceptance is met, or it is otherwise finished. Say the check you ran: `gh pr view`, `git log`, a file

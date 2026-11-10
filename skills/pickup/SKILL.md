@@ -52,6 +52,13 @@ the threads it came from in `from:` — one after a split, several after a re-pa
    `workstreams/<ws>/orientation/` sorts by name; the last is current. `gotchas.md` holds warnings that
    stay true: they left the orientation because they cannot die, not because they stopped mattering.
 
+   ```bash
+   lipika inbox <ws>    # 0 nothing pending · 1 PENDING messages, listed. Not under `set -e`
+   ```
+
+   Read each PENDING message: another thread, or the owner, addressed this one. One the current
+   orientation does not link was not absorbed by the last handoff; say so.
+
 3. **Audit it against its predecessor.**
 
    ```bash
@@ -107,6 +114,8 @@ the threads it came from in `from:` — one after a split, several after a re-pa
 7. **Open with what the owner needs.** Your first message is, in this order:
 
    - **Needs a decision** — every ESCALATED item. This is the most useful thing you will say; put it first.
+   - **Messages waiting** — each PENDING message: who sent it, what it asks. The `vault inbox: N
+     pending` line from `lipika threads`, once, if it printed one.
    - **Where this is** — two or three sentences, from the orientation. Not a summary of the whole thread.
    - **What the audit found** — drops caught, or that it was clean, with the exit code.
    - **Stale live items** — anything whose `as-of` argues it should be re-checked before being relied on.

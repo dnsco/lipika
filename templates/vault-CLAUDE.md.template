@@ -52,6 +52,8 @@ check, a dump written today has not had time to drift.
       dumps/YYYY-MM-DD-HHMMSS-<topic>.md immutable
       gotchas.md                       warnings that stay true. Append-only
       reference/YYYY-MM-DD-<topic>.md  dated traces, thread-local
+      inbox/YYYY-MM-DD-HHMMSS-<slug>.md messages from other threads; absorbed when a dump or orientation here links one
+  inbox/YYYY-MM-DD-HHMMSS-<slug>.md  messages no live thread owns; curate routes them
   sources/  external/  values/
 ```
 

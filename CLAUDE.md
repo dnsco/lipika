@@ -98,6 +98,8 @@ directory in this tree, and it is how a record stops being evidence of a moment.
 dispatched by `context-dump`, creates one `reference/` trace for one external source it re-opens
 itself. Not a dump, not an orientation, not the index, no commit, never `architecture/`. The forces are in
 `design/vault-and-agent-ontology.md` §7; the measurement is `design/eval-cases/handoff-cost.md`.
+The one exception is a thread's `inbox/`: any session writes a message there with `lipika inbox send`,
+and the thread's next handoff absorbs it.
 
 ## Developing the machinery
 
