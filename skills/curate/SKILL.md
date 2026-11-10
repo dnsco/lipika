@@ -91,12 +91,23 @@ title. Every line you show him says what the thread was for, in words for someon
 
    - **Archive**: run `lipika archive-thread <thread>` once per thread, then commit the paths it
      prints with `lipika vault-commit`. It moves files through Obsidian so links follow, and refuses
-     while the thread's inbox holds a message nothing has linked. Then one line to each live parent
-     (`lipika lineage --json`, its `parents`): `lipika inbox send <parent> --from <thread> --slug
-     archived`, body `# [[<thread>]] archived` and the ruling.
-   - **A vault-inbox message**: *Send to* — `lipika inbox send <thread> --from <message's from>`, the
-     body linking the original; *New thread* — write it as a re-partition writes one, with the message
-     in `## Live items`; *Drop* — record it in your dump. Each links the original, which absorbs it.
+     while the thread's inbox holds a message nothing has linked. Then one line to each **live**
+     parent (`lipika lineage --json`, its `parents`), body `# [[<thread>]] archived` and the ruling:
+
+     ```bash
+     lipika inbox send <parent> --from <thread> --slug archived-<thread> < note.md
+     ```
+
+   - **A vault-inbox message**: *Send to* — the body links the original, `--from` is its `from:` as stored:
+
+     ```bash
+     lipika inbox send <thread> --from "<its from:>" --slug <slug> < forward.md
+     ```
+
+     *New thread* — write it as a re-partition writes one, with the message in `## Live items`;
+     *Drop* — record it in your dump. Each links the original, which absorbs it.
+   - **Every `send` prints a path. Commit them** with `lipika vault-commit -m "…" -- <paths>` before
+     the curator runs; a message left uncommitted is one nobody else's checkout sees.
    - **Re-partition**: write each new thread here, from the curator's `REPARTITION` block. Do not
      invoke `/lipika:spin-out` — a nested skill call ends this one's span — but write what it writes:
      - `workstreams/YYYY-MM-DD-<slug>/<same>.md`, `type: routing`: the problem space, and the threads

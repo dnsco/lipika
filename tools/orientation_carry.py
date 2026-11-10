@@ -270,7 +270,9 @@ def message_body(path):
 
 
 def message_blocks(msgs, keep_immortals):
-    """(lines, immortal_items): one `### From [[…]]` block per message, bullets verbatim."""
+    """(lines, immortal): one `### From [[…]]` block per message, bullets verbatim. `immortal` is
+    [(raw, "[[<message>]]")], so a warning keeps the message it came from. A message whose every
+    item is a standing warning keeps its block, so the handoff still links and absorbs it."""
     out, immortal = [], []
     for m in msgs:
         frm, _, date = inbox.meta(m)
@@ -285,17 +287,20 @@ def message_blocks(msgs, keep_immortals):
                     continue
                 para.append(line.strip())
             items = [[f"- {' '.join(para)} · as-of {date}"]] if para else []
-        kept = []
+        kept, moved = [], 0
         for raw in items:
             if not keep_immortals and is_immortal(raw):
-                immortal.append(raw)
+                immortal.append((raw, f"[[{m.stem}]]"))
+                moved += 1
                 continue
             kept.append(raw)
-        if not kept:
+        if not kept and not moved:
             continue
         out += ["", f"### From [[{m.stem}]] ({frm}, {date})", ""]
         for raw in kept:
             out.extend(raw)
+        if not kept:
+            out.append(f"- {moved} standing warning(s), closing `dies never`, belong in gotchas.md · as-of {date}")
     return out, immortal
 
 
@@ -324,20 +329,24 @@ later line saying so, and the bytes above it stay as they were.
 """
 
 
-def append_gotchas(ws_dir, immortal, source):
-    """Append each item not already present, verbatim, to the thread's `gotchas.md`.
+def append_gotchas(ws_dir, immortal):
+    """Append each (raw, source) not already present, verbatim, to the thread's `gotchas.md`, one
+    `## From <source>` heading per source.
 
     Never regenerated: an item that cannot die has nothing to drop, so a rewrite could only lose one.
     Returns (appended, already present).
     """
     path = os.path.join(ws_dir, "gotchas.md")
     existing = open(path, errors="replace").read() if os.path.exists(path) else ""
-    new = [raw for raw in immortal if "\n".join(raw) not in existing]
+    new = [(raw, src) for raw, src in immortal if "\n".join(raw) not in existing]
     if new:
         head = GOTCHAS_HEAD if not existing else ("" if existing.endswith("\n") else "\n")
-        body = "\n".join("\n".join(r) for r in new)
+        chunks = []
+        for src in dict.fromkeys(s for _, s in new):
+            body = "\n".join("\n".join(r) for r, s in new if s == src)
+            chunks.append(f"\n## From {src}\n\n{body}\n")
         with open(path, "a") as fh:
-            fh.write(f"{head}\n## From orientation/{source}\n\n{body}\n")
+            fh.write(head + "".join(chunks))
     return len(new), len(immortal) - len(new)
 
 
@@ -353,10 +362,10 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas
 
     current = docs[-1] if docs else None
     text = open(current, errors="replace").read() if current else ""
-    lines, immortal = render(text, keep_immortals)
+    lines, own = render(text, keep_immortals)
     blocks, more = message_blocks(msgs, keep_immortals)
     lines = with_messages(lines, blocks)
-    immortal += more
+    immortal = [(raw, f"orientation/{os.path.basename(current)}") for raw in own] + more
 
     if current:
         print(f"# carried verbatim from {os.path.basename(current)} "
@@ -371,14 +380,14 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas
         return 0
 
     if to_gotchas:
-        added, had = append_gotchas(ws_dir, immortal, os.path.basename(current) if current else "inbox")
+        added, had = append_gotchas(ws_dir, immortal)
         print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`: "
               f"{added} appended to gotchas.md, {had} already there.", file=err)
         return 0
 
     print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`:",
           file=err)
-    for raw in immortal:
+    for raw, _ in immortal:
         one = " ".join(l.strip() for l in raw)
         print("  · " + markers.one_line(ITEM.sub("", one, count=1)), file=err)
     print("\n  These can never leave a live set, so carrying them is the one thing that only ever\n"

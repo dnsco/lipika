@@ -87,6 +87,11 @@ def main(argv=None):
         print(f"cannot locate the vault: {exc}", file=sys.stderr)
         return 2
 
+    import inbox
+    general = sum(1 for _, by in inbox.pending(vault.path / "inbox", inbox.vault_docs(vault.path)) if by is None)
+    if general:
+        print(f"vault inbox: {general} pending")
+
     rows = threads(vault)
     if not args.all:
         rows = [r for r in rows if r[0].split("/")[0] not in CONTAINERS]
@@ -94,16 +99,12 @@ def main(argv=None):
         print("no threads in workstreams/", file=sys.stderr)
         return 1
 
-    import inbox
     root = vault.path / "workstreams"
     mail = {}
     for name, _, _ in rows:
         n = sum(1 for _, by in inbox.pending(root / name / "inbox", inbox.thread_docs(root / name)) if by is None)
         if n:
             mail[name] = n
-    general = sum(1 for _, by in inbox.pending(vault.path / "inbox", inbox.vault_docs(vault.path)) if by is None)
-    if general:
-        print(f"vault inbox: {general} pending")
 
     rows.sort(key=lambda r: (r[1] or "0000-00-00"), reverse=True)
     width = max(len(r[0]) for r in rows)

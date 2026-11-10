@@ -105,21 +105,33 @@ def meta(msg):
     return frm, (t.group(1).strip() if t else ""), Path(msg).stem[:10]
 
 
-def resolve_target(vault_path, name):
-    """(thread dir, candidates). One candidate is a match; several is ambiguous; none is not found."""
+def thread_dirs(vault_path):
+    """Every thread root as (rel, dir): `name`, or `container/name` under parked/ and archive/."""
     root = Path(vault_path) / "workstreams"
+    out = []
+    if not root.is_dir():
+        return out
+    for d in sorted(root.iterdir()):
+        if not d.is_dir() or d.name.startswith("."):
+            continue
+        if d.name in CONTAINERS:
+            out += [(f"{d.name}/{p.name}", p) for p in sorted(d.iterdir())
+                    if p.is_dir() and not p.name.startswith(".")]
+        else:
+            out.append((d.name, d))
+    return out
+
+
+def resolve_target(vault_path, name):
+    """(thread dir, candidates), chosen from the listing of thread roots. A path is never joined,
+    so `../x` and `<thread>/dumps` name nothing. One candidate matches; several are ambiguous."""
     name = name.strip().strip("/")
     if name.startswith("workstreams/"):
         name = name[len("workstreams/"):]
-    for cand in (root / name, *(root / c / name for c in CONTAINERS)):
-        if cand.is_dir():
-            return cand, [cand]
-    slug = Path(name).name
-    cands = []
-    for base in (root, *(root / c for c in CONTAINERS)):
-        if base.is_dir():
-            cands += [d for d in sorted(base.iterdir())
-                      if d.is_dir() and not d.name.startswith(".") and d.name.endswith(slug)]
+    dirs = thread_dirs(vault_path)
+    cands = [d for r, d in dirs if r == name or d.name == name]
+    if not cands:
+        cands = [d for r, d in dirs if d.name.endswith(Path(name).name)]
     return (cands[0] if len(cands) == 1 else None), cands
 
 
@@ -162,16 +174,18 @@ def cmd_send(argv):
         to = "the vault"
 
     sender = args.sender.strip()
-    sdir, scands = resolve_target(vault, sender) if (DATED.match(sender) or sender.startswith("[[")) else (None, [])
-    if sdir is None and (DATED.match(sender.strip("[]")) or sender.startswith("[[")):
+    bracketed = sender.startswith("[[") and sender.endswith("]]")
+    bare = sender[2:-2].strip() if bracketed else sender
+    thread_shaped = bracketed or bool(DATED.match(bare))
+    sdir, scands = resolve_target(vault, bare)
+    if thread_shaped and sdir is None:
         if len(scands) > 1:
             die(5, f"REFUSING: --from {sender!r} is ambiguous:", *(f"  {rel(vault, c)}" for c in scands))
         die(5, f"REFUSING: --from {sender!r} looks like a thread and none is named so. "
                "Pass a thread name, or plain text for a sender that is not a thread.")
-    if sdir is None:
-        exact, _ = resolve_target(vault, sender)
-        sdir = exact if exact is not None and exact.name == sender else None
-    frm = f"[[{sdir.name}]]" if sdir is not None else sender.replace('"', '\\"')
+    if not thread_shaped and sdir is not None and sdir.name != bare:
+        sdir = None
+    frm = f"[[{sdir.name}]]" if sdir is not None else bare.replace('"', '\\"')
 
     st = args.now or stamp.stamp(stamp.utc_now())
     name = f"{st}-{args.slug}"
@@ -182,7 +196,11 @@ def cmd_send(argv):
 
     inbox_dir.mkdir(parents=True, exist_ok=True)
     path = inbox_dir / f"{name}.md"
-    path.write_text(f"---\ntype: message\nstatus: record\ndate: {st[:10]}\nfrom: \"{frm}\"\n---\n\n{body}\n")
+    try:
+        with open(path, "x") as fh:
+            fh.write(f"---\ntype: message\nstatus: record\ndate: {st[:10]}\nfrom: \"{frm}\"\n---\n\n{body}\n")
+    except FileExistsError:
+        die(6, f"REFUSING: {rel(vault, path)} appeared before the write. Nothing was overwritten.")
     r = rel(vault, path)
     subject = f"inbox {to}: {args.slug}"[:72]
     print(f"wrote {r}")
@@ -234,9 +252,38 @@ def cmd_list(argv):
 
 
 def self_test():
-    """The absorbed matcher: alias, anchor and path forms link; a code span does not."""
+    """The absorbed matcher: alias, anchor and path forms link; a code span does not. And the
+    race's loser: a file that appears between the basename scan and the write is never truncated."""
+    import io
     import tempfile
     failures = []
+    with tempfile.TemporaryDirectory() as tmp:
+        vault = Path(tmp) / "race"
+        (vault / "workstreams" / "2026-01-01-t").mkdir(parents=True)
+        target = vault / "workstreams" / "2026-01-01-t" / "inbox" / "2026-01-02-000000-same.md"
+        real = md_files
+
+        def scan_then_lose(root):
+            for p in real(root):
+                yield p
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("# first writer\n")
+
+        globals()["md_files"] = scan_then_lose
+        saved = sys.stdin, sys.stderr
+        sys.stdin, sys.stderr = io.StringIO("# second writer\n\nx\n"), io.StringIO()
+        try:
+            cmd_send(["2026-01-01-t", "--from", "x", "--slug", "same", "--now", "2026-01-02-000000",
+                      "--vault", str(vault)])
+            code = 0
+        except SystemExit as e:
+            code = e.code
+        finally:
+            sys.stdin, sys.stderr = saved
+            globals()["md_files"] = real
+        if code != 6 or target.read_text() != "# first writer\n":
+            failures.append(f"race: exit {code}, body {target.read_text()!r}; expected 6 and the first writer's bytes")
+
     with tempfile.TemporaryDirectory() as tmp:
         t = Path(tmp) / "t"
         (t / "inbox").mkdir(parents=True)
@@ -254,7 +301,8 @@ def self_test():
                 failures.append(f"{k}: absorbed={got.get(k)}, expected {v}")
     for f in failures:
         print("FAIL", f, file=sys.stderr)
-    print("self-test: " + ("FAILED" if failures else "alias, anchor and path forms link; a code span does not"))
+    print("self-test: " + ("FAILED" if failures
+                           else "alias, anchor and path forms link; a code span does not; a race never truncates"))
     return 1 if failures else 0
 
 

@@ -211,7 +211,8 @@ project does **not** load automatically — read it if you have not.
 
    - An item in another thread's problem space, too small to spin out.
    - A report to a parent — `lipika lineage <ws>` names it — when this session finished or changed
-     what the parent split off, or needs the owner through it.
+     what the parent split off, or needs the owner through it. When the parent is archived, `send`
+     refuses; the report goes to the vault inbox, which curate routes.
    - Friction with the machinery: the Lipika thread, or the vault inbox when none is live.
 
    ```bash
@@ -236,7 +237,9 @@ project does **not** load automatically — read it if you have not.
 
    It also brings in every message no orientation of this thread links, as `### From [[<message>]]`
    at the end of `## Live items`. The link is what absorbs the message; carry its items or settle
-   them with basis. A block deleted without either returns the message at the next handoff.
+   them with basis. A block deleted without either is a dropped item: once an orientation has linked
+   the message the carry does not bring it back, and `orientation-audit` names the loss at the next
+   pickup.
 
    Paste that in, then do the judgement it cannot: **delete the items that are finished**, writing
    each into `## Settled since the last orientation` with the evidence, and author the rest —
