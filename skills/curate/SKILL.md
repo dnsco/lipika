@@ -17,10 +17,12 @@ title. Every line you show him says what the thread was for, in words for someon
 
    ```bash
    cd "$(lipika vault-config path)"
-   lipika threads        # live, newest first; `--all` includes parked/ and archive/
+   lipika threads               # live, newest first; `--all` includes parked/ and archive/
+   lipika inbox --vault-inbox   # messages no thread owns. 0 none pending · 1 PENDING, listed
    ```
 
    The owner named no scope? Use finished candidates and say which threads that is, in one line.
+   Read each PENDING vault-inbox message; it is routed in step 4 and ruled on in step 5.
 
 2. **Partition the scope into groups**, first rule that applies:
    - threads of one split lineage are one group — `lipika lineage --json`, its `lineages`. A
@@ -62,6 +64,9 @@ title. Every line you show him says what the thread was for, in words for someon
    named live thread, a new thread with its question, or `nowhere, because …`. Skip items already
    carried verbatim elsewhere; name that thread once instead.
 
+   **Vault inbox** — each PENDING message in one line: who sent it, what it asks, and where it goes: a
+   named live thread, a new thread with its problem space, or `drop, because …`.
+
    **Re-partitions** — per proposal: the threads in, and for each thread out its slug and its
    description in one or two plain sentences, with a count of the items it would carry and how many
    duplicates collapsed. The item-by-item map goes in the detail file.
@@ -70,15 +75,39 @@ title. Every line you show him says what the thread was for, in words for someon
    link it, rather than printing them in the message.
 
 5. **Ask for rulings.** Skip this step when told to report only. Use `AskUserQuestion`: one question per thread
-   you advise archiving, and one per proposed re-partition, four to a call. Options come from the row —
-   *Archive*, *Keep*, *Carry first* — and for a re-partition *Re-partition as proposed*, *Keep as is*.
+   you advise archiving, one per proposed re-partition, and one per vault-inbox message, four to a
+   call. Options come from the row — *Archive*, *Keep*, *Carry first* — for a re-partition
+   *Re-partition as proposed*, *Keep as is* — for a message *Send to <thread>*, *New thread*, *Drop*.
    Describe each option in the thread's own plain words, never with a term the report did not define.
 
 6. **Carry out the rulings.**
-   - **Carry first**: hand the live items to the receiving thread's next handoff, by name.
-     Never edit that thread's orientation: it is a view, written only by a handoff.
+   - **Carry first**: send the live items to the receiving thread's inbox, verbatim, under
+     `# Carried from [[<thread>]]`; its next handoff absorbs them. Never edit that thread's
+     orientation: it is a view, written only by a handoff.
+
+     ```bash
+     lipika inbox send <receiver> --from <thread> --slug carried-from-<thread> < items.md
+     ```
+
    - **Archive**: run `lipika archive-thread <thread>` once per thread, then commit the paths it
-     prints with `lipika vault-commit`. It moves files through Obsidian so links follow.
+     prints with `lipika vault-commit`. It moves files through Obsidian so links follow, and refuses
+     while the thread's inbox holds a message nothing has linked. Then one line to each **live**
+     parent (`lipika lineage --json`, its `parents`), body `# [[<thread>]] archived` and the ruling:
+
+     ```bash
+     lipika inbox send <parent> --from <thread> --slug archived-<thread> < note.md
+     ```
+
+   - **A vault-inbox message**: *Send to* — the body links the original, `--from` is its `from:` as stored:
+
+     ```bash
+     lipika inbox send <thread> --from "<its from:>" --slug <slug> < forward.md
+     ```
+
+     *New thread* — write it as a re-partition writes one, with the message in `## Live items`;
+     *Drop* — record it in your dump. Each links the original, which absorbs it.
+   - **Every `send` prints a path. Commit them** with `lipika vault-commit -m "…" -- <paths>` before
+     the curator runs; a message left uncommitted is one nobody else's checkout sees.
    - **Re-partition**: write each new thread here, from the curator's `REPARTITION` block. Do not
      invoke `/lipika:spin-out` — a nested skill call ends this one's span — but write what it writes:
      - `workstreams/YYYY-MM-DD-<slug>/<same>.md`, `type: routing`: the problem space, and the threads

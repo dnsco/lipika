@@ -81,15 +81,27 @@ vault/
       orientation/YYYY-MM-DD-HHMMSS.md   VIEW when current, RECORD once superseded. Last sorts current
       dumps/YYYY-MM-DD-HHMMSS-<topic>.md RECORD — several a day is normal
       reference/YYYY-MM-DD-<topic>.md    RECORD — a trace, thread-local
+      inbox/YYYY-MM-DD-HHMMSS-<slug>.md  RECORD — a message to this thread, from another or the owner
       gotchas.md                     RECORD, append-only — warnings that stay true in this thread
     archive/<thread>/                a thread the owner ruled finished, moved whole
     parked/<effort>/                 shelved; hidden like archive/
+  inbox/YYYY-MM-DD-HHMMSS-<slug>.md  RECORD — a message no live thread owns; curate routes it
   sources/  external/  values/  grand-plans/       RECORD, except grand-plans/, the owner's prose
   pass-log.jsonl                     untracked — who is working where, right now
 ```
 
 - **A workstream is one discrete body of work** — sometimes a question, sometimes a task like
-  "migrate this test suite". One path prefix, one agent at a time. That makes the pass log's prefix partition exact.
+  "migrate this test suite". One path prefix; one agent writes its dumps and orientations, and any
+  session may write into its `inbox/`. That keeps the pass log's prefix partition exact.
+- **Threads talk through inboxes.** A message is a record one thread leaves in another's `inbox/`:
+  a finding that belongs there, a child's report to its parent, friction with the machinery. It is
+  **absorbed** when a later dump or orientation of the receiving thread links it — derived from the
+  records, never marked. `orientation-carry` brings every unlinked message into `## Live items`, so
+  the next handoff cites it by construction and the author carries or settles its items.
+  `archive-thread` refuses while one is unlinked. Receiving mail is not accruing: liveness and
+  architecture votes skip `inbox/`. A message no live thread owns goes to the vault-root `inbox/`,
+  which `curate` routes. A child is a thread with `from:`; it ends like any thread, and its handoff
+  sends the report. Messages address threads, never sessions.
 - **A workstream says what it is.** Every orientation opens with `## What this is`: one or two sentences
   describing the problem space, carried verbatim and redrawn only by curate. It is the scope a split is
   judged against — the cue is work outside the description, not a reworded question. "The question
@@ -173,10 +185,10 @@ An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN
 
 | skill | when | does |
 |---|---|---|
-| `pickup` | session start | reads the current orientation, audits it against its predecessor, opens with what needs the owner, ends in plan mode. Read-only |
-| `context-dump` | learned something; session end | one dated dump; at a handoff, also the next orientation and the handoff prompt |
+| `pickup` | session start | reads the current orientation and the thread's pending messages, audits it against its predecessor, opens with what needs the owner, ends in plan mode. Read-only |
+| `context-dump` | learned something; session end | one dated dump; messages to other threads; at a handoff, also the next orientation, which absorbs the inbox, and the handoff prompt |
 | `spin-out` | work outside the thread's problem space | the parent's handoff, the new thread's routing note and first orientation, its prior art |
-| `curate` | the owner asks what is finished, or whether the lines are right | groups threads by lineage, one `curator` per group; one table of dispositions and proposed re-partitions; archives and re-partitions what the owner rules |
+| `curate` | the owner asks what is finished, or whether the lines are right | groups threads by lineage, one `curator` per group; one table of dispositions, proposed re-partitions and vault-inbox routings; archives, re-partitions and sends what the owner rules |
 | `vault-normalize` | a vault is in an old shape | creates, moves and deletes files to the current shape; never edits inside one |
 
 They are skills rather than agents because they run in the main loop, where the context already is.
@@ -201,8 +213,10 @@ They are skills rather than agents because they run in the main loop, where the 
 | `curator` | the vault's shared surfaces | regenerates the index, the conventions file and the memory pointer; repairs links that cross threads; for `curate`, judges one group of threads and moves nothing |
 | `tracer` | one external source | re-opens it in a context that is discarded and writes one `reference/` trace |
 
-**Why only two.** Everything inside one thread belongs to the session working in it. What is left is the
-surfaces no thread owns, and an external source worth re-reading in a context that gets thrown away.
+**Why only two.** Everything inside one thread belongs to the session working in it, its `inbox/`
+excepted: any session may leave a message there, and only the thread's own handoff absorbs it. What is
+left is the surfaces no thread owns, and an external source worth re-reading in a context that gets
+thrown away.
 
 **Why a tracer may write.** A handoff's cost is text the session generates, at a flat rate. A child *told*
 what a source says costs the same bytes; a child that **re-opens** the source costs its address. So a

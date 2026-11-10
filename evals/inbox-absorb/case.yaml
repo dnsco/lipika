@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: inbox-absorb
+
+# The workspace IS the vault: inside the sandbox, vault_config's other routes are unavailable.
+context:
+  scaffold_script: scaffold.sh
+
+# Run:
+#   claude plugin eval . --case inbox-absorb --scaffold \
+#     --allow-tools Bash Write Edit Agent --trust-plugin --judge-model sonnet --keep-temp \
+#     --runs 1 --max-cost-usd 5

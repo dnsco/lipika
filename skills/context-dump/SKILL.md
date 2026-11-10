@@ -35,14 +35,17 @@ workstreams/YYYY-MM-DD-<thread>/ one body of work. NO status field
   dumps/<stamp>-<topic>.md       <- YOUR DUMP GOES HERE
   reference/YYYY-MM-DD-<topic>.md  dated trace from source. ONE SUBJECT EACH
   reference/YYYY-MM-DD-unopened.md what was cited and never opened. Newest wins
+  inbox/<stamp>-<slug>.md        messages from other threads. Absorbed when a dump or orientation here links one
   gotchas.md                     warnings that stay true. Append-only
+inbox/<stamp>-<slug>.md          messages no live thread owns. Curate routes them
 ```
 
 **No tier carries state.** A workstream falls off by date. A thread's first orientation names the
 threads it came from in `from:` — one after a split, several after a re-partition — across repos if the
 work spans them. `lipika lineage` prints it.
 
-One workstream is **one thread of work** — one path prefix, one agent at a time. A second concurrent thread
+One workstream is **one thread of work** — one path prefix, one agent writing its dumps and orientations;
+any session may write into its `inbox/`. A second concurrent thread
 is a **new dated workstream**, not a subfolder, opened with `/lipika:spin-out`. Resolve the vault with
 `lipika vault-config path`. Full conventions: the vault's `CLAUDE.md`, which a session rooted in a code
 project does **not** load automatically — read it if you have not.
@@ -75,7 +78,11 @@ project does **not** load automatically — read it if you have not.
 
    ```bash
    lipika pass-log start context-dump "<what you are dumping>" --scope workstreams/<ws> --kind dump
+   lipika inbox <ws>        # 0 nothing pending · 1 PENDING messages, listed. Not under `set -e`
    ```
+
+   A PENDING message is inherited work from another thread or the owner. Read each; answer it in the
+   dump where you can; name any you did not read.
 
 2. **Write the dump** — `workstreams/<ws>/dumps/<stamp>-<topic>.md`. Several a day is normal, so the
    time is in the name, and **the name comes from the tool, never from `date`**:
@@ -199,6 +206,22 @@ project does **not** load automatically — read it if you have not.
    environment traps, external references nothing names, and concrete current state. Route anything new into `## Live items` in the typed
    shape rather than into loose prose.
 
+3a. **Anything for another thread?** One message each. The body opens with a `# title`; items the
+   receiver should carry are in the typed shape.
+
+   - An item in another thread's problem space, too small to spin out.
+   - A report to a parent — `lipika lineage <ws>` names it — when this session finished or changed
+     what the parent split off, or needs the owner through it. When the parent is archived, `send`
+     refuses; the report goes to the vault inbox, which curate routes.
+   - Friction with the machinery: the Lipika thread, or the vault inbox when none is live.
+
+   ```bash
+   lipika inbox send <thread> --from <ws> --slug <slug> < message.md   # no <thread>: the vault inbox
+   ```
+
+   It prints the path; add it to step 5's pathspecs. A reply links the original and never quotes its
+   items. Receivers absorb a message at their next handoff, so what you send is what they read.
+
 4. **If this is a handoff, write the next orientation** — `lipika stamp --for
    workstreams/<ws>/orientation`. This is the name `pickup` reads, so sorting last is the whole document.
 
@@ -209,8 +232,14 @@ project does **not** load automatically — read it if you have not.
    **Do not retype the previous live set. Carry it.**
 
    ```bash
-   lipika orientation-carry <ws>   # `## Needs the owner` + `## Live items`, verbatim
+   lipika orientation-carry <ws>   # `## Needs the owner` + `## Live items`, verbatim, plus the inbox
    ```
+
+   It also brings in every message no orientation of this thread links, as `### From [[<message>]]`
+   at the end of `## Live items`. The link is what absorbs the message; carry its items or settle
+   them with basis. A block deleted without either is a dropped item: once an orientation has linked
+   the message the carry does not bring it back, and `orientation-audit` names the loss at the next
+   pickup.
 
    Paste that in, then do the judgement it cannot: **delete the items that are finished**, writing
    each into `## Settled since the last orientation` with the evidence, and author the rest —
@@ -294,8 +323,8 @@ project does **not** load automatically — read it if you have not.
    **The subject must be 72 characters or fewer** — `vault-commit` refuses a longer one, and it
    refuses after you have written the whole message. Count it before you write the body.
 
-   **Commit once, after every `tracer` has returned**, with their paths in the pathspec. A commit
-   that races a child leaves that file untracked with nothing to say so.
+   **Commit once, after every `tracer` has returned**, with their paths and every message you sent in
+   the pathspec. A commit that races a child leaves that file untracked with nothing to say so.
 
    **Never change HEAD.** No `git checkout -b` — the checkout is shared, so a branch moves HEAD for every
    session in it. Don't push unless asked.

@@ -76,6 +76,12 @@ CONTRACT
           with nothing live look identical on stdout.
   exit 5  bad invocation
 
+THE INBOX
+  Every message in <ws>/inbox/ that no orientation of the thread links is carried too, at the end
+  of `## Live items`, as `### From [[<message>]] (<from>, <date>)` holding the message's bullets
+  verbatim, or its first paragraph as one bullet. The link is what absorbs the message; the author
+  carries or settles its items. A thread with messages and no orientation gets the blocks alone.
+
 USAGE
   lipika orientation-carry <ws>                  # paste stdout into the new orientation
   lipika orientation-carry <ws> --all            # do not separate the immortals; emit everything
@@ -87,8 +93,10 @@ import argparse
 import os
 import re
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import inbox            # noqa: E402
 import markers          # noqa: E402
 import vault_config     # noqa: E402
 
@@ -244,6 +252,71 @@ def render(text, keep_immortals):
     return out, immortal
 
 
+LIVE_HEADING = re.compile(r"^##\s+.*live items", re.I)
+SECTION = re.compile(r"^#{1,2}\s")
+
+
+def message_body(path):
+    """A message's lines after its frontmatter and title."""
+    lines = Path(path).read_text(errors="replace").splitlines()
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                lines = lines[i + 1:]
+                break
+    while lines and (not lines[0].strip() or lines[0].startswith("# ")):
+        lines.pop(0)
+    return lines
+
+
+def message_blocks(msgs, keep_immortals):
+    """(lines, immortal): one `### From [[…]]` block per message, bullets verbatim. `immortal` is
+    [(raw, "[[<message>]]")], so a warning keeps the message it came from. A message whose every
+    item is a standing warning keeps its block, so the handoff still links and absorbs it."""
+    out, immortal = [], []
+    for m in msgs:
+        frm, _, date = inbox.meta(m)
+        body = message_body(m)
+        items = [raw for is_item, raw in split_items(body) if is_item]
+        if not items:
+            para = []
+            for line in body:
+                if not line.strip():
+                    if para:
+                        break
+                    continue
+                para.append(line.strip())
+            items = [[f"- {' '.join(para)} · as-of {date}"]] if para else []
+        kept, moved = [], 0
+        for raw in items:
+            if not keep_immortals and is_immortal(raw):
+                immortal.append((raw, f"[[{m.stem}]]"))
+                moved += 1
+                continue
+            kept.append(raw)
+        if not kept and not moved:
+            continue
+        out += ["", f"### From [[{m.stem}]] ({frm}, {date})", ""]
+        for raw in kept:
+            out.extend(raw)
+        if not kept:
+            out.append(f"- {moved} standing warning(s), closing `dies never`, belong in gotchas.md · as-of {date}")
+    return out, immortal
+
+
+def with_messages(lines, blocks):
+    """`blocks` at the end of `## Live items`; the section is created at the end if absent."""
+    if not blocks:
+        return lines
+    start = next((i for i, l in enumerate(lines) if LIVE_HEADING.match(l)), None)
+    if start is None:
+        return lines + ["", "## Live items"] + blocks
+    end = next((j for j in range(start + 1, len(lines)) if SECTION.match(lines[j])), len(lines))
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1
+    return lines[:end] + blocks + [""] + lines[end:]
+
+
 GOTCHAS_HEAD = """---
 type: gotchas
 status: record
@@ -256,38 +329,50 @@ later line saying so, and the bytes above it stay as they were.
 """
 
 
-def append_gotchas(ws_dir, immortal, source):
-    """Append each item not already present, verbatim, to the thread's `gotchas.md`.
+def append_gotchas(ws_dir, immortal):
+    """Append each (raw, source) not already present, verbatim, to the thread's `gotchas.md`, one
+    `## From <source>` heading per source.
 
     Never regenerated: an item that cannot die has nothing to drop, so a rewrite could only lose one.
     Returns (appended, already present).
     """
     path = os.path.join(ws_dir, "gotchas.md")
     existing = open(path, errors="replace").read() if os.path.exists(path) else ""
-    new = [raw for raw in immortal if "\n".join(raw) not in existing]
+    new = [(raw, src) for raw, src in immortal if "\n".join(raw) not in existing]
     if new:
         head = GOTCHAS_HEAD if not existing else ("" if existing.endswith("\n") else "\n")
-        body = "\n".join("\n".join(r) for r in new)
+        chunks = []
+        for src in dict.fromkeys(s for _, s in new):
+            body = "\n".join("\n".join(r) for r, s in new if s == src)
+            chunks.append(f"\n## From {src}\n\n{body}\n")
         with open(path, "a") as fh:
-            fh.write(f"{head}\n## From orientation/{source}\n\n{body}\n")
+            fh.write(head + "".join(chunks))
     return len(new), len(immortal) - len(new)
 
 
 def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas=False):
     docs = orientations(ws_dir)
-    if not docs:
+    msgs = [m for m, by in inbox.pending(os.path.join(ws_dir, "inbox"), docs) if by is None]
+    if not docs and not msgs:
         print(f"NOTHING TO CARRY: {os.path.basename(ws_dir)} has no orientation/ yet.", file=err)
         print("  A thread's first handoff writes one from scratch -- and if this thread was split\n"
               "  from another, that first orientation COPIES what still bears on it from the\n"
               "  parent and names the parent in `from:`. See context-dump step 4a.", file=err)
         return 3
 
-    current = docs[-1]
-    text = open(current, errors="replace").read()
-    lines, immortal = render(text, keep_immortals)
+    current = docs[-1] if docs else None
+    text = open(current, errors="replace").read() if current else ""
+    lines, own = render(text, keep_immortals)
+    blocks, more = message_blocks(msgs, keep_immortals)
+    lines = with_messages(lines, blocks)
+    immortal = [(raw, f"orientation/{os.path.basename(current)}") for raw in own] + more
 
-    print(f"# carried verbatim from {os.path.basename(current)} "
-          f"-- every `as-of` below is the date that item was last CONFIRMED", file=err)
+    if current:
+        print(f"# carried verbatim from {os.path.basename(current)} "
+              f"-- every `as-of` below is the date that item was last CONFIRMED", file=err)
+    if msgs:
+        print(f"# {len(msgs)} message(s) from inbox/ carried under `## Live items`; "
+              "the link absorbs each, you carry or settle its items", file=err)
     print("\n".join(lines), file=out)
 
     if not immortal:
@@ -295,14 +380,14 @@ def run(ws_dir, out=sys.stdout, err=sys.stderr, keep_immortals=False, to_gotchas
         return 0
 
     if to_gotchas:
-        added, had = append_gotchas(ws_dir, immortal, os.path.basename(current))
+        added, had = append_gotchas(ws_dir, immortal)
         print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`: "
               f"{added} appended to gotchas.md, {had} already there.", file=err)
         return 0
 
     print(f"\nNOT CARRIED -- {len(immortal)} standing warning(s), closing `dies never`:",
           file=err)
-    for raw in immortal:
+    for raw, _ in immortal:
         one = " ".join(l.strip() for l in raw)
         print("  · " + markers.one_line(ITEM.sub("", one, count=1)), file=err)
     print("\n  These can never leave a live set, so carrying them is the one thing that only ever\n"
@@ -415,10 +500,44 @@ type: orientation
         if run(bare, out=io.StringIO(), err=io.StringIO()) != 3:
             failures.append("a thread with no orientation/ must be exit 3, not an empty carry")
 
+        # Mail: a typed message and an untyped one, carried under `## Live items`.
+        ws = os.path.join(tmp, "mail")
+        os.makedirs(os.path.join(ws, "orientation"))
+        os.makedirs(os.path.join(ws, "inbox"))
+        with open(os.path.join(ws, "orientation", "2026-09-21-140000.md"), "w") as fh:
+            fh.write(green)
+        with open(os.path.join(ws, "inbox", "2026-09-22-090000-typed.md"), "w") as fh:
+            fh.write("---\ntype: message\nfrom: \"[[2026-09-01-sender]]\"\n---\n# Typed\n\n"
+                     "- **[OPEN Q] The window is 61s.** → accepted when measured · as-of 2026-09-22\n")
+        with open(os.path.join(ws, "inbox", "2026-09-22-090100-plain.md"), "w") as fh:
+            fh.write("---\ntype: message\nfrom: \"a conductor\"\n---\n# Plain\n\nFirst paragraph here.\nStill it.\n\nSecond.\n")
+        so, se = io.StringIO(), io.StringIO()
+        if run(ws, out=so, err=se) != 0:
+            failures.append("mail: exit 0 expected\n" + se.getvalue())
+        got = so.getvalue()
+        li, pa = got.find("## Live items"), got.find("## Prior art")
+        for head in ("### From [[2026-09-22-090000-typed]] ([[2026-09-01-sender]], 2026-09-22)",
+                     "### From [[2026-09-22-090100-plain]] (a conductor, 2026-09-22)"):
+            if not (li < got.find(head) < pa):
+                failures.append(f"mail: {head!r} is not inside `## Live items`")
+        if "- **[OPEN Q] The window is 61s.** → accepted when measured · as-of 2026-09-22" not in got:
+            failures.append("mail: the typed item was not carried verbatim")
+        if "- First paragraph here. Still it. · as-of 2026-09-22" not in got or "Second." in got:
+            failures.append("mail: the untyped message is not its first paragraph as one bullet")
+
+        # Mail and no orientation: the blocks are the carry.
+        ws = os.path.join(tmp, "mail-only")
+        os.makedirs(os.path.join(ws, "inbox"))
+        with open(os.path.join(ws, "inbox", "2026-09-22-090000-only.md"), "w") as fh:
+            fh.write("---\nfrom: x\n---\n# Only\n\n- **[OPEN Q] One.** · as-of 2026-09-22\n")
+        so = io.StringIO()
+        if run(ws, out=so, err=io.StringIO()) != 0 or "## Live items" not in so.getvalue():
+            failures.append("mail-only: a thread with mail and no orientation must emit the blocks, exit 0")
+
     for f in failures:
         print("FAIL", f, file=sys.stderr)
     print("self-test: " + ("FAILED" if failures
-                           else "green, red, escalated, --all and no-orientation all as specified"))
+                           else "green, red, escalated, --all, no-orientation and mail all as specified"))
     return 1 if failures else 0
 
 
