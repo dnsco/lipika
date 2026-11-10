@@ -110,6 +110,14 @@ def main():
     check("the curator still moves nothing", "Move, write and commit nothing" in curator or
           "moves nothing" in curator)
 
+    # The inbox: a dated record one thread leaves for another, absorbed by the receiver's next handoff.
+    for rel, t in (("pickup", pickup), ("context-dump", dump), ("curate", curate), ("curator", curator)):
+        check(f"{rel} reads the inbox with `lipika inbox`", "lipika inbox" in t)
+    check("context-dump sends with `lipika inbox send`", "lipika inbox send" in dump)
+    check("curate hands items on through the inbox, not 'by name'",
+          "lipika inbox send" in curate and "by name" not in curate)
+    check("the vault template lists inbox/", "inbox/" in body("templates/vault-CLAUDE.md.template"))
+
     print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
 
