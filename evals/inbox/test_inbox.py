@@ -385,6 +385,28 @@ def main():
     check("the grader regex rejects a plain mention", re.search(pattern, trace(f"Mentioned: {msg}")) is None)
     check("the grader regex rejects a code span", re.search(pattern, trace(f"`[[{msg}]]`")) is None)
 
+    carried = next(l for l in (REPO / "evals/inbox-absorb/graders/the-message-item-is-carried-or-settled.md")
+                   .read_text().splitlines() if l.startswith("pattern:"))[len("pattern:"):].strip().strip("'")
+    item = "- **[OPEN Q] Under load the stale window is 61–64s, not 60s.** The sweep slips\n  by up to 4s → accepted when measured at 100 clients · as-of 2026-09-23\n"
+    for label, body, want in [
+        ("accepts the item under a From heading in Live items",
+         f"## Live items\n\n- other · as-of 2026-11-10\n\n### From [[{msg}]]\n\n{item}\n## Settled since the last orientation\n", True),
+        ("accepts the item under Needs the owner", f"## Needs the owner\n\n{item}", True),
+        ("accepts the item settled with the message as basis",
+         f"## Settled since the last orientation\n\n- **61–64s under load** → settled by [[{msg}]]\n", True),
+        ("rejects the item mentioned only in narrative",
+         f"## Live items\n\n- other · as-of 2026-11-10\n\n## Recent narrative\n\n{item}", False),
+        ("rejects the item in Live items without its own as-of",
+         "## Live items\n\n- **Under load the stale window is 61–64s.** · as-of 2026-11-10\n- other · as-of 2026-09-23\n", False),
+        ("rejects a settled mention with no basis",
+         "## Settled since the last orientation\n\n- the window is 61–64s\n", False),
+    ]:
+        body = "---\ntype: orientation\n---\n\n" + body
+        utf8 = json.dumps({"file_path": "/w/workstreams/t/orientation/2026-11-10-010000.md", "content": body},
+                          separators=(",", ":"), ensure_ascii=False)
+        for name, enc in (("utf-8", utf8), ("ascii", trace(body))):
+            check(f"the carried-item grader {label} ({name})", (re.search(carried, enc) is not None) == want)
+
     # ---- vault-commit takes a sent message by the printed path ----------------------------------
     with tempfile.TemporaryDirectory() as d:
         vault = fixture(d)
