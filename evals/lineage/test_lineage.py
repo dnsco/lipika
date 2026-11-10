@@ -3,9 +3,9 @@
 
 Run `python3 evals/lineage/test_lineage.py`. Exit 0 all pass, 1 any fail.
 
-A project is the chain of threads its splits produced. Each child's orientation names its parent
-in `from:`. The epic tier used to tie a project's threads together, and it was dropped
-2026-09-25, so this chain is now the only link.
+A split lineage is the graph of threads that splits and re-partitions produced. Each thread's first
+orientation names its parents in `from:` -- one after a split, several after curate re-partitions
+threads along new lines. It is the only link between threads.
 
 These tests drive `bin/lipika` in this tree against a fixture vault. They import nothing from
 tools/, so they test the CLI a definition calls.
@@ -26,6 +26,10 @@ CHILD = "2026-02-01-child"          # live, split from ROOT
 GRAND = "2026-03-01-grand"          # live, split from CHILD
 PARKED = "2026-03-05-parked-kid"    # parked, split from CHILD
 ALONE = "2026-03-02-alone"          # live, no parent, no children
+MERGED = "2026-04-01-merged"        # re-partitioned from GRAND and OTHER, block-list `from:`
+OTHER = "2026-03-10-other"          # live, no parent; one of MERGED's two parents
+INLINE = "2026-04-02-inline"        # re-partitioned from OTHER and ALONE2, inline-list `from:`
+ALONE2 = "2026-03-11-alone2"
 
 failures = []
 
@@ -42,9 +46,14 @@ def lipika(vault, *args, env=None):
                           env=dict(os.environ, LIPIKA_TELEMETRY="0", **(env or {})))
 
 
-def orientation(frm=None, body="## Live items\n- [OPEN Q] **a thing** → dies when done · as-of 2026-03-01\n"):
+def orientation(frm=None, body="## Live items\n- [OPEN Q] **a thing** → dies when done · as-of 2026-03-01\n",
+                inline=False):
     fm = "---\ntype: orientation\nstatus: current\ndate: 2026-03-01\n"
-    if frm:
+    if isinstance(frm, list) and inline:
+        fm += "from: [" + ", ".join(f'"[[{f}]]"' for f in frm) + "]\n"
+    elif isinstance(frm, list):
+        fm += "from:\n" + "".join(f'  - "[[{f}]]"\n' for f in frm)
+    elif frm:
         fm += f'from: "[[{frm}]]"\n'
     return fm + "---\n\n## Where this is\nx\n\n" + body
 
@@ -88,21 +97,23 @@ def main():
         except json.JSONDecodeError:
             data = {}
         parents = data.get("parents", {})
-        check("an archived parent resolves", parents.get(CHILD) == f"archive/{ROOT}", parents)
-        check("a live thread's parent resolves", parents.get(GRAND) == CHILD, parents)
-        check("a parked thread's parent resolves", parents.get(f"parked/{PARKED}") == CHILD, parents)
-        check("the OLDEST orientation's `from:` wins over a later one", parents.get(CHILD) != ALONE,
+        check("an archived parent resolves", parents.get(CHILD) == [f"archive/{ROOT}"], parents)
+        check("a live thread's parent resolves", parents.get(GRAND) == [CHILD], parents)
+        check("a parked thread's parent resolves", parents.get(f"parked/{PARKED}") == [CHILD], parents)
+        check("the OLDEST orientation's `from:` wins over a later one", ALONE not in parents.get(CHILD, []),
               parents)
         check("a thread with no `from:` has no parent", ALONE not in parents and
               f"archive/{ROOT}" not in parents, parents)
-        projects = data.get("projects", [])
-        roots = [p.get("root") for p in projects]
-        check("the chain is one project rooted at the archived thread", roots.count(f"archive/{ROOT}") == 1,
-              projects)
-        proj = next((p for p in projects if p.get("root") == f"archive/{ROOT}"), {})
-        check("the project holds every descendant, parked included",
-              set(proj.get("threads", [])) == {f"archive/{ROOT}", CHILD, GRAND, f"parked/{PARKED}"}, proj)
-        check("a thread with no parent and no children is not a project", ALONE not in roots, roots)
+        check("the JSON says lineages, not projects", "projects" not in data and "lineages" in data,
+              sorted(data))
+        lineages = data.get("lineages", [])
+        check("the chain is one lineage rooted at the archived thread",
+              [l.get("roots") for l in lineages].count([f"archive/{ROOT}"]) == 1, lineages)
+        lin = next((l for l in lineages if f"archive/{ROOT}" in l.get("roots", [])), {})
+        check("the lineage holds every descendant, parked included",
+              set(lin.get("threads", [])) == {f"archive/{ROOT}", CHILD, GRAND, f"parked/{PARKED}"}, lin)
+        check("a thread with no parent and no children is in no lineage",
+              not any(ALONE in l.get("threads", []) for l in lineages), lineages)
 
         # One thread: the chain up to its root, and its descendants.
         r = lipika(vault, "lineage", GRAND)
@@ -117,7 +128,7 @@ def main():
 
         # The tree view, human-readable.
         r = lipika(vault, "lineage")
-        check("`lineage` with no thread prints the project tree",
+        check("`lineage` with no thread prints the lineage tree",
               r.returncode == 0 and ROOT in r.stdout and GRAND in r.stdout and ALONE not in r.stdout,
               r.stdout)
 
@@ -125,6 +136,58 @@ def main():
         r = lipika(vault, "orientation-audit", f"workstreams/{GRAND}")
         check("orientation-audit compares a first orientation against its parent",
               r.returncode in (0, 1) and "NOT CHECKED" not in r.stdout, f"exit {r.returncode}\n{r.stdout}")
+
+    # A re-partition: one new thread from several parents, in both YAML list spellings.
+    with tempfile.TemporaryDirectory() as d:
+        vault = fixture(d)
+        thread(vault, OTHER, "What did the other thread do?",
+               [("2026-03-10-100000", orientation(body="## Live items\n"
+                 "- [OPEN Q] **the other thread's item** · as-of 2026-03-10\n"))])
+        thread(vault, ALONE2, "What else stood alone?", [("2026-03-11-100000", orientation())])
+        # GRAND carries `a thing`; OTHER carries its own item. MERGED carries both.
+        thread(vault, MERGED, "What body of work do both become?",
+               [("2026-04-01-100000", orientation([GRAND, OTHER], body="## Live items\n"
+                 "- [OPEN Q] **a thing** → dies when done · as-of 2026-03-01\n"
+                 "- [OPEN Q] **the other thread's item** · as-of 2026-03-10\n"))])
+        # INLINE carries nothing of OTHER's, so the audit must name what it left behind.
+        thread(vault, INLINE, "What does the inline one become?",
+               [("2026-04-02-100000", orientation([OTHER, ALONE2], inline=True))])
+
+        r = lipika(vault, "lineage", "--json")
+        try:
+            data = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            data = {}
+        parents = data.get("parents", {})
+        check("a block-list `from:` names every parent", sorted(parents.get(MERGED, [])) == sorted([GRAND, OTHER]),
+              parents)
+        check("an inline-list `from:` names every parent", sorted(parents.get(INLINE, [])) == sorted([OTHER, ALONE2]),
+              parents)
+        lin = next((l for l in data.get("lineages", []) if MERGED in l.get("threads", [])), {})
+        check("a merge joins both parents' lineages into one",
+              {f"archive/{ROOT}", CHILD, GRAND, OTHER, MERGED, INLINE, ALONE2} <= set(lin.get("threads", [])), lin)
+        check("a joined lineage lists every root", {f"archive/{ROOT}", OTHER, ALONE2} <= set(lin.get("roots", [])),
+              lin)
+        check("a joined lineage lists each thread once", len(lin.get("threads", [])) == len(set(lin.get("threads", []))),
+              lin)
+
+        r = lipika(vault, "lineage", MERGED)
+        out = r.stdout
+        check("`lineage <merged>` exits 0", r.returncode == 0, f"exit {r.returncode}\n{r.stderr}")
+        check("`lineage <merged>` names both parents and the root above them",
+              all(n in out for n in (ROOT, CHILD, GRAND, OTHER, MERGED)), out)
+
+        r = lipika(vault, "orientation-audit", f"workstreams/{MERGED}")
+        out = r.stdout
+        check("orientation-audit compares a re-partitioned thread against every parent",
+              "NOT CHECKED" not in out and GRAND in out and OTHER in out, f"exit {r.returncode}\n{out}")
+        check("an item carried from either parent is accounted for", "NOT CARRIED" not in out, out)
+
+        r = lipika(vault, "orientation-audit", f"workstreams/{INLINE}")
+        out = r.stdout
+        check("an item no parent's successor carries is named, with the parent it came from",
+              "the other thread's item" in out and OTHER in out.split("NOT CARRIED", 1)[-1],
+              f"exit {r.returncode}\n{out}")
 
     # A split from an ARCHIVED parent is still checked.
     with tempfile.TemporaryDirectory() as d:

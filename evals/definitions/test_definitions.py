@@ -70,6 +70,46 @@ def main():
     check("spin-out names no other /lipika: skill -- a nested Skill call ends its perf span",
           not nested, ", ".join(nested))
 
+    # The ontology of 2026-09-30: a workstream is a body of work described by its problem space;
+    # "project" is gone; a death condition is now an optional acceptance clause; curate re-partitions.
+    ruled = [*DEFS, REPO / "CLAUDE.md", REPO / "design" / "vault-and-agent-ontology.md",
+             REPO / "tools" / "lineage.py", REPO / "tools" / "init.py"]
+    one_q = re.compile(r"workstream is one question|one question being answered|"
+                       r"(?:because|when|finds) the question (?:has )?changed", re.I)
+    project = re.compile(r"project is a split lineage|\bone project\b|a project's threads|"
+                         r"\bis a project\b|chain is (?:one|a) project|cuts (?:one|a) project|"
+                         r"one project's|\bprojects\b", re.I)
+    for p in ruled:
+        t = p.read_text()
+        rel = p.relative_to(REPO)
+        hit = one_q.search(t)
+        check(f"{rel} does not define a workstream as one question", not hit, hit and hit.group(0))
+        hit = project.search(t)
+        check(f"{rel} does not call a lineage a project", not hit, hit and hit.group(0))
+
+    def body(rel):
+        p = REPO / rel
+        return p.read_text() if p.exists() else ""
+
+    pickup, dump, spin = body("skills/pickup/SKILL.md"), body("skills/context-dump/SKILL.md"), body(
+        "skills/spin-out/SKILL.md")
+    curate, curator = body("skills/curate/SKILL.md"), body("agents/curator.md")
+    for rel, t in (("pickup", pickup), ("context-dump", dump), ("spin-out", spin)):
+        check(f"{rel} splits on a different problem space", "problem space" in t)
+        check(f"{rel} names the thread's `## What this is`", "## What this is" in t)
+    check("context-dump teaches `→ accepted when`", "accepted when" in dump)
+    check("context-dump no longer requires a death condition on every item",
+          "Every item carries a death condition" not in dump)
+    check("pickup checks acceptance, not death conditions", "accepted when" in pickup and
+          "death condition" not in pickup)
+    check("curate offers a re-partition ruling", "re-partition" in curate.lower() and "Re-partition" in curate)
+    check("curate reads `lineages` from `lineage --json`", "`lineages`" in curate)
+    check("curate writes `from:` with every parent", re.search(r"from:.*\n?\s*-\s*\"\[\[", curate) is not None
+          or "every parent" in curate)
+    check("the curator returns a REPARTITION block", "REPARTITION" in curator)
+    check("the curator still moves nothing", "Move, write and commit nothing" in curator or
+          "moves nothing" in curator)
+
     print(f"\n{len(failures)} failed" if failures else "\nall passed")
     return 1 if failures else 0
 

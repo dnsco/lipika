@@ -14,11 +14,12 @@ orientation already written — or a **view**, regenerated wholesale and never p
 orientation and the index. `architecture/` is a long-lived edited view and the owner's alone.
 
 **And two tiers, neither with a status field.** A **grand plan** (`grand-plans/`) is a standing want with
-no liveness — not started is not dead. A **workstream** (`workstreams/`) is one question being answered:
-the date it last accrued is the whole answer, so a thread that stopped is simply not listed as live. One
-the owner rules finished moves to `workstreams/archive/`, hidden like `parked/`. **A project is a split
-lineage** — each split names its parent in `from:`, and `lipika lineage <ws>` prints the chain, archived
-threads included. Grand plans are the owner's; agents write workstreams.
+no liveness — not started is not dead. A **workstream** (`workstreams/`) is one body of work — a question is one
+kind — and each orientation opens with `## What this is`, a sentence or two describing its problem space.
+The date it last accrued is the whole answer to liveness, so a thread that stopped is simply not listed as
+live. One the owner rules finished moves to `workstreams/archive/`, hidden like `parked/`. A thread names
+the threads it came from in `from:` — one after a split, several after a re-partition — and
+`lipika lineage <ws>` prints them, archived threads included. Grand plans are the owner's; agents write workstreams.
 
 ## Do
 
@@ -45,7 +46,9 @@ threads included. Grand plans are the owner's; agents write workstreams.
    If the task you were given matches no live thread, say so — that is usually a new thread rather than
    a wrong guess.
 
-2. **Read the newest orientation, and only that one** — plus the thread's `gotchas.md`, if any.
+2. **Read the newest orientation, and only that one** — plus the thread's `gotchas.md`, if any. Its
+   `## What this is` is the scope everything below is judged against; if it has none, the routing note
+   says what the thread is for.
    `workstreams/<ws>/orientation/` sorts by name; the last is current. `gotchas.md` holds warnings that
    stay true: they left the orientation because they cannot die, not because they stopped mattering.
 
@@ -58,7 +61,7 @@ threads included. Grand plans are the owner's; agents write workstreams.
 
    **This is a recall aid, not a gate, and there is no failure exit.** It hands you the items the last
    orientation carried that this one does not. Every live item should have been carried, so anything
-   listed here either had its death condition fire — check `## Settled since the last orientation` — or
+   listed here either was finished — check `## Settled since the last orientation` — or
    the last handoff lost it. Report which.
 
    **Exit 3 is not a pass.** A thread's first orientation has no predecessor, so nothing was verified —
@@ -70,19 +73,23 @@ threads included. Grand plans are the owner's; agents write workstreams.
    that moved today every item is stamped today, and scanning forty dates returns nothing. Two cold runs
    both skipped the scan and did this instead.
 
-   Ask of each item: **is its death condition checkable right now, in one call?** `is PR #N merged`,
-   `does that file still exist`, `is the branch gone`. Run those; a confirmed item is worth more than a
-   fresh-looking date, and a fired one you catch here is a drop the next handoff will not have to make.
+   Ask of each item: **is what finishes it checkable right now, in one call?** Its `→ accepted when …`
+   clause says, where it has one — older records say `→ dies when …`, which means the same.
+   `is PR #N merged`, `does that file still exist`, `is the branch gone`. Run those; a confirmed item is
+   worth more than a fresh-looking date, and a finished one you catch here is a drop the next handoff will
+   not have to make. An item with no clause is judged on its content.
 
    Then weigh `as-of` for the rest — **each item's own, not the document's date**. An item carried
    unchanged through six handoffs inherits today's filename and reads as fresh. More recent supersedes
    older, as **a prior, not a rule**: reach back into dumps when the newest document is thin or wrong.
 
-5. **Ask whether the question has changed.** You have just read the whole live set, which no other agent
-   does — a handoff is nearly out of budget. A workstream is one question being answered; if the items
-   are now answering a different one, say so. That is a new dated workstream, opened with
-   `/lipika:spin-out`, and a split is where items stop being carried. Threads are meant to be short, so expect
-   this to be yes more often than it feels like it should be.
+5. **Ask whether any of the work is in a different problem space.** You have just read the whole live
+   set, which no other agent does — a handoff is nearly out of budget. Hold each item against
+   `## What this is`: work outside that description is a different body of work, and belongs in its own
+   dated thread, opened with `/lipika:spin-out`. Say which items, and what their problem space is.
+   A question reworded inside the description is **not** a split — the same work, asked better. Short
+   threads keep context small, so a split is cheap; duplicating items across threads that are one body of
+   work is the cost, and `/lipika:curate` re-partitions them.
 
 6. **Ask whether an architecture document is missing.** You read cold, so you are the one who feels it: is there a
    system here you must work on that nothing describes?
@@ -107,7 +114,7 @@ threads included. Grand plans are the owner's; agents write workstreams.
      what it is claimed to settle. A count is not a report. Say it too when the newest document in
      `reference/` long predates the newest dump: the thread has moved past what it can still re-check.
    - **A missing architecture document**, if you found one.
-   - **That this has become two threads**, if it has, and that `/lipika:spin-out` opens the second.
+   - **Work outside this thread's problem space**, if any, and that `/lipika:spin-out` opens a thread for it.
 
 8. **Summarise in plain language before you ask anything.** Laconic, terse, salient: what you now
    know, in the words you would use to someone who has not read the thread. This is not the step-7

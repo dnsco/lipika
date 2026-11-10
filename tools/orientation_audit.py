@@ -7,9 +7,9 @@ WHY THIS EXISTS
   again, and nothing in the document says so. A register that is edited leaves a diff; a document
   that is regenerated leaves nothing.
 
-  Carried is the default: an item leaves the live set only when its death condition has fired. So an
-  item listed here either had that happen -- recorded in `## Settled since the last orientation` -- or the
-  handoff lost it.
+  Carried is the default: an item leaves the live set only when it is finished -- its acceptance met,
+  or judged no longer live by the agent carrying it. So an item listed here either had that happen --
+  recorded in `## Settled since the last orientation` -- or the handoff lost it.
 
   It still does not fail a handoff, because only a reader can tell those two apart, and the dumps behind
   an orientation are immutable, so a lost item is still there to be found. What this tool does is hand the
@@ -49,7 +49,6 @@ import markers                                    # noqa: E402
 import vault_config                               # noqa: E402
 
 ORIENT_DOC = re.compile(r"^\d{4}-\d{2}-\d{2}(-\d{4})?.*\.md$")
-FROM = re.compile(r"^from:\s*\"?\[\[([^\]\n|#]+)", re.M)
 
 LIVE_SECTIONS = ("live items", "needs the owner")
 # "- none" under a heading is an author saying the section is empty, not an item.
@@ -59,15 +58,12 @@ DISPOSITION_SECTIONS = ("settled since", "settled", "resolved", "dropped")
 ACCOUNTED_SECTIONS = LIVE_SECTIONS + DISPOSITION_SECTIONS
 
 AS_OF = re.compile(r"as[- ]of\s+(\d{4}-\d{2}-\d{2})", re.I)
-# "dies when X", but also "dies never" and "dies with the landmine above" -- the clause is
-# the point, not one phrasing of it.
-DIES_WHEN = re.compile(r"\bdies\s+\w", re.I)
 # Scaffolding every item carries. Left in, it is shared vocabulary that inflates the overlap
 # between two items that have nothing to do with each other -- measured on the first fixture, a
 # deleted LANDMINE scored 43% against a successor that did not mention it.
 SCAFFOLD = re.compile(r"\*\*\[?(?:LANDMINE|GATE|DEAD END|OPEN Q|ESCALATED)\]?\*\*|"
                       r"\[(?:LANDMINE|GATE|DEAD END|OPEN Q|ESCALATED)\]|"
-                      r"as[- ]of\s+\d{4}-\d{2}-\d{2}|\bdies when\b|[·—]", re.I)
+                      r"as[- ]of\s+\d{4}-\d{2}-\d{2}|\bdies when\b|\baccepted when\b|[·—]", re.I)
 
 
 def substance(item):
@@ -75,19 +71,21 @@ def substance(item):
     return SCAFFOLD.sub(" ", item)
 
 
-def parent_of(text, vault):
-    """The thread this one split from, as a workstream directory, or None.
+def parents_of(text, vault):
+    """The threads this one came from, as workstream directories, in `from:` order.
 
-    A split is where the push guarantee is won or lost: a new thread's first orientation must COPY
+    One after a split, several after a re-partition. A new thread's first orientation must COPY
     what still bears on it, because an agent reading one document does not follow a pointer it was
     not told it needed.
     """
-    m = FROM.search(text)
-    if not m:
-        return None
-    # One resolver for every reader of `from:`, so a parent in archive/ or parked/ resolves.
-    d = lineage.resolve_thread(vault, m.group(1))
-    return str(d) if d else None
+    # One reader and one resolver for every reader of `from:`, so every spelling reads the same and
+    # a parent in archive/ or parked/ resolves.
+    out = []
+    for name in lineage.parents_in(text):
+        d = lineage.resolve_thread(vault, name)
+        if d and str(d) not in out:
+            out.append(str(d))
+    return out
 
 
 def orientations(ws_dir):
@@ -380,29 +378,37 @@ def main(argv):
         return 3
     malformed = report_shape(docs[-1], vault)
     split = False
+    parent_docs = []            # (parent dir, its newest orientation), one per parent that has one
     if len(docs) == 1:
         cur = open(docs[0], encoding="utf-8").read()
-        parent = parent_of(cur, vault)
-        pdocs = orientations(parent) if parent else []
-        if not pdocs:
+        parents = parents_of(cur, vault)
+        parent_docs = [(p, orientations(p)[-1]) for p in parents if orientations(p)]
+        if not parent_docs:
             print("NOT CHECKED: one orientation and no predecessor — "
                   f"{os.path.relpath(docs[0], vault)}")
-            if parent:
-                print(f"  it names a parent, {os.path.basename(parent)}, which has no orientation of "
+            for p in parents:
+                print(f"  it names a parent, {os.path.basename(p)}, which has no orientation of "
                       "its own, so what it carried across cannot be verified against anything.")
             report_freshness(live_items(cur), today, args.stale_days)
             return 3
-        prev_p, cur_p, split = pdocs[-1], docs[0], True
+        cur_p, split = docs[0], True
     else:
         prev_p, cur_p = docs[-2], docs[-1]
-    prev = open(prev_p, encoding="utf-8").read()
     cur = open(cur_p, encoding="utf-8").read()
 
     print(f"current   {os.path.relpath(cur_p, vault)}")
-    print(f"{'parent  ' if split else 'previous'}  {os.path.relpath(prev_p, vault)}")
     if split:
-        print("  a split: items that do not bear on this thread are meant to stay behind.")
+        for _, pd in parent_docs:
+            print(f"parent    {os.path.relpath(pd, vault)}")
+        if len(parent_docs) > 1:
+            print("  a re-partition: each parent's items that bear elsewhere are meant to go to a "
+                  "sibling thread.")
+        else:
+            print("  a split: items that do not bear on this thread are meant to stay behind.")
+        prior_src = [(it, os.path.basename(p)) for p, pd in parent_docs
+                     for it in live_items(open(pd, encoding="utf-8").read())]
     else:
+        print(f"previous  {os.path.relpath(prev_p, vault)}")
         # SAY WHICH COMPARISON THIS IS. Measured 2026-08-25: a thread had two orientations written
         # the same afternoon, both declaring the same parent and both opening "this thread's first
         # orientation". The parent branch above needs len(docs) == 1, so this ran instead and
@@ -416,11 +422,13 @@ def main(argv):
         # same defect as reading only the newest, one level up, and it is why the first version of
         # this check stayed silent on the very run that motivated it.
         declared = next(
-            (p for p in (parent_of(open(d, encoding="utf-8").read(), vault) for d in docs) if p),
-            None,
+            (ps for ps in (parents_of(open(d, encoding="utf-8").read(), vault) for d in docs) if ps),
+            [],
         )
-        if declared and orientations(declared):
-            print(f"  SCOPE: this thread was split from {os.path.basename(declared)}, and this run "
+        declared = [p for p in declared if orientations(p)]
+        if declared:
+            names = ", ".join(os.path.basename(p) for p in declared)
+            print(f"  SCOPE: this thread came from {names}, and this run "
                   f"does NOT check that split.")
             print("  It compares the two orientations named above. What the split left behind in "
                   "the parent is")
@@ -428,8 +436,9 @@ def main(argv):
                   "ever compares")
             print("  against the parent, and once a second orientation exists that comparison "
                   "cannot be redone here.")
+        prior_src = [(it, None) for it in live_items(open(prev_p, encoding="utf-8").read())]
 
-    prior = live_items(prev)
+    prior = [it for it, _ in prior_src]
     if not prior:
         print("\nNOT CHECKED: the previous orientation held no live items.")
         report_freshness(live_items(cur), today, args.stale_days)
@@ -438,10 +447,10 @@ def main(argv):
     cands = accounted_items(cur)
 
     missing, weak = [], []
-    for item in prior:
+    for item, src in prior_src:
         verdict, detail = best_match(item, cands)
         if verdict == "missing":
-            missing.append((item, detail))
+            missing.append((item, detail, src))
         elif verdict == "weak":
             weak.append((item, detail))
 
@@ -450,11 +459,13 @@ def main(argv):
 
     if missing and split:
         print("\nNOT CARRIED FROM THE PARENT — dig into its dumps if any of these bear on your work:")
-        for item, detail in missing:
+        for item, detail, src in missing:
             print(f"  · {markers.one_line(item)}")
+            if len(parent_docs) > 1:
+                print(f"      from {src}")
     elif missing:
         print("\nNOT CARRIED FORWARD — the dumps still hold these; dig if any bear on your work:")
-        for item, detail in missing:
+        for item, detail, _ in missing:
             print(f"  · {markers.one_line(item)}")
             print(f"      {detail}")
     if weak:
@@ -490,7 +501,7 @@ def report_freshness(items, today, stale_days):
     reads as fresh. Its own `as-of` is the only thing that says otherwise, which is why an item
     without one is reported rather than ignored.
     """
-    stale, undated, no_death = [], [], []
+    stale, undated = [], []
     for t in items:
         if markers.typed_kind(t) == "DEAD END":
             continue                      # permanently live; freshness does not apply
@@ -499,8 +510,6 @@ def report_freshness(items, today, stale_days):
             undated.append(t)
         elif age >= stale_days:
             stale.append((age, t))
-        if not DIES_WHEN.search(t) and markers.typed_kind(t) not in (None, "DEAD END"):
-            no_death.append(t)
     if stale:
         print(f"\nSTALE — as-of is {stale_days}+ days old; re-check before relying on these:")
         for age, t in sorted(stale, reverse=True):
@@ -508,10 +517,6 @@ def report_freshness(items, today, stale_days):
     if undated:
         print("\nNO as-of — cannot tell how fresh; treat as unconfirmed:")
         for t in undated:
-            print(f"  · {markers.one_line(t)}")
-    if no_death:
-        print("\nNO death condition — nothing says what would retire these:")
-        for t in no_death:
             print(f"  · {markers.one_line(t)}")
     return bool(undated)
 

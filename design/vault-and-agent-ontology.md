@@ -90,11 +90,17 @@ vault/
 
 - **A workstream is one discrete body of work** — sometimes a question, sometimes a task like
   "migrate this test suite". One path prefix, one agent at a time. That makes the pass log's prefix partition exact.
+- **A workstream says what it is.** Every orientation opens with `## What this is`: one or two sentences
+  describing the problem space, carried verbatim and redrawn only by curate. It is the scope a split is
+  judged against — the cue is work outside the description, not a reworded question. "The question
+  changed" was the earlier cue; it fired on rewording, and the resulting threads carried each other's
+  items.
 - **Keep threads small.** A thread that runs long gathers cruft, absorbs adjacent work until its
   orientation carries more than an agent can use, and takes longer to audit. Several concurrent efforts
   in one thread is worse: each is pushed the others' warnings. So a second concurrent effort is a new
   dated workstream, and a thread that has grown past its work splits.
-- **When the work changes, the thread splits** into a new dated workstream, opened by `spin-out`.
+- **When the work moves into a different problem space, the thread splits** into a new dated
+  workstream, opened by `spin-out`.
   Threads are short-lived, and the split is where selection happens: it is the moment with enough
   information to decide what still bears. Carrying every item at a handoff (§5) is safe only because
   of this.
@@ -106,8 +112,12 @@ vault/
 - **A new thread is pushed its prior art.** `spin-out` reads the other threads when it opens one,
   inline, because relatedness is judged against the parent's context. `## Prior art` names each related
   thread with what it found; bearing warnings are copied verbatim into the new `gotchas.md`.
-- **A project is a split lineage.** The chain of `from:` links is one project, and may span repos.
-  `lipika lineage` walks it, archived threads included.
+- **Lines get redrawn.** A split drawn wrong shows as duplicated items. `curate` can propose a
+  **re-partition** — N live threads become M new ones along different lines, each with its own
+  description, every live item assigned once, the old threads archived. The new threads name every
+  parent in `from:`.
+- **A lineage is the `from:` graph.** One parent after a split, several after a re-partition; it may
+  span repos. `lipika lineage` walks it, archived threads included. No tier or name groups threads.
 - **A thread ends by not being listed as live.** Liveness is "accrued a dated document recently", so
   most threads are dead most of the time and a tool that counts threads excludes the dead ones. When
   the owner rules a thread finished, `lipika archive-thread` moves it to `archive/` through
@@ -115,9 +125,9 @@ vault/
   goes stale and stays so.
 - **A finished thread's last orientation is its citable summary**, sound because nothing will
   supersede it. The index carries the navigation between threads.
-- **`gotchas.md` holds what cannot die.** A `dies never` item is a warning that stays true, not live
-  state; `orientation-carry --append-gotchas` appends it, and a later line retires one that stops being
-  true. It is per-thread because a shared surface collects every thread's warnings.
+- **`gotchas.md` holds warnings that stay true.** They are not live state; the writer puts one there
+  directly, `orientation-carry --append-gotchas` moves an older item closing `→ dies never`, and a later
+  line retires one that stops being true. It is per-thread because a shared surface collects every thread's warnings.
 - **Folders and notes carry the date they were opened; `architecture/` does not.** Last-touched is
   derivable from git and never written down. Wikilinks resolve by basename, so a dated note name keeps a
   link to the second effort on a subject from resolving to the first.
@@ -125,15 +135,18 @@ vault/
 Falsified by threads that keep needing to be merged back, or a corpus where finding the live thread
 costs more than reading a long orientation would.
 
-## 5. The live set, and how an item dies
+## 5. The live set, and how an item is finished
 
 An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN Q** and **ESCALATED**.
 
 - **ESCALATED is a distinct type.** "Agents can work on this" and "only the owner can decide this"
   route differently: escalations are what a fresh session opens with.
-- **Every item carries a death condition** — what would make it stop being true. The writer has the
-  context in hand; without it, a later agent cannot judge liveness without re-reading everything. A DEAD
-  END is exempt: it fires forever.
+- **An item may carry acceptance** — `→ accepted when <condition>`, what, checked, would finish it.
+  It is a goal, and a pickup checks it in one call; give one to work-shaped items and leave it off facts
+  and warnings. It is optional, and the agent carrying items judges liveness either way. Older records
+  write `→ dies when …`, which the tools read as the same. It replaced the required death condition
+  2026-09-30: a required clause got invented for items that had none, and `dies never` became a category
+  that only accumulated.
 - **Every item carries its own `as-of`** — when last *confirmed*, not last copied. An item carried
   unchanged through six handoffs inherits the newest document's name; its own `as-of` is the only thing
   that says otherwise.
@@ -142,7 +155,7 @@ An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN
   outdated, and possibly holding context the newest one dropped. The aim is the context the task needs,
   not a complete model of the world.
 - **Three dispositions at a handoff: carried, resolved with evidence, escalated.** **Carried is the
-  default**; an item leaves only when its death condition has fired. Selecting what to drop would ask the
+  default**; an item leaves only when it is finished — acceptance met, or judged no longer live. Selecting what to drop would ask the
   least-budgeted agent in the system to predict what the next one needs, and a regenerated view costs the
   same to write at forty items as at ten.
 - **Every disposition states its basis: evidence or judgement.** Silent inference is the failure;
@@ -153,7 +166,7 @@ An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN
   several times a day into documents that can disagree; a report alone would lose the reconciliation when
   a session ends without a handoff. Records are the store, and the orientation is the projection over them.
 - **The carry is a tool, and the tool bounds the document.** `orientation-carry` makes carrying cheap,
-  and exits non-zero naming the immortal fraction — the part that is actually unbounded. Hand-typing was
+  and exits non-zero naming the standing warnings — the part that is actually unbounded. Hand-typing was
   never the bound.
 
 ## 6. The skills
@@ -162,8 +175,8 @@ An orientation carries typed items: **GATE**, **LANDMINE**, **DEAD END**, **OPEN
 |---|---|---|
 | `pickup` | session start | reads the current orientation, audits it against its predecessor, opens with what needs the owner, ends in plan mode. Read-only |
 | `context-dump` | learned something; session end | one dated dump; at a handoff, also the next orientation and the handoff prompt |
-| `spin-out` | the question changed | the parent's handoff, the new thread's routing note and first orientation, its prior art |
-| `curate` | the owner asks what is finished | groups threads by lineage, one `curator` per group; one table of dispositions; archives what the owner rules finished |
+| `spin-out` | work outside the thread's problem space | the parent's handoff, the new thread's routing note and first orientation, its prior art |
+| `curate` | the owner asks what is finished, or whether the lines are right | groups threads by lineage, one `curator` per group; one table of dispositions and proposed re-partitions; archives and re-partitions what the owner rules |
 | `vault-normalize` | a vault is in an old shape | creates, moves and deletes files to the current shape; never edits inside one |
 
 They are skills rather than agents because they run in the main loop, where the context already is.
@@ -174,8 +187,9 @@ They are skills rather than agents because they run in the main loop, where the 
 - **`orientation-audit` is a recall aid, not a gate**, with no failure exit. It lists items the last
   orientation carried that this one does not. Matching is fuzzy because a carried item is meant to be
   reworded. **Length is not the failure mode** — goal 1 fails on a surface full of *another thread's*
-  warnings — so an uncarried item whose death condition has not fired is reported as a loss. Only the
-  reader can tell a fired condition from a lost item, so it still does not fail.
+  warnings — so an uncarried item not recorded as finished is reported as a loss. Only the reader can
+  tell a finished item from a lost one, so it still does not fail. After a re-partition it compares
+  against every parent.
 - **The architecture recommendation is pickup's.** A handoff infers one would help; pickup, reading cold,
   finds the system it must work on described nowhere. `architecture-candidates` is the mechanical half.
 - **A pickup calls `EnterPlanMode` itself.** Hooks receive `permission_mode` read-only, so no hook can set it.
@@ -217,10 +231,11 @@ check a deliberate deletion — there, the deletions are the deliverable and `gi
 | Every document is a record or a view | The maintenance bill was entirely the third class | A document that must be both, and stays correct |
 | A record is never edited | It is evidence of a moment; a later moment gets a later document | An edited record nobody had to reconcile |
 | Documents move, and the wikilinks inside them follow | A link is an address, not a claim; a dangling link loses one | A link update that changed what a document asserted |
-| A project is its split lineage | Which threads are one effort is recorded once, in `from:` | Two threads of one effort with no `from:` chain, that curation needed grouped |
+| A lineage is the `from:` graph | Which threads came from which is recorded once, in `from:` | Two threads of one body of work with no `from:` link, that curation needed grouped |
+| A workstream is scoped by its described problem space | A split cue that fires on rewording duplicates items | Threads split on the description that still carried each other's items |
 | A vault needs no tools or skills of its own for standard maintenance, and may hold them for its own purposes | Maintenance is the installed plugin's job | A vault that needed a local tool to be maintained |
 | A view is regenerated, never patched | Patching reintroduces surgical discipline and its toolchain | A patched view that stayed true over months |
-| A `dies never` item is a convention, not a live item | It can never leave, so it only accumulates | A `dies never` item a shared surface could not hold without losing what made it useful |
+| A warning that stays true is not a live item | It can never leave, so it only accumulates | A standing warning `gotchas.md` could not hold without losing what made it useful |
 | An item left out of an orientation stays recoverable | Records are immutable and complete | A dropped item that could not be found again |
 | A disposition states its basis | Silent inference is the failure | An unstated basis nobody later needed |
 | One thread per workstream | Two threads under one prefix put two agents on one path | Two concurrent threads sharing an orientation, each pushed the other's warnings |
